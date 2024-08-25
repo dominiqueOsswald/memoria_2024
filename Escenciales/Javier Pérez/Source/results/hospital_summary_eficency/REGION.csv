@@ -1,0 +1,11 @@
+hospital_id,hospital_alternative_name,input_crs,input_vrs,input_nirs,output_crs,output_vrs,output_nirs,directional_crs,directional_vrs,directional_nirs,total_dominance
+133150,Hospital de Puerto Montt,X,X,X,X,X,X,,,,42
+112101,Hospital de Urgencia Asistencia Pública,X,X,X,X,X,X,,,,42
+113100,Hospital del Tórax,X,X,X,X,X,X,,,,42
+113180,Hospital Barros Luco Trudeau,X,X,X,X,X,X,,,,42
+110150,Hospital San Juan de Dios (Santiago),X,X,X,X,X,X,,,,42
+115100,Hospital Sótero del Río,X,X,X,X,X,X,,,,42
+115107,Hospital Padre Alberto Hurtado,X,X,X,X,X,X,,,,42
+109100,Hospital San Camilo de San Felipe,X,X,X,X,X,X,,,,42
+108101,Hospital de Quilpué,X,X,X,X,X,X,,,,42
+108100,Hospital de Quillota,X,X,X,X,X,X,,,,42

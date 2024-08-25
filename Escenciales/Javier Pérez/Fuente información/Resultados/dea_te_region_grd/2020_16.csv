@@ -1,0 +1,3 @@
+hospital_id,X21_value_normalized,X22_value_normalized,hospital_discharge_normalized,diagnostic_tests_normalized,surgical_interventions_normalized,medical_consultations_normalized,grd,te_input_grd,te_output_grd,te_directional_grd
+117101,0.48,0.4,0.35,0,0,0.06,0.98,0.714,1.344,0.154
+117102,0.13,0.09,0.13,0,0,0.05,0.79,0.79,0.79,0

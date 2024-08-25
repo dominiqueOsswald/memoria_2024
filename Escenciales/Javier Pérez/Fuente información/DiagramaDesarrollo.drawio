@@ -1,0 +1,78 @@
+<mxfile host="app.diagrams.net" modified="2024-01-15T17:48:30.269Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" etag="cIIV6qwZWDie5wdPt8me" version="22.1.18" type="google">
+  <diagram name="Page-1" id="DqPqVIT2y1leuRaURYq-">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-29" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="578" width="750" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="V2bOT-LWaTVSim-I6r6i-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YxhGlRdBj2PuwSg8yrcr-28" target="YxhGlRdBj2PuwSg8yrcr-27">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="435" y="417" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-28" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="132" width="750" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="V2bOT-LWaTVSim-I6r6i-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YxhGlRdBj2PuwSg8yrcr-27" target="YxhGlRdBj2PuwSg8yrcr-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-27" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="435" width="750" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="V2bOT-LWaTVSim-I6r6i-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YxhGlRdBj2PuwSg8yrcr-26" target="YxhGlRdBj2PuwSg8yrcr-28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-26" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="30" width="750" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-1" value="Obtención datos insumos" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="485" y="40" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-2" value="Obtención datos egreso" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="245" y="40" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="V2bOT-LWaTVSim-I6r6i-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YxhGlRdBj2PuwSg8yrcr-3" target="YxhGlRdBj2PuwSg8yrcr-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-3" value="Consolidación de datos" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="375" y="150" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="V2bOT-LWaTVSim-I6r6i-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="YxhGlRdBj2PuwSg8yrcr-6" target="YxhGlRdBj2PuwSg8yrcr-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-6" value="Reajuste monetario de insumos" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="375" y="237" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-7" value="Normalización de datos" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="375" y="320" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-12" value="Generación clasificación Minsal" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="249.5" y="465" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-13" value="Generación clasificación GRD" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="374.5" y="465" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-14" value="Generación clasificación Geográfica" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500.5" y="465" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-16" value="Métodos de eficiencia técnica" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="375" y="591.5" width="120" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-30" value="Obtención de datos" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="30" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-31" value="Procesamiento de datos" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="132" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-32" value="Generación clasificaciones" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="435" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YxhGlRdBj2PuwSg8yrcr-33" value="Aplicación métodos de eficiencia técnica" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="578" width="160" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

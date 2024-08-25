@@ -1,0 +1,63 @@
+hospital_id,hospital_fns_id,region,hospital_name,hospital_alternative_name,slug
+101100,103,15,Hospital Regional Dr. Juan Noé Crevani,Hospital Doctor Juan Noé,hospital-regional-dr-juan-noe-crevani
+102100,203,1,Hospital Dr. Ernesto Torres Galdames,Hospital de Iquique,hospital-dr-ernesto-torres-galdames
+103100,303,3,Hospital Dr. Leonardo Guzmán,Hospital de Antofagasta,hospital-dr-leonardo-guzman
+103101,304,3,Hospital Dr. Carlos Cisternas,Hospital de Calama,hospital-dr-carlos-cisternas
+104100,403,3,Hospital San José del Carmen,Hospital de Copiapó,hospital-san-jose-del-carmen
+105100,503,4,Hospital San Juan de Dios (Serena),Hospital de La Serena,hospital-san-juan-de-dios
+105101,504,4,Hospital San Pablo,Hospital de Coquimbo,hospital-san-pablo
+105102,505,4,Hospital Dr. Antonio Tirado Lanas de Ovalle,Hospital de Ovalle,hospital-dr-antonio-tirado-lanas-de-ovalle
+108100,803,5,Hospital San Camilo de San Felipe,Hospital San Camilo de San Felipe,hospital-san-camilo-de-san-felipe
+108101,804,5,Hospital San Juan de Dios (Los Andes),Hospital San Juan de Dios (Los Andes),hospital-san-juan-de-dios
+107101,704,5,Hospital San Martín,Hospital de Quillota,hospital-san-martin
+107100,703,5,Hospital Dr. Gustavo Fricke,Hospital Dr. Gustavo Fricke,hospital-dr-gustavo-fricke
+106100,603,5,Hospital Carlos Van Buren,Hospital Carlos Van Buren,hospital-carlos-van-buren
+107102,705,5,Hospital de Quilpué,Hospital de Quilpué,hospital-de-quilpue
+106102,607,5,Hospital Dr. Eduardo Pereira Ramírez,Hospital Dr. Eduardo Pereira Ramírez,hospital-dr-eduardo-pereira-ramirez
+110120,2708,13,Hospital  Félix Bulnes Cerda,Hospital  Félix Bulnes Cerda,hospital--felix-bulnes-cerda
+109101,2605,13,Hospital Clínico de Niños Dr. Roberto del Río,Hospital Roberto del Río,hospital-clinico-de-ninos-dr-roberto-del-rio
+109100,2606,13,Complejo Hospitalario San José,Hospital San José,complejo-hospitalario-san-jose
+109103,2607,13,Instituto Nacional del Cáncer Dr. Caupolicán Pardo Correa,Instituto Nacional del Cáncer,instituto-nacional-del-cancer-dr-caupolican-pardo-correa
+109102,2608,13,Instituto Psiquiátrico Dr. José Horwitz Barak,Instituto Psiquiatrico,instituto-psiquiatrico-dr-jose-horwitz-barak
+112102,2304,13,Hospital de Niños Dr. Luis Calvo Mackenna,Hospital Luis Calvo Mackena,hospital-de-ninos-dr-luis-calvo-mackenna
+112106,2307,13,Instituto Nacional Geriátrico Presidente Eduardo Frei Montalva,,instituto-nacional-geriatrico-presidente-eduardo-frei-montalva
+110110,27010,13,Instituto Traumatológico Dr. Teodoro Gebauer,Instituto Traumatológico,instituto-traumatologico-dr-teodoro-gebauer
+112100,2306,13,Hospital Del Salvador de Santiago,Hospital Del Salvador de Santiago,hospital-del-salvador-de-santiago
+112104,2308,13,Instituto de Neurocirugía Dr. Alfonso Asenjo,Instituto de Neurocirugía,instituto-de-neurocirugia-dr-alfonso-asenjo
+112103,2303,13,Instituto Nacional de Enfermedades Respiratorias y Cirugía Torácica,Hospital del Tórax,instituto-nacional-de-enfermedades-respiratorias-y-cirugia-toracica
+110100,2709,13,Hospital San Juan de Dios (Santiago),Hospital San Juan de Dios (Santiago),hospital-san-juan-de-dios
+111195,2405,13,Hospital de Urgencia Asistencia Pública Dr. Alejandro del Río,Hospital de Urgencia Asistencia Pública,hospital-de-urgencia-asistencia-publica-dr-alejandro-del-rio
+112105,2309,13,Instituto Nacional de Rehabilitación Infantil Presidente Pedro Aguirre Cerda,Instituto Pedro Aguirre Cerda,instituto-nacional-de-rehabilitacion-infantil-presidente-pedro-aguirre-cerda
+111100,2404,13,Hospital Clínico San Borja Arriarán,Hospital Clínico San Borja Arriarán,hospital-clinico-san-borja-arriaran
+113130,2505,13,Hospital Dr. Exequiel González Cortés,Hospital Exequiel González Cortés,hospital-dr-exequiel-gonzalez-cortes
+113100,2503,13,Hospital Barros Luco Trudeau,Hospital Barros Luco Trudeau,hospital-barros-luco-trudeau
+112101,2305,13,Hospital Dr. Luis Tisné B.,Hospital Santiago Oriente Luis Tisne,hospital-dr-luis-tisne-b
+111101,2406,13,Hospital Clínico Metropolitano El Carmen Doctor Luis Valentín Ferrada,Hospital El Carmen de Maipú,hospital-clinico-metropolitano-el-carmen-doctor-luis-valentin-ferrada
+114105,2807,13,Hospital Clínico Metropolitano La Florida Dra. Eloísa Díaz Insunza,Hospital La Florida,hospital-clinico-metropolitano-la-florida-dra-eloisa-diaz-insunza
+114103,3001,13,Hospital Padre Alberto Hurtado,Hospital Padre Alberto Hurtado,hospital-padre-alberto-hurtado
+114101,2805,13,Complejo Hospitalario Dr. Sótero del Río,Hospital Sótero del Río,complejo-hospitalario-dr-sotero-del-rio
+113180,2508,13,Hospital El Pino,Hospital Sanatorio El Pino,hospital-el-pino
+106103,604,5,Hospital Claudio Vicuña,Hospital Claudio Vicuña,hospital-claudio-vicuna
+110150,2705,13,Hospital San José,Hospital de Melipilla,hospital-san-jose
+115100,903,6,Hospital Regional de Rancagua,Hospital de Rancagua,hospital-regional-de-rancagua
+115107,9010,6,Hospital San Juan de Dios (San Fernando),Hospital San Fernando,hospital-san-juan-de-dios-de-san-fernando
+116100,1003,7,Hospital San Juan de Dios (Curicó),Hospital de Curicó,hospital-san-juan-de-dios
+116105,1008,7,Hospital Dr. César Garavagno Burotto,Hospital de Talca,hospital-dr-cesar-garavagno-burotto
+116108,10011,7,Hospital Presidente Carlos Ibáñez del Campo,Hospital de Linares,hospital-presidente-carlos-ibanez-del-campo
+117102,1104,16,Hospital de San Carlos,Hospital de San Carlos,hospital-de-san-carlos
+117101,1103,16,Hospital Clínico Herminda Martín,Hospital de Chillán,hospital-clinico-herminda-martin
+119101,1304,8,Hospital de Tomé,Hospital de Tomé,hospital-de-tome
+119100,1303,8,Hospital Las Higueras,Hospital de Las Higueras,hospital-las-higueras
+118100,1203,8,Hospital Clínico Regional Dr. Guillermo Grant Benavente,Hospital Guillermo  Grant Benavente,hospital-clinico-regional-dr-guillermo-grant-benavente
+118105,1205,8,Hospital San José,Hospital de Coronel,hospital-san-jose
+118106,1206,8,Hospital de Lota,Hospital de Lota,hospital-de-lota
+120101,1405,8,Complejo Asistencial Dr. Víctor Ríos Ruiz,Hospital de Los Ángeles,complejo-asistencial-dr-victor-rios-ruiz
+129100,1603,9,Hospital Dr. Mauricio Heyermann,Hospital de Angol,hospital-dr-mauricio-heyermann
+129106,1604,9,Hospital San José de Victoria,Hospital de Victoria,hospital-san-jose-de-victoria
+121109,17016,9,Hospital Dr. Hernán Henríquez Aravena,Hospital de Temuco,hospital-dr-hernan-henriquez-aravena
+122100,1803,14,Hospital Clínico Regional de Valdivia,Hospital de Valdivia,hospital-clinico-regional
+123100,1903,10,Hospital Base San José de Osorno,Hospital de Osorno,hospital-base-san-jose-de-osorno
+124105,20011,10,Hospital de Puerto Montt,Hospital de Puerto Montt,hospital-de-puerto-montt
+133150,3302,10,Hospital de Castro,Hospital de Castro,hospital-de-castro
+125100,2107,11,Hospital Regional de Coyhaique,Hospital de Coyhaique,hospital-regional
+126100,2205,12,Hospital Clínico de Magallanes Dr. Lautaro Navarro Avari,Hospital Regional de Punta Arenas,hospital-clinico-de-magallanes-dr-lautaro-navarro-avari

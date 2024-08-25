@@ -1,0 +1,11 @@
+hospital_id,hospital_alternative_name,input_crs,input_vrs,input_nirs,output_crs,output_vrs,output_nirs,directional_crs,directional_vrs,directional_nirs,total_dominance
+118105,Hospital de Coronel,X,X,X,X,X,X,,,,30
+109100,Hospital San José,X,X,X,X,X,X,,,,30
+120101,Hospital de Los Ángeles,X,X,X,X,X,X,,,,24
+114101,Hospital Sótero del Río,,,,X,X,X,,,,21
+118100,Hospital Guillermo Grant Benavente,,,,X,X,X,,,,21
+116108,Hospital de Linares,X,X,X,X,X,X,,,,18
+106102,Hospital Dr. Eduardo Pereira Ramírez,X,X,X,X,X,X,,,,18
+113100,Hospital Barros Luco Trudeau,,,,X,X,X,,,,15
+110100,Hospital San Juan de Dios (Santiago),,,,X,X,X,,,,15
+108101,Hospital San Juan de Dios (Los Andes),X,X,X,X,X,X,,,,15
