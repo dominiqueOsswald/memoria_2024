@@ -4,7 +4,7 @@ library(Benchmarking)
 library(corrplot)
 
 setwd("/home/domi/Escritorio/Seminario/Taller")
-getwd()
+#getwd()
 
 hospitales <- read.csv("hospital_region.csv") 
 
@@ -75,22 +75,34 @@ resultado_dea_2019_in_crs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = 
 #resultado_dea_2019_out_crs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "crs", ORIENTATION = "out")
 
 eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
-
-print(eficiencia_vrs)
-
 eficiencia_crs <- resultado_dea_2019_in_crs$eff
 
-efficiency_df_in_vrs_id <- data.frame(
+# Crear un dataframe con las dos eficiencias
+eficiencia_df <- data.frame(
   ID = all_2019$IdEstablecimiento,
   Nombre = all_2019$'Nombre Establecimiento',
   Region = all_2019$'Nombre SS/SEREMI',
-  VRS = eficiencia_vrs
+  vrs = resultado_dea_2019_in_vrs$eff,
+  crs = resultado_dea_2019_in_crs$eff
 )
 
-efficiency_df_in_crs_id <- data.frame(
-  ID = all_2019$IdEstablecimiento,
-  CRS = eficiencia_crs
-)
+# Mostrar el dataframe resultante
+print(eficiencia_df)
+
+
+# Ordenar el dataframe en orden decreciente según la columna 'vrs'
+eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+
+# Mostrar el dataframe ordenado
+print(eficiencia_vrs_data)
+
+
+# Ordenar el dataframe en orden decreciente según la columna 'crs'
+eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+
+# Mostrar el dataframe ordenado
+print(eficiencia_crs_data)
+
 
 
 # Clasificar eficiencia VRS en los rangos especificados
@@ -128,140 +140,3 @@ print("Clasificación de eficiencia en CRS:")
 print(frecuencia_crs_clasificada)
 print("Porcentaje de eficiencia en CRS:")
 print(porcentaje_crs_clasificada)
-
-
-
-# Crear un dataframe con los IDs y su clasificación en VRS y CRS
-clasificacion_establecimientos <- data.frame(
-  ID = all_2019$IdEstablecimiento,
-  Nombre = all_2019$'Nombre Establecimiento',
-  Region = all_2019$'Nombre SS/SEREMI',
-  Clasificacion_VRS = clasificacion_vrs,
-  Clasificacion_CRS = clasificacion_crs
-)
-
-
-# Listado de establecimientos con eficiencia en el rango "Valor 1" en VRS
-establecimientos_vrs_valor1 <- subset(clasificacion_establecimientos, Clasificacion_VRS == "Valor 1")
-
-# Listado de establecimientos con eficiencia en el rango "Entre 0.75 y 1" en VRS
-establecimientos_vrs_075_1 <- subset(clasificacion_establecimientos, Clasificacion_VRS == "Entre 0.75 y 1")
-
-# Listado de establecimientos con eficiencia en el rango "Entre 0.5 y 0.75" en VRS
-establecimientos_vrs_05_075 <- subset(clasificacion_establecimientos, Clasificacion_VRS == "Entre 0.5 y 0.75")
-
-# Listado de establecimientos con eficiencia en el rango "Menor que 0.5" en VRS
-establecimientos_vrs_menor_05 <- subset(clasificacion_establecimientos, Clasificacion_VRS == "Menor que 0.5")
-
-
-# Visualizar establecimientos con eficiencia Valor 1 en VRS
-print("Establecimientos con eficiencia Valor 1 en VRS:")
-print(establecimientos_vrs_valor1)
-
-# Visualizar establecimientos con eficiencia entre 0.75 y 1 en VRS
-print("Establecimientos con eficiencia entre 0.75 y 1 en VRS:")
-print(establecimientos_vrs_075_1)
-
-# Visualizar establecimientos con eficiencia entre 0.5 y 0.75 en VRS
-print("Establecimientos con eficiencia entre 0.5 y 0.75 en VRS:")
-print(establecimientos_vrs_05_075)
-
-# Visualizar establecimientos con eficiencia menor que 0.5 en VRS
-print("Establecimientos con eficiencia menor que 0.5 en VRS:")
-print(establecimientos_vrs_menor_05)
-
-
-
-
-
-
-
-
-
-# Ordenar por eficiencia VRS
-tabla_vrs <- efficiency_df_in_vrs_id[order(efficiency_df_in_vrs_id$VRS, decreasing = TRUE), ]
-
-# Ordenar por eficiencia CRS
-tabla_crs <- efficiency_df_in_crs_id[order(efficiency_df_in_crs_id$CRS, decreasing = TRUE), ]
-
-
-# Mostrar la tabla completa ordenada por VRS
-print(tabla_vrs)
-
-# Mostrar la tabla completa ordenada por CRS
-print(tabla_crs)
-
-
-
-
-
-
-
-# Crear un dataframe vacío para almacenar los IDs que coinciden
-ids_coincidentes <- data.frame(
-  ID = character(),  # Inicializa un dataframe vacío con columna de IDs
-  Eficiencia_VRS = numeric(),
-  Eficiencia_CRS = numeric(),
-  stringsAsFactors = FALSE
-)
-
-# Recorrer la tabla de VRS y buscar coincidencias en CRS
-for (i in 1:nrow(tabla_vrs)) {
-  # Buscar el ID actual en la tabla CRS
-  id_actual <- tabla_vrs$ID[i]
-  
-  # Encontrar el índice del ID en la tabla CRS
-  posicion_crs <- which(tabla_crs$ID == id_actual)
-  
-  # Si el ID se encuentra en la tabla CRS
-  if (length(posicion_crs) > 0) {
-    # Comparar los valores de eficiencia en VRS y CRS
-    if (tabla_vrs$VRS[i] == tabla_crs$CRS[posicion_crs]) {
-      # Si coinciden, almacenar el ID y las eficiencias en el nuevo dataframe
-      ids_coincidentes <- rbind(ids_coincidentes, data.frame(
-        ID = id_actual,
-        Eficiencia_VRS = tabla_vrs$VRS[i],
-        Eficiencia_CRS = tabla_crs$CRS[posicion_crs]
-      ))
-    }
-  }
-}
-
-# Mostrar el resultado
-print(ids_coincidentes)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-efficiency_df_in <- data.frame(
-  VRS = eficiencia_vrs,
-  CRS = eficiencia_crs
-)
-
-# Visualizar el resultado
-head(efficiency_df_in)
-head(efficiency_df_in_names)
-
-
-# Calcular la matriz de correlación
-correlation_matrix <- cor(efficiency_df_in)
-
-# Mostrar la matriz de correlación
-print(correlation_matrix)
-
-#En términos prácticos, una correlación de 0.5920349 sugiere que hay una relación moderada entre las dos variables que estás analizando, pero también implica que existen otros factores que podrían estar influyendo en las variaciones de las variables. La relación no es lo suficientemente fuerte como para afirmar que las variables están muy estrechamente ligadas.
