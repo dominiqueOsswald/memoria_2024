@@ -110,7 +110,8 @@ dias_cama_ocupadas_2019 <-  datos_2019 %>% filter(Glosa == "Dias Cama Ocupados")
 egresos_2019 <-  datos_2019 %>% filter(Glosa == "Numero de Egresos") %>%  select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa) 
 
 # Consultas médicas
-consultas <- list("idEstablecimiento","X03020101","X03020201","X03020301","X03020402","X03020403","X03020401","X03040210","X03040220","X04040100","X04025010","X04025020","X04025025","X04040427","X03020501")
+#consultas_1 <- list("idEstablecimiento","X03020101","X03020201","X03020301","X03020402","X03020403","X03020401","X03040210","X03040220","X04040100","X04025010","X04025020","X04025025","X04040427","X03020501")
+consultas <- list("idEstablecimiento","X07020130","X07020230","X07020330","X07020331","X07020332","X07024219","X07020500","X07020501","X07020600","X07020601","X07020700","X07020800","X07020801","X07020900","X07020901","X07021000","X07021001","X07021100","X07021101","X07021230","X07021300","X07021301","X07022000","X07022001","X07021531","X07022132","X07022133","X07022134","X07021700","X07021800","X07021801","X07021900","X07022130","X07022142","X07022143","X07022144","X07022135","X07022136","X07022137","X07022700","X07022800","X07022900","X07021701","X07023100","X07023200","X07023201","X07023202","X07023203","X07023700","X07023701","X07023702","X07023703","X07024000","X07024001","X07024200","X07030500","X07024201","X07024202","X07030501","X07030502")
 consultas_data_2019 <- subset(data, select = unlist(consultas))
 consultas_data_2019$sumaTotal <- rowSums(consultas_data_2019[ , -which(names(consultas_data_2019) == "idEstablecimiento")], na.rm = TRUE)
 
@@ -156,16 +157,71 @@ resultados_2019_vrs <- inner_join(
 )
 
 
+# Resumen estadístico de las columnas vrs_1 y vrs_2
+summary(resultados_2019_vrs[c("vrs_1", "vrs_2")])
 
 
-#eficiencia_df <- resultados$eficiencia_df
-#eficiencia_vrs_data <- resultados$eficiencia_vrs_data
-#eficiencia_crs_data <- resultados$eficiencia_crs_data
-#eficiencia_escala_data <- resultados$eficiencia_escala_data
+# Calcular la correlación entre vrs_1 y vrs_2
+correlacion <- cor(resultados_2019_vrs$vrs_1, resultados_2019_vrs$vrs_2)
+
+# Mostrar la correlación
+print(correlacion)
+
+# Cargar el paquete ggplot2 para la visualización
+library(ggplot2)
+
+# Crear un gráfico de dispersión
+ggplot(resultados_2019_vrs, aes(x = vrs_1, y = vrs_2)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue", se = FALSE) +  # Línea de regresión lineal
+  labs(title = "Correlación entre VRS_1 y VRS_2",
+       x = "VRS 1",
+       y = "VRS 2") +
+  theme_minimal()
 
 
-#print(eficiencia_df)
-#print(eficiencia_vrs_data)
-#print(eficiencia_crs_data)
-#print(eficiencia_escala_data)
 
+
+
+# Resultados que presenten una diferencia menor a 0,2 -> Para la lista de consultas_1
+# Resultados que presenten una diferencia menor a 0,05 -> Para la lista de consultas
+resultados_2019_vrs_filtrado <- resultados_2019_vrs %>%
+  filter(abs(vrs_1 - vrs_2) <= 0.05)
+
+all_2019_3 <- all_2019 %>%
+  semi_join(resultados_2019_vrs_filtrado, by = c("IdEstablecimiento" = "ID"))
+
+
+resultados_3 <- analisis_dea(all_2019_3)
+
+# Segundo join con el tercer dataframe
+resultados_2019_vrs_2 <- inner_join(
+  resultados_2019_vrs,
+  resultados_3$eficiencia_vrs_data %>% select(ID, vrs_3 = vrs),
+  by = "ID"
+)
+
+# Calcular la matriz de correlación entre vrs_1, vrs_2 y vrs_3
+correlacion <- cor(resultados_2019_vrs_2[, c("vrs_1", "vrs_2", "vrs_3")])
+
+# Mostrar la matriz de correlación
+print(correlacion)
+
+
+# Cargar el paquete ggplot2 y reshape2 para la visualización
+library(ggplot2)
+library(reshape2)
+
+# Convertir la matriz de correlación a un formato largo para ggplot2
+correlacion_melt <- melt(correlacion)
+
+# Crear el mapa de calor
+ggplot(data = correlacion_melt, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", 
+                       name = "Correlación") +
+  theme_minimal() +
+  labs(title = "Matriz de Correlación entre VRS_1, VRS_2 y VRS_3",
+       x = "Variables",
+       y = "Variables")
