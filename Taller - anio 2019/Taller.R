@@ -137,14 +137,3 @@ analisis_dea(all_2019)
 
 
 
-
-install.packages("ggplot2")
-install.packages("sf")
-install.packages("rnaturalearth")
-install.packages("rnaturalearthdata")
-
-
-
-
-
-
