@@ -32,7 +32,26 @@ resultados <- analisis_dea(all_2019)
 resultados_geo <- resultados$eficiencia_vrs_data %>%
   left_join(hospitales, by = "IdEstablecimiento")
 
-graficar_hospitales(resultados$eficiencia_vrs_data)
+graficar_hospitales_vrs(resultados_geo)
+graficar_hospitales_crs(resultados_geo)
+
+graficar_hospitales_vrs_rm(resultados_geo)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
