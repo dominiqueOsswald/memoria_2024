@@ -1,17 +1,17 @@
-install.packages("ggplot2")
-install.packages("maps")
+#install.packages("ggplot2")
+#install.packages("maps")
 
 library(ggplot2)
 library(maps)
 
 chile_map <- map_data("world", region = "Chile")
 
-hospitales <- data.frame(
-  nombre = c("Hospital 1", "Hospital 2", "Hospital 3"),
-  latitud = c(-18.4827411739751, -32.417, -39.828),
-  longitud = c( -70.31266928987736, -71.135, -73.245),
-  valor = c(100, 200, 150)  # Valores que deseas representar
-)
+#hospitales <- data.frame(
+#  nombre = c("Hospital 1", "Hospital 2", "Hospital 3"),
+#  latitud = c(-18.4827411739751, -20.21392734846593,-23.659761892406777),
+#  longitud = c( -70.31266928987736, -70.13837254566423,-70.39590564743622),
+#  valor = c(0.5, 1, 0.75)  # Valores que deseas representar
+#)
 
 
 graficar_hospitales <- function(hospitales_df) {

@@ -20,9 +20,9 @@ analisis_dea <- function(all_2019) {
   
   # Crear dataframe con eficiencias y retorno a escala
   eficiencia_df <- data.frame(
-    ID = all_2019$IdEstablecimiento,
+    IdEstablecimiento = all_2019$IdEstablecimiento,
     Nombre = all_2019$'Nombre Establecimiento',
-    Region = all_2019$'Nombre SS/SEREMI',
+    Region = all_2019$'Region',
     vrs = round(eficiencia_vrs, 3),
     crs = round(eficiencia_crs, 3),
     escala = round(eficiencia_vrs / eficiencia_crs, 3)

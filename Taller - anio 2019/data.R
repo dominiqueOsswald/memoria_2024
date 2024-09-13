@@ -6,7 +6,8 @@ setwd("/home/domi/Escritorio/Memoria/Taller - anio 2019")
 
 
 #Código, región y nombre de todos los hospitales
-hospitales <- read.csv("hospitals.csv") 
+hospitales <- read.csv("hospitals.csv")  %>% 
+  rename("IdEstablecimiento" = "hospital_id")
 
 #Predicciones GRD de todos los hospitales
 predicciones_grd_2019 <- read.csv("Predicion GRD/prediciones_grd_2019.txt", sep="," )
@@ -39,7 +40,7 @@ egresos_2019 <-  datos_2019 %>% filter(Glosa == "Numero de Egresos") %>%  select
 # Consultas médicas
 
 consultas <- list("idEstablecimiento","X07020130","X07020230","X07020330","X07020331","X07020332","X07024219","X07020500","X07020501","X07020600","X07020601","X07020700","X07020800","X07020801","X07020900","X07020901","X07021000","X07021001","X07021100","X07021101","X07021230","X07021300","X07021301","X07022000","X07022001","X07021531","X07022132","X07022133","X07022134","X07021700","X07021800","X07021801","X07021900","X07022130","X07022142","X07022143","X07022144","X07022135","X07022136","X07022137","X07022700","X07022800","X07022900","X07021701","X07023100","X07023200","X07023201","X07023202","X07023203","X07023700","X07023701","X07023702","X07023703","X07024000","X07024001","X07024200","X07030500","X07024201","X07024202","X07030501","X07030502")
-consultas_data_2019 <- subset(datos_consolidados, select = unlist(consultas))
+consultas_data_2019 <- subset(datos_consolidados_2019, select = unlist(consultas))
 consultas_data_2019$sumaTotal <- rowSums(consultas_data_2019[ , -which(names(consultas_data_2019) == "idEstablecimiento")], na.rm = TRUE)
 # consultas odontologicas "09400082","09400081","09230300","09400084"
 
@@ -71,4 +72,4 @@ dias_cama_ocupadas_2019 <- dias_cama_ocupadas_2019 %>% inner_join(predicciones_g
 intermediate_df <- egresos_2019 %>%
   inner_join(predicciones_grd_2019, by = "IdEstablecimiento") %>%
   mutate(Egresos.GRD = Prediction * egresos) %>%
-  select("Nombre SS/SEREMI", IdEstablecimiento, "Nombre Establecimiento", Egresos.GRD)
+  select("Region", IdEstablecimiento, "Nombre Establecimiento", Egresos.GRD)

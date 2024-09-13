@@ -7,6 +7,7 @@ library(corrplot)
 setwd("/home/domi/Escritorio/Memoria/Taller - anio 2019")
 source("funciones.R")
 source("data.R")
+source("graphics.R")
 
 
 # ----- INPUTS -----
@@ -28,6 +29,14 @@ all_2019 <- inner_join(output_2019, input_2019, by = "IdEstablecimiento")  %>% l
 
 # Todos los hospitales, aplicando multiplicación de GRD em ambos parametros de salida
 resultados <- analisis_dea(all_2019)
+resultados_geo <- resultados$eficiencia_vrs_data %>%
+  left_join(hospitales, by = "IdEstablecimiento")
+
+graficar_hospitales(resultados$eficiencia_vrs_data)
+
+
+
+
 
 #  ------------------------------------------------------------------
 
@@ -61,20 +70,6 @@ correlacion <- cor(resultados_2019_vrs$vrs_1, resultados_2019_vrs$vrs_2)
 # Mostrar la correlación
 print(correlacion)
 
-# Cargar el paquete ggplot2 para la visualización
-library(ggplot2)
-
-# Crear un gráfico de dispersión
-ggplot(resultados_2019_vrs, aes(x = vrs_1, y = vrs_2)) +
-  geom_point() +
-  geom_smooth(method = "lm", col = "blue", se = FALSE) +  # Línea de regresión lineal
-  labs(title = "Correlación entre VRS_1 y VRS_2",
-       x = "VRS 1",
-       y = "VRS 2") +
-  theme_minimal()
-
-
-
 
 
 # Resultados que presenten una diferencia menor a 0,2 -> Para la lista de consultas_1
@@ -100,28 +95,6 @@ correlacion <- cor(resultados_2019_vrs_2[, c("vrs_1", "vrs_2", "vrs_3")])
 
 # Mostrar la matriz de correlación
 print(correlacion)
-
-
-# Convertir la matriz de correlación a un data.frame largo manualmente
-#correlacion_long <- data.frame(
-#  Var1 = rep(rownames(correlacion), times = ncol(correlacion)),
-#  Var2 = rep(colnames(correlacion), each = nrow(correlacion)),
-#  value = as.vector(correlacion)
-#)
-
-# Cargar ggplot2 para la visualización
-#library(ggplot2)
-
-# Crear el mapa de calor
-#ggplot(data = correlacion_long, aes(Var1, Var2, fill = value)) +
-#  geom_tile() +
-#  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-#                       midpoint = 0, limit = c(-1, 1), space = "Lab", 
-#                       name = "Correlación") +
-#  theme_minimal() +
-#  labs(title = "Matriz de Correlación entre VRS_1, VRS_2 y VRS_3",
-#       x = "Variables",
-#       y = "Variables")
 
 
 
