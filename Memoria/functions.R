@@ -84,7 +84,7 @@ consolidar_datos_por_anio <- function(anio) {
   return(all)
 }
 
-analisis_dea <- function(data) {
+analisis_dea_in <- function(data) {
   
   # Preparar inputs y outputs
   input_dea_2019 <- as.data.frame(data[c(8,9,10)])
@@ -108,10 +108,12 @@ analisis_dea <- function(data) {
     escala = round(eficiencia_vrs / eficiencia_crs, 3)
   )
   
+  # ------------------------------------------------------------------- #
   # Ordenar dataframes según diferentes columnas
-  eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
-  eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
-  eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  # ------------------------------------------------------------------- #
   
   # Clasificar eficiencia VRS
   clasificacion_vrs <- cut(eficiencia_vrs, 
@@ -150,11 +152,147 @@ analisis_dea <- function(data) {
   print(porcentaje_crs_clasificada)
   
   # Retornar los dataframes ordenados como una lista
-  return(list(
-    eficiencia_df = eficiencia_df,
-    eficiencia_vrs_data = eficiencia_vrs_data,
-    eficiencia_crs_data = eficiencia_crs_data,
-    eficiencia_escala_data = eficiencia_escala_data
-    
-  ))
+  return(eficiencia_df)
+}
+
+analisis_dea_out <- function(data) {
+  
+  # Preparar inputs y outputs
+  input_dea_2019 <- as.data.frame(data[c(8,9,10)])
+  output_dea_2019 <- as.data.frame(data[c(5,6,7)])
+  
+  # Aplicar DEA orientado a los inputs
+  resultado_dea_2019_in_vrs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "vrs", ORIENTATION = "out")
+  resultado_dea_2019_in_crs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "crs", ORIENTATION = "out")
+  
+  # Calcular eficiencias
+  eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
+  eficiencia_crs <- resultado_dea_2019_in_crs$eff
+  
+  # Crear dataframe con eficiencias y retorno a escala
+  eficiencia_df <- data.frame(
+    IdEstablecimiento = data$IdEstablecimiento,
+    Nombre = data$'Nombre Establecimiento',
+    Region = data$'Region',
+    vrs = round(eficiencia_vrs, 3),
+    crs = round(eficiencia_crs, 3),
+    escala = round(eficiencia_vrs / eficiencia_crs, 3)
+  )
+  
+  # ------------------------------------------------------------------- #
+  # Ordenar dataframes según diferentes columnas
+  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  # ------------------------------------------------------------------- #
+  
+  # Clasificar eficiencia VRS
+  clasificacion_vrs <- cut(eficiencia_vrs, 
+                           breaks = c(-Inf, 0.5, 1, 1.5, Inf), 
+                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
+                           right = FALSE)
+  
+  # Clasificar eficiencia CRS
+  clasificacion_crs <- cut(eficiencia_crs, 
+                           breaks = c(-Inf, 0.5, 1, 1.5, Inf),
+                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
+                           right = FALSE)
+  
+  # Calcular frecuencia y porcentaje para VRS
+  frecuencia_vrs_clasificada <- table(clasificacion_vrs)
+  porcentaje_vrs_clasificada <- prop.table(frecuencia_vrs_clasificada) * 100
+  
+  # Calcular frecuencia y porcentaje para CRS
+  frecuencia_crs_clasificada <- table(clasificacion_crs)
+  porcentaje_crs_clasificada <- prop.table(frecuencia_crs_clasificada) * 100
+  
+  # Mostrar resultados
+  cat("Clasificación de eficiencia en VRS:\n")
+  print(frecuencia_vrs_clasificada)
+  cat("----------------------------------\n")
+  cat("Porcentaje de eficiencia en VRS:\n")
+  print(porcentaje_vrs_clasificada)
+  
+  cat("----------------------------------\n")
+  cat("----------------------------------\n")
+  
+  cat("\nClasificación de eficiencia en CRS:\n")
+  print(frecuencia_crs_clasificada)
+  cat("----------------------------------\n")
+  cat("Porcentaje de eficiencia en CRS:\n")
+  print(porcentaje_crs_clasificada)
+  
+  # Retornar los dataframes ordenados como una lista
+  return(eficiencia_df)
+}
+
+analisis_dea_graph <- function(data) {
+  
+  # Preparar inputs y outputs
+  input_dea_2019 <- as.data.frame(data[c(8,9,10)])
+  output_dea_2019 <- as.data.frame(data[c(5,6,7)])
+  
+  # Aplicar DEA orientado a los inputs
+  resultado_dea_2019_in_vrs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "vrs", ORIENTATION = "graph")
+  resultado_dea_2019_in_crs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "crs", ORIENTATION = "graph")
+  
+  # Calcular eficiencias
+  eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
+  eficiencia_crs <- resultado_dea_2019_in_crs$eff
+  
+  # Crear dataframe con eficiencias y retorno a escala
+  eficiencia_df <- data.frame(
+    IdEstablecimiento = data$IdEstablecimiento,
+    Nombre = data$'Nombre Establecimiento',
+    Region = data$'Region',
+    vrs = round(eficiencia_vrs, 3),
+    crs = round(eficiencia_crs, 3),
+    escala = round(eficiencia_vrs / eficiencia_crs, 3)
+  )
+  
+  # ------------------------------------------------------------------- #
+  # Ordenar dataframes según diferentes columnas
+  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  # ------------------------------------------------------------------- #
+  
+  # Clasificar eficiencia VRS
+  clasificacion_vrs <- cut(eficiencia_vrs, 
+                           breaks = c(-Inf, 0.5, 1, 1.5, Inf), 
+                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
+                           right = FALSE)
+  
+  # Clasificar eficiencia CRS
+  clasificacion_crs <- cut(eficiencia_crs, 
+                           breaks = c(-Inf, 0.5, 1, 1.5, Inf),
+                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
+                           right = FALSE)
+  
+  # Calcular frecuencia y porcentaje para VRS
+  frecuencia_vrs_clasificada <- table(clasificacion_vrs)
+  porcentaje_vrs_clasificada <- prop.table(frecuencia_vrs_clasificada) * 100
+  
+  # Calcular frecuencia y porcentaje para CRS
+  frecuencia_crs_clasificada <- table(clasificacion_crs)
+  porcentaje_crs_clasificada <- prop.table(frecuencia_crs_clasificada) * 100
+  
+  # Mostrar resultados
+  cat("Clasificación de eficiencia en VRS:\n")
+  print(frecuencia_vrs_clasificada)
+  cat("----------------------------------\n")
+  cat("Porcentaje de eficiencia en VRS:\n")
+  print(porcentaje_vrs_clasificada)
+  
+  cat("----------------------------------\n")
+  cat("----------------------------------\n")
+  
+  cat("\nClasificación de eficiencia en CRS:\n")
+  print(frecuencia_crs_clasificada)
+  cat("----------------------------------\n")
+  cat("Porcentaje de eficiencia en CRS:\n")
+  print(porcentaje_crs_clasificada)
+  
+  # Retornar los dataframes ordenados como una lista
+  return(eficiencia_df)
 }

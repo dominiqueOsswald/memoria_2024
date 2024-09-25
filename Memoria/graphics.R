@@ -18,9 +18,6 @@ graficar_hospitales_vrs <- function(hospitales_df) {
     theme_minimal()
 }
 
-
-
-
 graficar_hospitales_crs <- function(hospitales_df) {
   # Cargar el mapa de Chile
   chile_map <- map_data("world", region = "Chile")
@@ -34,7 +31,6 @@ graficar_hospitales_crs <- function(hospitales_df) {
     coord_fixed(1.3) +  # Mantiene la proporción correcta del mapa
     theme_minimal()
 }
-
 
 graficar_hospitales_vrs_rm <- function(hospitales_df) {
   
@@ -54,9 +50,6 @@ graficar_hospitales_vrs_rm <- function(hospitales_df) {
     coord_fixed(1.3) +  # Mantiene la proporción correcta del mapa
     theme_minimal()
 }
-
-
-
 
 # Llamar a la función para graficar
 #graficar_hospitales(hospitales)
