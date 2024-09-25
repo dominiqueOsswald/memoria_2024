@@ -1,4 +1,4 @@
-hospital_id,hospital_fns_id,region,hospital_name,hospital_alternative_name,latitud,longitud
+hospital_id,hospital_fns_id,region_id,hospital_name,hospital_alternative_name,latitud,longitud
 101100,103,15,Hospital Dr. Juan Noé Crevanni (Arica),Hospital Doctor Juan Noé,-18.4827, -70.3126
 102100,203,1,Hospital Dr. Ernesto Torres Galdames (Iquique),Hospital Iquique,-20.2139,-70.1383
 103100,303,2,Hospital Dr. Leonardo Guzmán (Antofagasta),Hospital de Antofagasta,-23.6597,-70.3959

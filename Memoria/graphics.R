@@ -1,13 +1,8 @@
-#install.packages("ggplot2")
-#install.packages("maps")
-
 library(ggplot2)
 library(maps)
 
-chile_map <- map_data("world", region = "Chile")
-
-chile_map <- ne_states(country = "Chile", returnclass = "sf")
-
+#chile_map <- map_data("world", region = "Chile")
+#chile_map <- ne_states(country = "Chile", returnclass = "sf")
 
 graficar_hospitales_vrs <- function(hospitales_df) {
   # Cargar el mapa de Chile
