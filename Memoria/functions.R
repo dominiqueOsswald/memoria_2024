@@ -78,8 +78,10 @@ consolidar_datos_por_anio <- function(anio) {
     left_join(dias_cama_ocupadas, by = "IdEstablecimiento")
   
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
-    left_join(hospitales %>% select(IdEstablecimiento, region_id), by = "IdEstablecimiento") %>%
+    left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud,longitud), by = "IdEstablecimiento") %>%
     relocate(region_id, .after = Region)
+  
+  all
   
   return(all)
 }
@@ -97,7 +99,8 @@ analisis_dea_in <- function(data) {
   # Calcular eficiencias
   eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
   eficiencia_crs <- resultado_dea_2019_in_crs$eff
-  
+  # Imprimir las cabeceras del dataframe
+  print(colnames(data))
   # Crear dataframe con eficiencias y retorno a escala
   eficiencia_df <- data.frame(
     IdEstablecimiento = data$IdEstablecimiento,
@@ -105,8 +108,12 @@ analisis_dea_in <- function(data) {
     Region = data$'Region',
     vrs = round(eficiencia_vrs, 3),
     crs = round(eficiencia_crs, 3),
-    escala = round(eficiencia_vrs / eficiencia_crs, 3)
+    escala = round(eficiencia_vrs / eficiencia_crs, 3),
+    latitud = data$latitud,
+    longitud = data$longitud,
+    region_id = data$region_id
   )
+  print(colnames(eficiencia_df))
   
   # ------------------------------------------------------------------- #
   # Ordenar dataframes según diferentes columnas

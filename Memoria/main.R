@@ -9,10 +9,16 @@ source("functions.R")
 source("graphics.R")
 
 
-
 data_2019 <- consolidar_datos_por_anio(2019)
-
 resultados_2019_in <- analisis_dea_in(data_2019)
+
+graficar_hospitales_vrs(resultados_2019_in) 
+graficar_hospitales_crs(resultados_2019_in) 
+graficar_hospitales_vrs_rm(resultados_2019_in)
+
+
+
+
 
 resultados_2019_out <- analisis_dea_out(data_2019)
 

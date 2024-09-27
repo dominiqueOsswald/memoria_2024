@@ -34,8 +34,11 @@ graficar_hospitales_crs <- function(hospitales_df) {
 
 graficar_hospitales_vrs_rm <- function(hospitales_df) {
   
+  chile_map <- map_data("world", region = "Chile")
+  
+  print(colnames(hospitales_df))
   hospitales_df_rm <- hospitales_df %>%
-    filter(region == 13)  %>%
+    filter(region_id == 13)  %>%
     filter(IdEstablecimiento != 112107)
   # Cargar el mapa de Chile filtrando por la Región Metropolitana
   chile_map_rm <- chile_map %>%
