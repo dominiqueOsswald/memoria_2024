@@ -6,21 +6,17 @@ library(corrplot)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("functions.R")
-source("graphics.R")
-
+#source("graphics.R")
+source("graphics2.R")
 
 data_2019 <- consolidar_datos_por_anio(2019)
 resultados_2019_in <- analisis_dea_in(data_2019)
 
-graficar_hospitales_vrs(resultados_2019_in) 
-graficar_hospitales_crs(resultados_2019_in) 
-graficar_hospitales_vrs_rm(resultados_2019_in)
+chile_vrs(resultados_2019_in) 
+region <- region_vrs(resultados_2019_in, 13)
+print(region)
+
+mapa_interactivo <- ggplotly(region, tooltip = "text")
 
 
-
-
-
-resultados_2019_out <- analisis_dea_out(data_2019)
-
-resultados_2019_graph <- analisis_dea_graph(data_2019)
 

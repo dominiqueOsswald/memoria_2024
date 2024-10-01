@@ -45,6 +45,7 @@ consolidar_datos_por_anio <- function(anio) {
                     "X07022900","X07021701","X07023100","X07023200","X07023201","X07023202","X07023203",
                     "X07023700","X07023701","X07023702","X07023703","X07024000","X07024001","X07024200",
                     "X07030500","X07024201","X07024202","X07030501","X07030502")
+  
   consultas_data <- subset(datos_consolidados, select = unlist(consultas))
   consultas_data$sumaTotal <- rowSums(consultas_data[ , -which(names(consultas_data) == "idEstablecimiento")], na.rm = TRUE)
   
@@ -53,16 +54,35 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento")
   
   consultas <- consultas %>% inner_join(predicciones_grd, by = "IdEstablecimiento") %>% 
-    mutate(Consultas.GRD = Prediction * Consultas) %>% 
-    select(IdEstablecimiento, Consultas.GRD)
+    select(IdEstablecimiento, Consultas)
   
-  dias_cama_ocupadas <- estadisticas %>% filter(Glosa == "Dias Cama Ocupados") %>%  
-    select(1:5) %>% rename("dias_cama_ocupados" = "Acum") %>% select(-Glosa)
+  # ---------------------------------------------------- #
   
-  dias_cama_ocupadas <- dias_cama_ocupadas %>% 
-    inner_join(predicciones_grd, by = "IdEstablecimiento") %>% 
-    mutate(dias_cama_ocupados.GRD = Prediction * dias_cama_ocupados) %>% 
-    select(IdEstablecimiento, dias_cama_ocupados.GRD)
+  #quirofano <- list("idEstablecimiento", "X21500600", "X21600800", "X21600900", "X21700100", "X21500700",
+  #                  "X21500800", "X21700300", "X21700400", "X21700500", "X21700600", "X21500900", "X21700700")
+  
+  quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600")
+  
+  quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
+  
+  # Reemplazar comas por puntos y convertir a numérico
+  quirofano_data <- quirofano_data %>%
+    mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
+  
+  # Crear la columna de suma, ignorando los NA
+  quirofano_data <- quirofano_data %>%
+    mutate(sumaTotal = rowSums(select(., -idEstablecimiento), na.rm = TRUE))
+  
+  
+   quirofano <- data.frame(idEstablecimiento = quirofano_data$idEstablecimiento, 
+                          Quirofano = quirofano_data$sumaTotal) %>%
+    rename("IdEstablecimiento" = "idEstablecimiento")
+  quirofano <- quirofano %>% inner_join(predicciones_grd, by = "IdEstablecimiento") %>% 
+    select(IdEstablecimiento, Quirofano)
+  
+  #ESTO HAY QUE ELIMINARLO !!!! Y CAMBIARLO POR LAS INTERVENCIONES QUIRURGICAS
+  
+
   
   # Unir egresos y predicciones GRD
   intermediate_df <- egresos %>%
@@ -75,7 +95,7 @@ consolidar_datos_por_anio <- function(anio) {
   
   output <- intermediate_df %>%
     left_join(consultas, by = "IdEstablecimiento") %>%
-    left_join(dias_cama_ocupadas, by = "IdEstablecimiento")
+    left_join(quirofano, by = "IdEstablecimiento")
   
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
     left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud,longitud), by = "IdEstablecimiento") %>%
@@ -99,8 +119,8 @@ analisis_dea_in <- function(data) {
   # Calcular eficiencias
   eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
   eficiencia_crs <- resultado_dea_2019_in_crs$eff
-  # Imprimir las cabeceras del dataframe
-  print(colnames(data))
+
+  
   # Crear dataframe con eficiencias y retorno a escala
   eficiencia_df <- data.frame(
     IdEstablecimiento = data$IdEstablecimiento,
@@ -113,7 +133,6 @@ analisis_dea_in <- function(data) {
     longitud = data$longitud,
     region_id = data$region_id
   )
-  print(colnames(eficiencia_df))
   
   # ------------------------------------------------------------------- #
   # Ordenar dataframes según diferentes columnas
