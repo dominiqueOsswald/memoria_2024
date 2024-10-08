@@ -1,0 +1,216 @@
+103,002 Hospital Doctor Juan Noé
+204,004 Hospital de Alto Hospicio
+303,002 Hospital de Antofagasta
+304,003 Hospital de Calama
+305,004 Hospital de Tocopilla
+306,005 Hospital de Taltal
+307,006 Hospital de Mejillones
+403,002 Hospital Regional de Copiapó
+404,003 Hospital de Chañaral
+405,004 Hospital Diego de Almagro
+406,005 Hospital de Vallenar
+407,006 Hospital de Huasco
+503,002 Hospital La Serena
+504,003 Hospital Coquimbo
+505,004 Hospital Ovalle
+506,005 Hospital Illapel
+507,006 Hospital Salamanca
+508,007 Hospital Combarbalá
+509,008 Hospital de Andacollo
+5010,009 Hospital Vicuña
+5011,010 Hospital Los Vilos
+603,002 Hospital Carlos Van Buren
+604,003 Hospital Claudio Vicuña
+605,004 Hospital Del Salvador
+606,005 Hospital San José Casablanca
+607,007 Hospital Doctor Eduardo Pereira
+703,002 Hospital Doctor Gustavo Fricke
+704,003 Hospital de Quillota
+705,004 Hospital de Quilpue
+706,005 Hospital de La Calera
+707,006 Hospital Geriátrico Paz de la Tarde
+708,007 Hospital de Limache
+709,008 Hospital de La Ligua
+7010,009 Hospital Cabildo
+7011,010 Hospital Petorca
+7012,011 Hospital de Quintero
+7013,012 Hospital Peñablanca
+803,002 Hospital San Camilo de San Felipe
+804,003 Hospital San Juan de Dios de Los Andes
+805,004 Hospital San Francisco de Llay Llay
+806,005 Hospital San Antonio de  Putaendo
+807,006 Hospital Psiquiátrico Doctor  Philippe Pinel de Putaendo
+903,002 Hospital Rancagua
+904,003 Hospital Graneros
+905,004 Hospital Coínco
+906,005 Hospital Peumo
+907,006 Hospital de Rengo
+908,007 Hospital San Vicente
+909,008 Hospital Pichidegua
+9010,009 Hospital San Fernando
+9011,010 Hospital Chimbarongo
+9012,011 Hospital Nancagua
+9013,012 Hospital Santa Cruz
+9014,013 Hospital Marchigue
+9015,014 Hospital Pichilemu
+9016,015 Hospital de Lolol
+9017,016 Hospital de Litueche
+1003,002 Hospital Curicó
+1004,003 Hospital de Teno
+1005,004 Hospital Molina
+1006,005 Hospital Hualane
+1007,006 Hospital Licantén
+1008,007 Hospital Talca
+1009,008 Hospital Curepto
+10010,009 Hospital Constitución
+10011,010 Hospital Linares
+10012,011 Hospital San Javier
+10013,012 Hospital Parral
+10014,013 Hospital Cauquenes
+10015,014 Hospital Chanco
+1103,002 Hospital de Chillán
+1104,003 Hospital de San Carlos
+1105,004 Hospital de Bulnes
+1106,005 Hospital de Yungay
+1107,006 Hospital de Quirihue
+1108,007 Hospital de Coelemu
+1109,008 Hospital El Carmen
+1203,002 Hospital Guillermo  Grant Benavente
+1204,003 Hospital Traumatológico
+1205,004 Hospital de Coronel
+1206,005 Hospital Lota
+1207,006 Hospital Santa Juana
+1208,007 Hospital Florida
+1303,002 Hospital Higueras
+1304,003 Hospital Tome
+1305,004 Hospital Penco Lirquén
+1403,003 Hospital Huepil
+1404,004 Hospital de Laja
+1405,005 Hospital de Los Ángeles
+1406,006 Hospital de Mulchén
+1407,007 Hospital de Nacimiento
+1408,008 Hospital de Yumbel
+1409,009 Hospital Santa Bárbara
+1503,002 Hospital Arauco
+1504,003 Hospital de Cañete
+1505,004 Hospital Contulmo
+1506,005 Hospital Curanilahue
+1507,006 Hospital Lebu
+1603,002 Hospital Angol
+1604,003 Hospital Victoria
+1605,004 Hospital Traiguén
+1606,005 Hospital de Collipulli
+1607,006 Hospital Purén
+1608,007 Hospital Curacautín
+1609,008 Hospital de Lonquimay
+1704,003 Hospital de Cunco
+1705,004 Hospital Nueva Imperial
+1706,005 Hospital Villarica
+1707,006 Hospital Carahue
+1708,007 Hospital Gorbea
+1709,008 Hospital Pitrufquén
+17010,009 Hospital Puerto Saavedra
+17011,010 Hospital Toltén
+17012,011 Hospital Galvarino
+17013,012 Hospital Lautaro
+17014,013 Hospital Loncoche
+17015,014 Hospital Vilcún
+17016,015 Hospital Temuco
+1803,002 Hospital de Valdivia
+1804,003 Hospital de Corral
+1805,004 Hospital de Los Lagos
+1806,005 Hospital de Lanco
+1807,006 Hospital de La Unión
+1808,007 Hospital de Río Bueno
+1809,008 Hospital de Paillaco
+1903,002 Hospital de Osorno
+1904,003 Hospital Puerto Octay
+1905,004 Hospital Purranque
+1906,005 Hospital de Río Negro
+1907,006 Hospital Misión San Juan de la Costa
+1908,007 Hospital del Perpetuo Socorro de Quilacahuín
+2003,002 Hospital Calbuco
+2004,003 Hospital Chaitén
+2005,007 Hospital de Fresia
+2006,008 Hospital de Frutillar
+2007,009 Hospital Futaleufú
+2008,010 Hospital de Llanquihue
+2009,011 Hospital de Maullín
+20010,012 Hospital de Palena
+20011,013 Hospital de Puerto Montt
+2104,003 Hospital de Cisnes
+2105,004 Hospital de Chile Chico
+2106,005 Hospital de Cochrane
+2107,006 Hospital de Coyhaique
+2108,007 Hospital de Puerto Aysén
+2203,002 Hospital Porvenir
+2204,003 Hospital de Puerto Natales
+2205,004 Hospital Regional de Punta Arenas
+2206,005 Cecosf Puerto Williams
+2207,006 SAMU Magallanes
+2208,007 Hospital Psiquiátrico
+2209,008 Atención Primaria de Salud
+22010,009 UNIDAD SALUD MENTAL - CTAS COMPLEMENTARIAS
+22011,010 ESTABLECIMIENTO LARGA ESTADIA ADULTO MAYOR
+2301,
+2302,001 Dirección del Servicio
+2303,002 Hospital del Tórax
+2304,003 Hospital Luis Calvo Mackenna
+2305,004 Hospital Santiago Oriente Luis Tisne
+2306,005 Hospital Salvador
+2307,006 Instituto de Geriatría
+2308,007 Instituto de Neurocirugía
+2309,008 Instituto Pedro Aguirre Cerda
+23010,009 Hospital de Hanga Roa
+2401,
+2402,001 Dirección del Servicio
+2403,002 Dirección Atención Primaria
+2404,003 Hospital Clínico San Borja Arriaran
+2405,004 Hospital De Urgencia Asistencia Pública
+2406,005 Hospital El Carmen de Maipú
+2501,
+2502,001 Dirección del Servicio
+2503,002 Hospital Barros Luco Trudeau
+2504,003 Hospital Enfermedades Infecciosas
+2505,004 Hospital Exequiel González Cortés
+2506,005 Hospital San Luis de Buin
+2507,006 Hospital Sanatorio El Peral
+2508,007 Hospital Sanatorio El Pino
+2601,
+2602,001 Dirección del Servicio
+2603,002 Centro De Diagnóstico Terapéutico
+2604,003 Hospital de Til Til
+2605,004 Hospital Roberto del Río
+2606,005 Hospital San José
+2607,006 Instituto Nacional del Cáncer
+2608,007 Instituto Psiquiátrico
+2701,
+2702,001 Dirección del Servicio
+2703,002 Centro de Referencia Salud Occidente Salvador Allende
+2704,003 Hospital de Curacaví
+2705,004 Hospital de Melipilla
+2706,005 Hospital de Peñaflor
+2707,006 Hospital de Talagante
+2708,007 Hospital Félix Bulnes
+2709,008 Hospital San Juan de Dios
+27010,009 Instituto Traumatológico
+2801,
+2802,001 Dirección del Servicio
+2803,002 Hospital Metropolitano
+2804,003 Centro de Referencia de Salud
+2805,004 Hospital Sotero del Río
+2806,005 Hospital San José de Maipo
+2807,006 Hospital La Florida
+29,
+3001,001 Hospital Padre Alberto Hurtado
+3101,001 Centro de Referencia de Salud Maipú
+3201,001 Centro de Referencia de Salud Cordillera Peñalolén Cordillera Oriente
+3301,
+3302,001 Hospital Castro
+3303,002 Hospital Quellón
+3304,003 Hospital Achao
+3305,004 Hospital Queilen
+3306,005 Hospital Ancud
+3307,006 Dirección del Servicio
+3401 ,SERVICIOS DE SALUD
+3501,ESTABLECIMIENTOS AUTOGESTIONADOS EN RED
