@@ -1,10 +1,13 @@
+hospital_id,hospital_name
 103,Hospital Doctor Juan Noé
+203,Hospital de Iquique
 204,Hospital de Alto Hospicio
 303,Hospital de Antofagasta
 304,Hospital de Calama
 305,Hospital de Tocopilla
 306,Hospital de Taltal
 307,Hospital de Mejillones
+308,Centro Asistencial Norte
 403,Hospital Regional de Copiapó
 404,Hospital de Chañaral
 405,Hospital Diego de Almagro
@@ -24,6 +27,7 @@
 605,Hospital Del Salvador
 606,Hospital San José Casablanca
 607,Hospital Doctor Eduardo Pereira
+608,Atención Primaria de Salud
 703,Hospital Doctor Gustavo Fricke
 704,Hospital de Quillota
 705,Hospital de Quilpue
@@ -40,6 +44,9 @@
 805,Hospital San Francisco de Llay Llay
 806,Hospital San Antonio de  Putaendo
 807,Hospital Psiquiátrico Doctor  Philippe Pinel de Putaendo
+808,Consultorio General Urbano de San Felipe
+809,Consultorio General Urbano Nº 2 de Los Andes
+8010,Consultorio General Urbano de Llay Llay
 903,Hospital Rancagua
 904,Hospital Graneros
 905,Hospital Coínco
@@ -75,15 +82,20 @@
 1107,Hospital de Quirihue
 1108,Hospital de Coelemu
 1109,Hospital El Carmen
+11010,Consultorio Violeta Parra
+11011,Centro Comunitario Salud Mental
 1203,Hospital Guillermo  Grant Benavente
 1204,Hospital Traumatológico
 1205,Hospital de Coronel
 1206,Hospital Lota
 1207,Hospital Santa Juana
 1208,Hospital Florida
+1209,Consultorio Víctor Manuel Fernández
+12010,Centro de Sangre y Tejidos
 1303,Hospital Higueras
 1304,Hospital Tome
 1305,Hospital Penco Lirquén
+1306,CESFAM LIRQUEN
 1403,Hospital Huepil
 1404,Hospital de Laja
 1405,Hospital de Los Ángeles
@@ -103,6 +115,7 @@
 1607,Hospital Purén
 1608,Hospital Curacautín
 1609,Hospital de Lonquimay
+1703,Consultorio de Miraflores
 1704,Hospital de Cunco
 1705,Hospital Nueva Imperial
 1706,Hospital Villarica
@@ -116,13 +129,14 @@
 17014,Hospital Loncoche
 17015,Hospital Vilcún
 17016,Hospital Temuco
-1803,002 Hospital de Valdivia
+1803,Hospital de Valdivia
 1804,Hospital de Corral
 1805,Hospital de Los Lagos
 1806,Hospital de Lanco
 1807,Hospital de La Unión
 1808,Hospital de Río Bueno
 1809,Hospital de Paillaco
+18010,Consultorio Externo
 1903,Hospital de Osorno
 1904,Hospital Puerto Octay
 1905,Hospital Purranque
@@ -138,11 +152,15 @@
 2009,Hospital de Maullín
 20010,Hospital de Palena
 20011,Hospital de Puerto Montt
+20012,Consultorio de Hualaihue
+2103,Dirección de Salud Rural
 2104,Hospital de Cisnes
 2105,Hospital de Chile Chico
 2106,Hospital de Cochrane
 2107,Hospital de Coyhaique
 2108,Hospital de Puerto Aysén
+2109,Consultorio A. Gutiérrez
+21010,Consultorio Víctor Domingo Silva
 2203,Hospital Porvenir
 2204,Hospital de Puerto Natales
 2205,Hospital Regional de Punta Arenas
