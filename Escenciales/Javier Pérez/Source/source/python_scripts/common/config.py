@@ -4,7 +4,7 @@
 HOSPITAL_DICTIONARY_PATH = '../../data/hospitals_dictionary.csv'
 
 # Years range
-YEARS_RANGE = [str(year) for year in range(2019, 2020)]
+YEARS_RANGE = [str(year) for year in range(2021, 2024)]
 #YEARS_RANGE = [str(year) for year in range(2014, 2021)]
 
 # Sheets name
