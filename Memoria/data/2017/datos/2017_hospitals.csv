@@ -1,0 +1,221 @@
+hospital_id,hospital_fns_id,region_id,hospital_name_x,hospital_name_y,latitud,longitud
+0,hospital_id,,hospital_name,,,
+101100,103,15.0,Hospital Doctor Juan Noé,Hospital Dr. Juan Noé Crevanni (Arica),-18.4827,-70.3126
+102100,203,1.0,Hospital Iquique,Hospital Dr. Ernesto Torres Galdames (Iquique),-20.2139,-70.1383
+0,204,,Hospital Alto Hospicio,,,
+103100,303,2.0,Hospital de Antofagasta,Hospital Dr. Leonardo Guzmán (Antofagasta),-23.6597,-70.3959
+103101,304,2.0,Hospital de Calama,Hospital Dr. Carlos Cisternas (Calama),-22445,-68.9181
+103102,305,2.0,Hospital de Tocopilla,Hospital Dr. Marcos Macuada (Tocopilla),-22.0882,-70.1929
+103103,306,2.0,Hospital de Taltal,Hospital 21 de Mayo (Taltal),-25.4036,-70.4869
+103104,307,2.0,Hospital de Mejillones,Hospital de Mejillones,-23.0931,-70.4575
+0,308,,Centro Asistencial Norte,,,
+104100,403,3.0,Hospital Regional de Copiapó,Hospital San José del Carmen (Copiapó),-27.3668,-70.3417
+104101,404,3.0,Hospital de Chañaral,Hospital Dr. Jerónimo Méndez Arancibia (Chañaral),-26.3442,-70.6071
+104102,405,3.0,Hospital Diego de Almagro,Hospital Dr. Florencio Vargas (Diego de Almagro),-26.3799,-70.2974
+104103,406,3.0,Hospital de Vallenar,Hospital Provincial del Huasco Monseñor Fernando Ariztía Ruiz (Vallenar),-28.5765,-70.3578
+104104,407,3.0,Hospital de Huasco,Hospital Dr. Manuel Magalhaes Medling (Huasco),-28.4568,-70.2929
+105100,503,4.0,Hospital La Serena,Hospital San Juan de Dios (La Serena),-29.9065,-70.2432
+105101,504,4.0,Hospital Coquimbo,Hospital San Pablo (Coquimbo),-30.0168,-71.2544
+105102,505,4.0,Hospital Ovalle,Hospital Dr. Antonio Tirado Lanas (Ovalle),-30.5991,-71.2124
+105103,506,4.0,Hospital Illapel,Hospital Dr. Humberto Elorza Cortés (Illapel),-31.6277,-71.3682
+105104,507,4.0,Hospital Salamanca,Hospital de Salamanca,-31.6344,-71.3425
+105105,508,4.0,Hospital Combarbalá,Hospital San Juan de Dios (Combarbalá),-31.2125,-71.2355
+105106,509,4.0,Hospital de Andacollo,Hospital Dr. José Arraño (Andacollo),-29.9047,-71.5976
+105107,5010,4.0,Hospital Vicuña,Hospital San Juan de Dios (Vicuña),-30.0309,-70.7087
+105108,5011,4.0,Hospital Los Vilos,Hospital San Pedro (Los Vilos),-31.9075,-71.5144
+106100,603,5.0,Hospital Carlos Van Buren,Hospital Carlos Van Buren (Valparaíso),-33.0458,-71.6229
+106103,604,5.0,Hospital Claudio Vicuña,Hospital Claudio Vicuña ( San Antonio),-33.5996,-71.5598
+106104,605,5.0,Hospital Del Salvador,Hospital Del Salvador (Valparaíso),-33.0472,-71.3567
+106105,606,5.0,Hospital San José Casablanca,Hospital San José (Casablanca),-33.3205,-71.4102
+106102,607,5.0,Hospital Doctor Eduardo Pereira,Hospital Dr. Eduardo Pereira Ramírez (Valparaíso),-33.0384,-71.6264
+0,608,,Atención Primaria de Salud,,,
+107100,703,5.0,Hospital Doctor Gustavo Fricke,Hospital Dr. Gustavo Fricke (Viña del Mar),-33.0214,-71.5537
+107101,704,5.0,Hospital de Quillota,Hospital San Martín (Quillota),-32.8833,-71.2482
+107102,705,5.0,Hospital de Quilpué,Hospital de Quilpué,-33.0458,-71.4457
+107103,706,5.0,Hospital de La Calera,Hospital Dr. Mario Sánchez Vergara (La Calera),-32.7875,-71.2035
+107110,707,5.0,Hospital Geriátrico Paz de la Tarde,Hospital Centro Geriátrico Paz de la Tarde (Limache),-33.0098,-71.2544
+107104,708,5.0,Hospital de Limache,Hospital Santo Tomás (Limache),-33.0103,-71.2549
+107105,709,5.0,Hospital de La Ligua,Hospital San Agustín (La Ligua),-32.4478,-71.2316
+107106,7010,5.0,009 Hospital Cabildo,Hospital Dr. Víctor Hugo Moll (Cabildo),-32.4285,-71.0639
+107107,7011,5.0,010 Hospital Petorca,Hospital de Petorca,-32.2594,-70.9392
+107108,7012,5.0,011 Hospital de Quintero,Hospital Adriana Cousiño (Quintero),-32.7844,-71.5269
+107109,7013,5.0,012 Hospital Peñablanca,"Hospital Juana Ross de Edwards (Peñablanca, Villa Alemana)",-33.0424,-71.3724
+108100,803,5.0,002 Hospital San Camilo de San Felipe,Hospital de San Camilo (San Felipe),-32.7521,-70.7254
+108101,804,5.0,003 Hospital San Juan de Dios de Los Andes,Hospital San Juan de Dios (Los Andes),-32.8325,-70.5984
+108102,805,5.0,004 Hospital San Francisco de Llay Llay,Hospital San Francisco (Llaillay),-32.8377,-70.9502
+108104,806,5.0,005 Hospital San Antonio de  Putaendo,Hospital San Antonio (Putaendo),-32.6214,-70.7253
+108105,807,5.0,006 Hospital Psiquiátrico Doctor  Philippe Pinel de Putaendo,Hospital Psiquiátrico Dr. Philippe Pinel (Putaendo),-32.6212,-70.7263
+0,808,,010 Consultorio General Urbano de San Felipe,,,
+0,809,,011 Consultorio General Urbano Nº 2 de Los Andes,,,
+0,8010,,012 Consultorio General Urbano de Llay Llay,,,
+115100,903,6.0,002 Hospital Rancagua,Hospital Regional de Rancagua,-34.1713,-70.7449
+115101,904,6.0,003 Hospital Graneros,Hospital Santa Filomena (Graneros),-34.0667,-70.7264
+115102,905,6.0,004 Hospital Coínco,Hospital de Coínco,-34.2667,-70.9933
+115103,906,6.0,005 Hospital Peumo,Hospital Del Salvador (Peumo),-34.3903,-71.2542
+115104,907,6.0,006 Hospital de Rengo,Hospital Dr. Ricardo Valenzuela Sáez (Rengo),-34.4065,-70.8587
+115105,908,6.0,007 Hospital San Vicente,Hospital San Vicente de Tagua-Tagua,-34.4487,-70.9682
+115106,909,6.0,008 Hospital Pichidegua,Hospital de Pichidegua,-34.2998,-71.2786
+115107,9010,6.0,009 Hospital San Fernando,Hospital San Juan de Dios (San Fernando),-34.5817,-70.9899
+115108,9011,6.0,010 Hospital Chimbarongo,Hospital Mercedes (Chimbarongo),-34.7239,-71.0394
+115109,9012,6.0,011 Hospital Nancagua,Hospital de Nancagua,-34.7012,-71.1288
+115110,9013,6.0,012 Hospital Santa Cruz,Hospital de Santa Cruz,-34.6364,-71.3657
+115111,9014,6.0,013 Hospital Marchigue,Hospital de Marchigüe,-34.4231,-71.5873
+115112,9015,6.0,014 Hospital Pichilemu,Hospital de Pichilemu,-34.3869,-72.0095
+115113,9016,6.0,015 Hospital de Lolol,Hospital de Lolol,-34.7589,-71.6721
+115114,9017,6.0,016 Hospital de Litueche,Hospital de Litueche,-34.1344,-71.6822
+116100,1003,7.0,002 Hospital Curicó,Hospital San Juan de Dios (Curicó),-34.9824,-71.2433
+116101,1004,7.0,003 Hospital de Teno,Hospital de Teno,-34.8749,-71.1676
+116102,1005,7.0,004 Hospital Molina,Hospital de Molina,-35.1155,-71.2826
+116103,1006,7.0,005 Hospital Hualane,Hospital de Hualañé,-34.9768,-71.7986
+116104,1007,7.0,006 Hospital Licantén,Hospital de Licantén,-34.9983,-71.8771
+116105,1008,7.0,007 Hospital Talca,Hospital Dr. César Garavagno Burotto (Talca),-35.4232,-71.6485
+116106,1009,7.0,008 Hospital Curepto,Hospital de Curepto,-35.0834,-72.0038
+116107,10010,7.0,009 Hospital Constitución,Hospital de Constitución,-35.3329,-72.4162
+116108,10011,7.0,010 Hospital Linares,Hospital Presidente Carlos Ibáñez del Campo (Linares),-35.8487,-71.5901
+116109,10012,7.0,011 Hospital San Javier,Hospital Dr. Abel Fuentealba Lagos de San Javier,-35.5911,-71.7362
+116110,10013,7.0,012 Hospital Parral,Hospital San José (Parral),-36.1438,-71.8369
+116111,10014,7.0,013 Hospital Cauquenes,Hospital San Juan de Dios (Cauquenes),-35.9637,-72.3228
+116112,10015,7.0,014 Hospital Chanco,Hospital Dr. Benjamín Pedreros (Chanco),-35.7335,-72.5435
+117101,1103,16.0,002 Hospital de Chillán,Hospital Clínico Herminda Martín (Chillán),-36.6063,-72.1024
+117102,1104,16.0,003 Hospital de San Carlos,Hospital de San Carlos,-36.4267,-71.9592
+117103,1105,16.0,004 Hospital de Bulnes,Hospital Comunitario de Salud Familiar de Bulnes,-36.7411,-72.2996
+117104,1106,16.0,005 Hospital de Yungay,Hospital Comunitario de Salud Familiar Pedro Morales Campos (Yungay),-37.1013,-71.9325
+117106,1107,16.0,006 Hospital de Quirihue,Hospital Comunitario de Salud Familiar de Quirihue,-36.2821,-72.5323
+117108,1108,16.0,007 Hospital de Coelemu,Hospital Comunitario de Salud Familiar Dr. Eduardo Contreras Trabucco de Coelemu,-36.4942,-72.7081
+117107,1109,16.0,008 Hospital El Carmen,Hospital Comunitario de Salud Familiar de El Carmen,-36.5639,-72.0405
+0,11010,,009 Consultorio Violeta Parra,,,
+0,11011,,013 Centro Comunitario Salud Mental,,,
+118100,1203,8.0,002 Hospital Guillermo  Grant Benavente,Hospital Clínico Regional Dr. Guillermo Grant Benavente (Concepción),-36.8201,-73.0503
+118103,1204,8.0,003 Hospital Traumatológico,Hospital Traumatológico (Concepción),-36.8276,-73.0565
+118105,1205,8.0,004 Hospital de Coronel,Hospital San José (Coronel),-37.0302,-73.1412
+118106,1206,8.0,005 Hospital Lota,Hospital de Lota,-37.0887,-73.1581
+118107,1207,8.0,006 Hospital Santa Juana,Hospital Clorinda Avello (Santa Juana),-37.1696,-72.9339
+118108,1208,8.0,007 Hospital Florida,Hospital San Agustín de Florida,-36.8227,-72.6696
+0,1209,,008 Consultorio Víctor Manuel Fernández,,,
+0,12010,,010 Centro de Sangre y Tejidos,,,
+119100,1303,8.0,002 Hospital Higueras,Hospital Las Higueras (Talcahuano),-36.7185,-73.1217
+119101,1304,8.0,003 Hospital Tome,Hospital de Tomé,-36.6206,-72.9515
+119102,1305,8.0,004 Hospital Penco Lirquén,Hospital Penco - Lirquén,-36.7399,-72.9955
+0,1306,,005 CESFAM LIRQUEN,,,
+0,1403,,002 CENTRO REGULADOR SAMU SERVICIO SALUD BIO BIO,,,
+120107,1404,8.0,003 Hospital Huepil,Hospital Comunitario Dr. Roberto Muñoz Urrutia de Huépil,-37.6869,-72.0197
+120105,1405,8.0,004 Hospital de Laja,Hospital Comunitario de Laja,-37.2837,-72.7105
+120101,1406,8.0,005 Hospital de Los Ángeles,Complejo Asistencial Dr. Víctor Ríos Ruiz (Los Ángeles),-37.4621,-72.3604
+120102,1407,8.0,006 Hospital de Mulchén,Hospital Comunitario de Mulchén,-37.7222,-72.2329
+120103,1408,8.0,007 Hospital de Nacimiento,Hospital Comunitario de Nacimiento,-37.5079,-72.6766
+120104,1409,8.0,008 Hospital de Yumbel,Hospital Comunitario de Yumbel,-37.0846,-72.5645
+120106,14010,8.0,009 Hospital Santa Bárbara,Hospital Comunitario de Santa Bárbara,-37.6637,-72.0153
+128113,1503,8.0,002 Hospital Arauco,Hospital San Vicente (Arauco),-37.2462,-73.3219
+128111,1504,8.0,003 Hospital de Cañete,Hospital Intercultural Kallvu Llanka (Cañete),-37.8047,-73.3832
+128112,1505,8.0,004 Hospital Contulmo,Hospital de Contulmo,-38.0172,-73.2277
+128109,1506,8.0,005 Hospital Curanilahue,Hospital Provincial Dr. Rafael Avaría (Curanilahue),-37.4764,-73.3437
+128110,1507,8.0,006 Hospital Lebu,Hospital de Lebu,-37.6088,-73.6595
+129100,1603,9.0,002 Hospital Angol,Hospital Dr. Mauricio Heyermann (Angol),-37.7966,-72.7099
+129106,1604,9.0,003 Hospital Victoria,Hospital San José de Victoria,-38.2363,-72.3315
+129104,1605,9.0,004 Hospital Traiguén,Hospital Dr. Dino Stagno M.(Traiguén),-38.2502,-72.6886
+129103,1606,9.0,005 Hospital de Collipulli,Hospital de Collipulli,-37.9536,-72.4364
+129101,1607,9.0,006 Hospital Purén,Hospital de Purén,-38.0503,-72.6734
+129107,1608,9.0,007 Hospital Curacautín,Hospital Dr. Oscar Hernández E.(Curacautín),-38.4353,-71.8888
+129108,1609,9.0,008 Hospital de Lonquimay,Hospital de Lonquimay,-38.4476,-71.2306
+0,1703,,002 Consultorio de Miraflores,,,
+121113,1704,9.0,003 Hospital de Cunco,Hospital Dr. Eduardo González Galeno (Cunco),-38.9325,-72.0292
+121114,1705,9.0,004 Hospital Nueva Imperial,Hospital Intercultural de Nueva Imperial,-38.7449,-72.9503
+121121,1706,9.0,005 Hospital Villarica,Hospital de Villarrica,-39.2868,-72.2278
+121115,1707,9.0,006 Hospital Carahue,Hospital de Carahue,-38.7082,-73.1669
+121119,1708,9.0,007 Hospital Gorbea,Hospital de Gorbea,-39.0973,-72.6763
+121117,1709,9.0,008 Hospital Pitrufquén,Hospital de Pitrufquén,-39.2291,-72.6402
+121116,17010,9.0,009 Hospital Puerto Saavedra,Hospital Dr. Arturo Hillerns Larrañaga (Saavedra),-38.7779,-73.4003
+121118,17011,9.0,010 Hospital Toltén,Hospital de Toltén,-39.2144,-73.2075
+121111,17012,9.0,011 Hospital Galvarino,Hospital de Galvarino,-38.4178,-72.7738
+121110,17013,9.0,012 Hospital Lautaro,Hospital Dr. Abraham Godoy (Lautaro),-38.5277,-72.4466
+121120,17014,9.0,013 Hospital Loncoche,Hospital de Loncoche,-39.3702,-72.6311
+121112,17015,9.0,014 Hospital Vilcún,Hospital de Vilcún,-38.6547,-72.2248
+121109,17016,9.0,015 Hospital Temuco,Hospital Dr. Hernán Henríquez Aravena (Temuco),-38.7335,-72.5963
+122100,1803,14.0,002 Hospital de Valdivia,Hospital Clínico Regional (Valdivia),-39.8099,-73.2459
+122101,1804,14.0,003 Hospital de Corral,Hospital de Corral,-39.8826,-73.4306
+122102,1805,14.0,004 Hospital de Los Lagos,Hospital de Los Lagos,-39.8561,-72.8254
+122103,1806,14.0,005 Hospital de Lanco,Hospital de Lanco,-39.4529,-72.7751
+122104,1807,14.0,006 Hospital de La Unión,Hospital Juan Morey (La Unión),-40.2931,-73.0812
+122105,1808,14.0,007 Hospital de Río Bueno,Hospital de Río Bueno,-40.3326,-72.9535
+122106,1809,14.0,008 Hospital de Paillaco,Hospital de Paillaco,-40.0692,-72.8776
+0,18010,,009 Consultorio Externo,,,
+122200,18011,14.0,011 Hospital Santa Elisa De San Jose De La Mariquina,Hospital de Mariquina,-39.5332,-72.9767
+123100,1903,10.0,002 Hospital de Osorno,Hospital Base San José de Osorno,-40.5744,-73.1252
+123103,1904,10.0,003 Hospital Puerto Octay,Hospital de Puerto Octay,-40.9736,-72.9002
+123101,1905,10.0,004 Hospital Purranque,Hospital de Purranque,-40.9074,-73.1689
+123102,1906,10.0,005 Hospital de Río Negro,Hospital de Río Negro,-40.7839,-73.2163
+123104,1907,10.0,006 Hospital Misión San Juan de la Costa,Hospital Misión San Juan de la Costa,-40.5785,-73.3772
+123105,1908,10.0,007 Hospital del Perpetuo Socorro de Quilacahuín,Hospital del Perpetuo Socorro de Quilacahuín,-40.7554,-73.4516
+124130,2003,10.0,002 Hospital Calbuco,Hospital de Calbuco,-41.7726,-73.1315
+0,2004,,003 Hospital Chaitén,,,
+124120,2005,10.0,007 Hospital de Fresia,Hospital de Fresia,-41.1517,-73.4081
+124115,2006,10.0,008 Hospital de Frutillar,Hospital de Frutillar,-41.1267,-73.0707
+124145,2007,10.0,009 Hospital Futaleufú,Hospital de Futaleufú,-43.1863,-71.8684
+124110,2008,10.0,010 Hospital de Llanquihue,Hospital de Llanquihue,-41.2606,-73.0042
+124125,2009,10.0,011 Hospital de Maullín,Hospital de Maullín,-41.6192,-73.6056
+124140,20010,10.0,012 Hospital de Palena,Hospital de Palena,-43.6161,-71.8036
+124105,20011,10.0,013 Hospital de Puerto Montt,Hospital de Puerto Montt,-41.4687,-72.9411
+0,20012,,016 Consultorio de Hualaihue,,,
+125104,2104,11.0,003 Hospital de Cisnes,Hospital Dr. Jorge Ibar (Cisnes),-44.7477,-72.6964
+125102,2105,11.0,004 Hospital de Chile Chico,Hospital Dr. Leopoldo Ortega R. (Chile Chico),-46.5416,-71.7265
+125103,2106,11.0,005 Hospital de Cochrane,Hospital Lord Cochrane,-47.2549,-72.5687
+125100,2107,11.0,006 Hospital de Coyhaique,Hospital Regional (Coihaique),-45.5713,-72.0661
+125101,2108,11.0,007 Hospital de Puerto Aysén,Hospital de Puerto Aysén,-45.4037,-72.6993
+0,2109,,008 Consultorio A. Gutiérrez,,,
+0,21010,,009 Consultorio Víctor Domingo Silva,,,
+126102,2203,12.0,002 Hospital Porvenir,Hospital Dr. Marco Antonio Chamorro ( Porvenir),-53.2984,-70.3683
+126101,2204,12.0,003 Hospital de Puerto Natales,Hospital Dr. Augusto Essmann Burgos ( Natales),-51.7264,-72.5143
+126100,2205,12.0,004 Hospital Regional de Punta Arenas,Hospital Clínico de Magallanes Dr. Lautaro Navarro Avaria,-53.1598,-70.9056
+0,2206,,005 Cecosf Puerto Williams,,,
+0,2207,,006 SAMU Magallanes,,,
+0,2208,,007 Hospital Psiquiátrico,,,
+0,2209,,008 Atención Primaria de Salud,,,
+0,22010,,009 UNIDAD SALUD MENTAL - CTAS COMPLEMENTARIAS,,,
+0,22011,,010 ESTABLECIMIENTO LARGA ESTADIA ADULTO MAYOR,,,
+126704,22012,12.0,011 Hospital Comunitario Cristina Calderon de Puerto Williams,Hospital Comunitario Cristina Calderón de Puerto Williams,-54.9334,-67.6108
+112103,2303,13.0,002 Hospital del Tórax,Instituto Nacional de Enfermedades Respiratorias y Cirugía Torácica,-33.4428,-70.6193
+112102,2304,13.0,003 Hospital Luis Calvo Mackenna,"Hospital de Niños Dr. Luis Calvo Mackenna (Santiago, Providencia)",-33.4401,-70.6112
+112101,2305,13.0,004 Hospital Santiago Oriente Luis Tisne,"Hospital Dr. Luis Tisné B. (Santiago, Peñalolén)",-33.4711,-70.5302
+112100,2306,13.0,005 Hospital Salvador,"Hospital Del Salvador (Santiago, Providencia)",-33.4345,-70.6196
+112106,2307,13.0,006 Instituto de Geriatría,Instituto Nacional Geriátrico Presidente Eduardo Frei Montalva,-33.4269,-70.6456
+112104,2308,13.0,007 Instituto de Neurocirugía,Instituto de Neurocirugía Dr. Alfonso Asenjo,-33.4384,-70.6492
+112105,2309,13.0,008 Instituto Pedro Aguirre Cerda,Instituto Nacional de Rehabilitación Infantil Presidente Pedro Aguirre Cerda,-33.4285,-70.6498
+112107,23010,13.0,009 Hospital de Hanga Roa,Hospital Hanga Roa (Isla De Pascua),-27.1501,-109.4209
+0,2403,,002 Dirección Atención Primaria,,,
+111100,2404,13.0,003 Hospital Clínico San Borja Arriaran,"Hospital Clínico San Borja-Arriarán (Santiago, Santiago)",-33.4566,-70.6495
+0,2405,,004 Hospital De Urgencia Asistencia Pública,,,
+111101,2406,13.0,005 Hospital El Carmen,Hospital Clínico Metropolitano El Carmen Doctor Luis Valentín Ferrada,-33.5089,-70.7552
+113100,2503,13.0,002 Hospital Barros Luco Trudeau,"Hospital Barros Luco Trudeau (Santiago, San Miguel)",-33.4866,-70.6614
+113160,2504,13.0,003 Hospital Enfermedades Infecciosas,"Hospital de Enfermedades Infecciosas Dr. Lucio Córdova (Santiago, San Miguel)",-33.4984,-70.6529
+113130,2505,13.0,004 Hospital Exequiel González Cortés,"Hospital Dr. Exequiel González Cortés (Santiago, San Miguel)",-33.5013,-70.6541
+113150,2506,13.0,005 Hospital San Luis de Buin,Hospital San Luis (Buin),-33.7336,-70.7478
+113170,2507,13.0,006 Hospital Sanatorio El Peral,"Hospital Psiquiátrico El Peral (Santiago, Puente Alto)",-33.5876,-70.5704
+113180,2508,13.0,007 Hospital Sanatorio El Pino,"Hospital El Pino (Santiago, San Bernardo)",-33.6091,-70.7018
+0,2603,,002 Centro De Diagnóstico Terapéutico,,,
+109104,2604,13.0,003 Hospital de Til Til,Hospital de Til Til,-33.1383,-70.8035
+109101,2605,13.0,004 Hospital Roberto del Río,"Hospital Clínico de Niños Dr. Roberto del Río (Santiago, Independencia)",-33.4164,-70.6522
+109100,2606,13.0,005 Hospital San José,"Complejo Hospitalario San José (Santiago, Independencia)",-33.4074,-70.6415
+109103,2607,13.0,006 Instituto Nacional del Cáncer,"Instituto Nacional del Cáncer Dr. Caupolicán Pardo Correa (Santiago, Recoleta)",-33.3986,-70.6413
+109102,2608,13.0,007 Instituto Psiquiátrico,"Instituto Psiquiátrico Dr. José Horwitz Barak (Santiago, Recoleta)",-33.4032,-70.6418
+0,2703,,002 Centro de Referencia Salud Occidente Salvador Allende,,,
+110160,2704,13.0,003 Hospital de Curacaví,Hospital de Curacaví,-33.3961,-71.1549
+110150,2705,13.0,004 Hospital de Melipilla,Hospital San José (Melipilla),-33.6864,-71.2145
+110140,2706,13.0,005 Hospital de Peñaflor,Hospital de Peñaflor,-33.6051,-70.8789
+110130,2707,13.0,006 Hospital de Talagante,Hospital Adalberto Steeger (Talagante),-33.6727,-70.9278
+110120,2708,13.0,007 Hospital Félix Bulnes,"Hospital Dr. Félix Bulnes Cerda (Santiago, Quinta Normal)",-33.4358,-70.6867
+110100,2709,13.0,008 Hospital San Juan de Dios,"Hospital San Juan de Dios (Santiago, Santiago)",-33.4378,-70.6632
+110110,27010,13.0,009 Instituto Traumatológico,Instituto Traumatológico Dr. Teodoro Gebauer,-33.4413,-70.6638
+0,2803,,002 Hospital Metropolitano,,,
+0,2804,,003 Centro de Referencia de Salud,,,
+114101,2805,13.0,004 Hospital Sotero del Río,"Complejo Hospitalario Dr. Sótero del Río (Santiago, Puente Alto)",-33.5847,-70.5782
+114102,2806,13.0,005 Hospital San José de Maipo,Hospital San José de Maipo,-33.6764,-70.3508
+114105,2807,13.0,006 Hospital La Florida,Hospital Clínico Metropolitano La Florida Dra. Eloisa Díaz Inzunza,-33.5208,-70.5994
+0,2808,,007 CRS Puente Alto,,,
+114103,3001,13.0,001 Hospital Padre Alberto Hurtado,Hospital Padre Alberto Hurtado (San Ramón),-33.5119,-70.6446
+111351,3101,13.0,001 Centro de Referencia de Salud Maipú,Centro de Referencia de Salud de Maipú,-33.5116,-70.7603
+0,3201,,001 Centro de Referencia de Salud Cordillera Peñalolén Cordillera Oriente,,,
+133150,3302,10.0,001 Hospital Castro,Hospital de Castro,-42.4794,-73.7659
+133165,3303,10.0,002 Hospital Quellón,Hospital de Quellón,-43.1171,-73.6256
+133160,3304,10.0,003 Hospital Achao,Hospital Comunitario de Achao,-42.4806,-73.4826
+133170,3305,10.0,004 Hospital Queilen,Hospital de Queilén,-42.8825,-73.4697
+133155,3306,10.0,005 Hospital Ancud,Hospital de Ancud,-41.8703,-73.8222
