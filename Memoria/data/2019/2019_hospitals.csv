@@ -22,7 +22,7 @@ hospital_id,hospital_fns_id,region_id,hospital_name,hospital_alternative_name,la
 105108,5011,4,Hospital San Pedro (Los Vilos),Hospital Los Vilos,-31.9075,-71.5144
 106100,603,5,Hospital Carlos Van Buren (Valparaíso),Hospital Carlos Van Buren,-33.0458,-71.6229
 106102,607,5,Hospital Dr. Eduardo Pereira Ramírez (Valparaíso),Hospital Doctor Eduardo Pereira,-33.0384,-71.6264
-106103,604,5,Hospital Claudio Vicuña ( San Antonio),Hospital Claudio Vicuña,-33.5996,-71.5598
+106103,604,5,Hospital Claudio Vicuña (San Antonio),Hospital Claudio Vicuña,-33.5996,-71.5598
 106104,605,5,Hospital Del Salvador (Valparaíso),Hospital Del Salvador,-33.0472,-71.3567
 106105,606,5,Hospital San José (Casablanca),Hospital San José Casablanca,-33.3205,-71.4102
 107100,703,5,Hospital Dr. Gustavo Fricke (Viña del Mar),Hospital Doctor Gustavo Fricke,-33.0214,-71.5537
@@ -34,43 +34,43 @@ hospital_id,hospital_fns_id,region_id,hospital_name,hospital_alternative_name,la
 107106,7010,5,Hospital Dr. Víctor Hugo Moll (Cabildo),Hospital Cabildo,-32.4285,-71.0639
 107107,7011,5,Hospital de Petorca,Hospital Petorca,-32.2594,-70.9392
 107108,7012,5,Hospital Adriana Cousiño (Quintero),Hospital de Quintero,-32.7844,-71.5269
-107109,7013,5,"Hospital Juana Ross de Edwards (Peñablanca, Villa Alemana)",Hospital Peñablanca,-33.0424,-71.3724
+107109,7013,5,"Hospital Juana Ross de Edwards (Peñablanca - Villa Alemana)",Hospital Peñablanca,-33.0424,-71.3724
 107110,707,5,Hospital Centro Geriátrico Paz de la Tarde (Limache),Hospital Geriátrico Paz de la Tarde,-33.0098,-71.2544
 108100,803,5,Hospital de San Camilo (San Felipe),Hospital San Camilo de San Felipe,-32.7521,-70.7254
 108101,804,5,Hospital San Juan de Dios (Los Andes),Hospital San Juan de Dios de Los Andes,-32.8325,-70.5984
 108102,805,5,Hospital San Francisco (Llaillay),Hospital San Francisco de Llay Llay,-32.8377,-70.9502
 108104,806,5,Hospital San Antonio (Putaendo),Hospital San Antonio de  Putaendo,-32.6214,-70.7253
 108105,807,5,Hospital Psiquiátrico Dr. Philippe Pinel (Putaendo),Hospital Psiquiátrico Doctor  Philippe Pinel de Putaendo,-32.6212,-70.7263
-109100,2606,13,"Complejo Hospitalario San José (Santiago, Independencia)",Hospital San José,-33.4074,-70.6415
-109101,2605,13,"Hospital Clínico de Niños Dr. Roberto del Río (Santiago, Independencia)",Hospital Roberto del Río,-33.4164,-70.6522
-109102,2608,13,"Instituto Psiquiátrico Dr. José Horwitz Barak (Santiago, Recoleta)",Instituto Psiquiátrico,-33.4032,-70.6418
-109103,2607,13,"Instituto Nacional del Cáncer Dr. Caupolicán Pardo Correa (Santiago, Recoleta)",Instituto Nacional del Cáncer,-33.3986,-70.6413
+109100,2606,13,"Complejo Hospitalario San José (Santiago - Independencia)",Hospital San José,-33.4074,-70.6415
+109101,2605,13,"Hospital Clínico de Niños Dr. Roberto del Río (Santiago - Independencia)",Hospital Roberto del Río,-33.4164,-70.6522
+109102,2608,13,"Instituto Psiquiátrico Dr. José Horwitz Barak (Santiago - Recoleta)",Instituto Psiquiátrico,-33.4032,-70.6418
+109103,2607,13,"Instituto Nacional del Cáncer Dr. Caupolicán Pardo Correa (Santiago - Recoleta)",Instituto Nacional del Cáncer,-33.3986,-70.6413
 109104,2604,13,Hospital de Til Til,Hospital de Til Til,-33.1383,-70.8035
-110100,2709,13,"Hospital San Juan de Dios (Santiago, Santiago)",Hospital San Juan de Dios,-33.4378,-70.6632
+110100,2709,13,"Hospital San Juan de Dios (Santiago - Santiago)",Hospital San Juan de Dios,-33.4378,-70.6632
 110110,27010,13,Instituto Traumatológico Dr. Teodoro Gebauer,Instituto Traumatológico,-33.4413,-70.6638
-110120,2708,13,"Hospital Dr. Félix Bulnes Cerda (Santiago, Quinta Normal)",Hospital Félix Bulnes,-33.4358,-70.6867
+110120,2708,13,"Hospital Dr. Félix Bulnes Cerda (Santiago - Quinta Normal)",Hospital Félix Bulnes,-33.4358,-70.6867
 110130,2707,13,Hospital Adalberto Steeger (Talagante),Hospital de Talagante,-33.6727,-70.9278
 110140,2706,13,Hospital de Peñaflor,Hospital de Peñaflor,-33.6051,-70.8789
 110150,2705,13,Hospital San José (Melipilla),Hospital de Melipilla,-33.6864,-71.2145
 110160,2704,13,Hospital de Curacaví,Hospital de Curacaví,-33.3961,-71.1549
-111100,2404,13,"Hospital Clínico San Borja-Arriarán (Santiago, Santiago)",Hospital Clínico San Borja Arriaran,-33.4566,-70.6495
+111100,2404,13,"Hospital Clínico San Borja-Arriarán (Santiago - Santiago)",Hospital Clínico San Borja Arriaran,-33.4566,-70.6495
 111101,2406,13,Hospital Clínico Metropolitano El Carmen Doctor Luis Valentín Ferrada,Hospital El Carmen,-33.5089,-70.7552
 111351,3101,13,Centro de Referencia de Salud de Maipú,Centro de Referencia de Salud Maipú,-33.5116,-70.7603
-112100,2306,13,"Hospital Del Salvador (Santiago, Providencia)",Hospital Salvador,-33.4345,-70.6196
-112101,2305,13,"Hospital Dr. Luis Tisné B. (Santiago, Peñalolén)",Hospital Santiago Oriente Luis Tisne,-33.4711,-70.5302
-112102,2304,13,"Hospital de Niños Dr. Luis Calvo Mackenna (Santiago, Providencia)",Hospital Luis Calvo Mackenna,-33.4401,-70.6112
+112100,2306,13,"Hospital Del Salvador (Santiago - Providencia)",Hospital Salvador,-33.4345,-70.6196
+112101,2305,13,"Hospital Dr. Luis Tisné B. (Santiago - Peñalolén)",Hospital Santiago Oriente Luis Tisne,-33.4711,-70.5302
+112102,2304,13,"Hospital de Niños Dr. Luis Calvo Mackenna (Santiago - Providencia)",Hospital Luis Calvo Mackenna,-33.4401,-70.6112
 112103,2303,13,Instituto Nacional de Enfermedades Respiratorias y Cirugía Torácica,Hospital del Tórax,-33.4428,-70.6193
 112104,2308,13,Instituto de Neurocirugía Dr. Alfonso Asenjo,Instituto de Neurocirugía,-33.4384,-70.6492
 112105,2309,13,Instituto Nacional de Rehabilitación Infantil Presidente Pedro Aguirre Cerda,Instituto Pedro Aguirre Cerda,-33.4285,-70.6498
 112106,2307,13,Instituto Nacional Geriátrico Presidente Eduardo Frei Montalva,Instituto de Geriatría,-33.4269,-70.6456
 112107,23010,13,Hospital Hanga Roa (Isla De Pascua),Hospital de Hanga Roa,-27.1501,-109.4209
-113100,2503,13,"Hospital Barros Luco Trudeau (Santiago, San Miguel)",Hospital Barros Luco Trudeau,-33.4866,-70.6614
-113130,2505,13,"Hospital Dr. Exequiel González Cortés (Santiago, San Miguel)",Hospital Exequiel González Cortés,-33.5013,-70.6541
+113100,2503,13,"Hospital Barros Luco Trudeau (Santiago - San Miguel)",Hospital Barros Luco Trudeau,-33.4866,-70.6614
+113130,2505,13,"Hospital Dr. Exequiel González Cortés (Santiago - San Miguel)",Hospital Exequiel González Cortés,-33.5013,-70.6541
 113150,2506,13,Hospital San Luis (Buin),Hospital San Luis de Buin,-33.7336,-70.7478
-113160,2504,13,"Hospital de Enfermedades Infecciosas Dr. Lucio Córdova (Santiago, San Miguel)",Hospital Enfermedades Infecciosas,-33.4984,-70.6529
-113170,2507,13,"Hospital Psiquiátrico El Peral (Santiago, Puente Alto)",Hospital Sanatorio El Peral,-33.5876,-70.5704
-113180,2508,13,"Hospital El Pino (Santiago, San Bernardo)",Hospital Sanatorio El Pino,-33.6091,-70.7018
-114101,2805,13,"Complejo Hospitalario Dr. Sótero del Río (Santiago, Puente Alto)",Hospital Sotero del Río,-33.5847,-70.5782
+113160,2504,13,"Hospital de Enfermedades Infecciosas Dr. Lucio Córdova (Santiago - San Miguel)",Hospital Enfermedades Infecciosas,-33.4984,-70.6529
+113170,2507,13,"Hospital Psiquiátrico El Peral (Santiago - Puente Alto)",Hospital Sanatorio El Peral,-33.5876,-70.5704
+113180,2508,13,"Hospital El Pino (Santiago - San Bernardo)",Hospital Sanatorio El Pino,-33.6091,-70.7018
+114101,2805,13,"Complejo Hospitalario Dr. Sótero del Río (Santiago - Puente Alto)",Hospital Sotero del Río,-33.5847,-70.5782
 114102,2806,13,Hospital San José de Maipo,Hospital San José de Maipo,-33.6764,-70.3508
 114103,3001,13,Hospital Padre Alberto Hurtado (San Ramón),Hospital Padre Alberto Hurtado,-33.5119,-70.6446
 114105,2807,13,Hospital Clínico Metropolitano La Florida Dra. Eloisa Díaz Inzunza,Hospital La Florida,-33.5208,-70.5994

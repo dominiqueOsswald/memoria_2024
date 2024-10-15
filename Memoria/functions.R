@@ -3,11 +3,16 @@ library(dplyr)
 library(Benchmarking)
 library(corrplot)
 
+#anio <- 2014
+#path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
+#path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
+#hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
+#path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
 
 consolidar_datos_por_anio <- function(anio) {
   # Establecer directorio de trabajo
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-  
+  anio <- 2014
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
   print("-")
@@ -28,7 +33,7 @@ consolidar_datos_por_anio <- function(anio) {
   financiero$X21_value <- as.numeric(financiero$X21_value)
   financiero$X22_value <- as.numeric(financiero$X22_value)
   print("2")
-  estadisticas <- read_excel(path_estadisticas, sheet = 6, skip = 2)  %>% 
+  estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 2)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
     filter(`Nombre Nivel Cuidado` == "Datos Establecimiento") %>% 
     select(-"Cód. Nivel Cuidado", -"Cód. SS/SEREMI", -"Nombre Nivel Cuidado") %>%  

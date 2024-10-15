@@ -45,7 +45,19 @@ resultados_2020_in <- analisis_dea_in(data_2020)
 
 
 
+# --------------------------------------------#}
 
+region <- region_vrs(resultados_2014_in, 13)
+print(region)
+
+region <- region_vrs(resultados_2015_in, 13)
+print(region)
+
+region <- region_vrs(resultados_2016_in, 13)
+print(region)
+
+region <- region_vrs(resultados_2017_in, 13)
+print(region)
 
 
 
@@ -58,6 +70,6 @@ region <- region_vrs(resultados_2019_in, 13)
 print(region)
 
 mapa_interactivo <- ggplotly(region, tooltip = "text")
-
+print(mapa_interactivo)
 
 
