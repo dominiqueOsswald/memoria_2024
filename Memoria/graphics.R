@@ -1,58 +1,82 @@
 library(ggplot2)
-library(maps)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(plotly)
+library(chilemapas)
 
-#chile_map <- map_data("world", region = "Chile")
-#chile_map <- ne_states(country = "Chile", returnclass = "sf")
 
-graficar_hospitales_vrs <- function(hospitales_df) {
+# Cargar los datos de Chile
+world <- ne_countries(scale = "medium", returnclass = "sf")
+chile <- world[world$name == "Chile", ]
+comunas_sf <- chilemapas::mapa_comunas
+
+
+chile_vrs <- function(hospitales_df) {
   # Cargar el mapa de Chile
   chile_map <- map_data("world", region = "Chile")
   
-  # Crear el gráfico
-  ggplot() +
-    geom_polygon(data = chile_map, aes(x = long, y = lat, group = group), fill = "white", color = "black") +
-    geom_point(data = hospitales_df, aes(x = longitud, y = latitud, color = vrs, size = vrs), alpha = 0.7) +
-    scale_color_gradient(low = "red", high = "green") +  # Colores según valor
+  mapa_chile <- ggplot(data = chile) +
+    geom_sf() +
+    geom_point(data = hospitales_df, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.7) +
+    scale_color_gradient(low = "red", high = "green", limits = c(0.2, 1)) +  # Rango de valores para los colores
     labs(title = "Eficiencia técnica hospitales públicos Chilenos (VRS)", color = "Valor", size = "Valor") +
-    coord_fixed(1.3) +  # Mantiene la proporción correcta del mapa
     theme_minimal()
+  
+  # Mostrar el mapa con ggplot2
+  print(mapa_chile)
+  return(mapa_chile)
+  
 }
 
-graficar_hospitales_crs <- function(hospitales_df) {
-  # Cargar el mapa de Chile
-  chile_map <- map_data("world", region = "Chile")
+region_vrs <- function(hospitales_df, region, anio) {
   
-  # Crear el gráfico
-  ggplot() +
-    geom_polygon(data = chile_map, aes(x = long, y = lat, group = group), fill = "white", color = "black") +
-    geom_point(data = hospitales_df, aes(x = longitud, y = latitud, color = crs, size = crs), alpha = 0.7) +
-    scale_color_gradient(low = "red", high = "green") +  # Colores según valor
-    labs(title = "Eficiencia técnica hospitales públicos Chilenos (VRS)", color = "Valor", size = "Valor") +
-    coord_fixed(1.3) +  # Mantiene la proporción correcta del mapa
-    theme_minimal()
-}
-
-graficar_hospitales_vrs_rm <- function(hospitales_df) {
-  
-  chile_map <- map_data("world", region = "Chile")
-  
-  print(colnames(hospitales_df))
+  # Filtro de hospitales para la región seleccionada
   hospitales_df_rm <- hospitales_df %>%
-    filter(region_id == 13)  %>%
+    filter(region_id == region) %>%
     filter(IdEstablecimiento != 112107)
-  # Cargar el mapa de Chile filtrando por la Región Metropolitana
-  chile_map_rm <- chile_map %>%
-    filter(long > -71.5 & long < -70.3 & lat > -34.2 & lat < -33.2)  # Coordenadas aproximadas
   
-  # Crear el gráfico
-  ggplot() +
-    geom_polygon(data = chile_map_rm, aes(x = long, y = lat, group = group), fill = "white", color = "black") +
-    geom_point(data = hospitales_df_rm, aes(x = longitud, y = latitud, color = vrs, size = vrs), alpha = 0.7) +
-    scale_color_gradient(low = "red", high = "green") +  # Colores según valor
-    labs(title = "Mapa de la Región Metropolitana con Hospitales", color = "Valor", size = "Valor") +
-    coord_fixed(1.3) +  # Mantiene la proporción correcta del mapa
+  nombre_region <- hospitales_df_rm$Region[[1]]
+  
+  if (region == 13){
+    nombre_region = "Región Metropolitana"
+  }
+  
+  # Verificar si la región tiene hospitales después del filtro
+  if (nrow(hospitales_df_rm) == 0) {
+    stop("No hay hospitales en la región seleccionada.")
+  }
+  
+  codigo <- ifelse(region < 10, paste0("0", as.character(region)), as.character(region))
+  
+  # Filtrar las comunas de la región seleccionada
+  rm_comunas <- comunas_sf[comunas_sf$codigo_region == codigo, ]
+  
+  # Verificar si hay comunas en la región seleccionada
+  if (nrow(rm_comunas) == 0) {
+    stop("No hay comunas disponibles para la región seleccionada.")
+  }
+  
+  
+  # Crear el mapa de la región seleccionada
+  mapa_rm <- ggplot(data = rm_comunas) +
+    geom_sf(aes(geometry = geometry)) + 
+    geom_point(data = hospitales_df_rm, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.6)  +
+    
+    scale_color_gradient(low = "red", high = "green", limits = c(0.2, 1)) +  # Rango de valores para los colores
+    labs(title = paste("Eficiencia técnica hospitales públicos en", nombre_region, "(VRS) - Año ", anio),
+         color = "Valor", 
+         size = "Valor") +
     theme_minimal()
+  
+  return(mapa_rm)
 }
 
-# Llamar a la función para graficar
-#graficar_hospitales(hospitales)
+
+
+
+
+
+
+
+

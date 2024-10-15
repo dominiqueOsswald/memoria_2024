@@ -7,10 +7,12 @@ library(purrr)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("functions.R")
-source("graphics2.R")
+source("graphics.R")
 
 # ----------------------------------------------- #
 # Periodo previo a pandemia #
+
+# Datos #
 data_2014 <- consolidar_datos_por_anio(2014)
 resultados_2014_in <- analisis_dea_in(data_2014)
 
@@ -29,10 +31,41 @@ resultados_2018_in <- analisis_dea_in(data_2018)
 data_2019 <- consolidar_datos_por_anio(2019)
 resultados_2019_in <- analisis_dea_in(data_2019)
 
+# Graficas #
+region_rm_2014 <- region_vrs(resultados_2014_in, 13, 2014)
+print(region_rm_2014)
+
+region_rm_2015 <- region_vrs(resultados_2015_in, 13, 2015)
+print(region_rm_2015)
+
+region_rm_2016 <- region_vrs(resultados_2016_in, 13, 2016)
+print(region_rm_2016)
+
+region_rm_2017 <- region_vrs(resultados_2017_in, 13, 2017)
+print(region_rm_2017)
+
+region_rm_2018 <- region_vrs(resultados_2018_in, 13, 2018)
+print(region_rm_2018)
+
+region_rm_2019 <- region_vrs(resultados_2019_in, 13, 2019)
+print(region_rm_2019)
+
 
 
 iteracion_1 <- comparativa(resultados_2014_in, resultados_2015_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) 
 cor(iteracion_1[, c("vrs_2014", "vrs_2015", "vrs_2017", "vrs_2018", "vrs_2019")])
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ----------------------------------------------- #
 # Periodo pandémico #
@@ -45,31 +78,9 @@ resultados_2020_in <- analisis_dea_in(data_2020)
 
 
 
-# --------------------------------------------#}
-
-region <- region_vrs(resultados_2014_in, 13)
-print(region)
-
-region <- region_vrs(resultados_2015_in, 13)
-print(region)
-
-region <- region_vrs(resultados_2016_in, 13)
-print(region)
-
-region <- region_vrs(resultados_2017_in, 13)
-print(region)
-
-
-
-
-
-
-
-chile_vrs(resultados_2019_in) 
-region <- region_vrs(resultados_2019_in, 13)
-print(region)
+# -------------------------------------------- #
 
 mapa_interactivo <- ggplotly(region, tooltip = "text")
 print(mapa_interactivo)
 
-
+# ------------------------------------------- #

@@ -12,7 +12,6 @@ library(corrplot)
 consolidar_datos_por_anio <- function(anio) {
   # Establecer directorio de trabajo
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-  anio <- 2014
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
   print("-")
@@ -32,7 +31,10 @@ consolidar_datos_por_anio <- function(anio) {
     select(hospital_id, X21_value, X22_value) %>% rename("IdEstablecimiento" = "hospital_id")
   financiero$X21_value <- as.numeric(financiero$X21_value)
   financiero$X22_value <- as.numeric(financiero$X22_value)
-  print("2")
+  sheet= (anio - 2014) + 1
+  print(sheet)
+  print(anio)
+  print((anio - 2014) + 1)
   estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 2)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
     filter(`Nombre Nivel Cuidado` == "Datos Establecimiento") %>% 
@@ -359,11 +361,12 @@ comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2017_
                                        resultados_2019_in_df), 
                                   function(x, y) full_join(x, y, by = "IdEstablecimiento"))
   
+  
   # Renombrar las columnas para indicar el año
   colnames(resultados_combinados)[-1] <- c("vrs_2014", "vrs_2015", "vrs_2017", "vrs_2018", "vrs_2019")
   
   # Visualizar los resultados combinados
-  print(resultados_combinados)
+  #print(resultados_combinados)
   
   resultados_combinados <- resultados_combinados %>%
     mutate(
@@ -372,7 +375,7 @@ comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2017_
       diff_2017_2018 = vrs_2018 - vrs_2017,
       diff_2018_2019 = vrs_2019 - vrs_2018
     )
-  
+  print(resultados_combinados)
   # Calcular el promedio de las diferencias por fila, ignorando NA si existen
   resultados_combinados <- resultados_combinados %>%
     mutate(
@@ -381,6 +384,8 @@ comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2017_
   
   # Visualizar los resultados
   print(resultados_combinados)
+  
+  return(resultados_combinados) 
   
   
 }
