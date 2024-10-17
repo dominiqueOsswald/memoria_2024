@@ -1,6 +1,6 @@
 import pandas as pd
 
-anio = "2022"
+anio = "2021"
 # Leer el primer archivo CSV (Hospitales con IDs y nombres)
 df1 = pd.read_csv(anio + "/1_" + anio + "_hospitals.csv", header=None, names=['hospital_fns_id', 'hospital_name'])
 
