@@ -73,6 +73,19 @@ cor(iteracion_1[, c("vrs_2014", "vrs_2015", "vrs_2017", "vrs_2018", "vrs_2019")]
 data_2020 <- consolidar_datos_por_anio(2020)
 resultados_2020_in <- analisis_dea_in(data_2020)
 
+# Falta esta data
+#data_2021 <- consolidar_datos_por_anio(2021)
+#resultados_2021_in <- analisis_dea_in(data_2021)
+
+
+
+
+
+region_rm_2020 <- region_vrs(resultados_2020_in, 13, 2020)
+print(region_rm_2020)
+
+#region_rm_2021 <- region_vrs(resultados_2021_in, 13, 2021)
+#print(region_rm_2021)
 
 
 
