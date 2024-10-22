@@ -14,22 +14,56 @@ source("graphics.R")
 
 # Datos #
 data_2014 <- consolidar_datos_por_anio(2014)
-resultados_2014_in <- analisis_dea_in(data_2014)
-
 data_2015 <- consolidar_datos_por_anio(2015)
-resultados_2015_in <- analisis_dea_in(data_2015)
-
 data_2016 <- consolidar_datos_por_anio(2016)
-resultados_2016_in <- analisis_dea_in(data_2016)
-
 data_2017 <- consolidar_datos_por_anio(2017)
-resultados_2017_in <- analisis_dea_in(data_2017)
-
 data_2018 <- consolidar_datos_por_anio(2018)
-resultados_2018_in <- analisis_dea_in(data_2018)
-
 data_2019 <- consolidar_datos_por_anio(2019)
+
+
+
+
+resultados_2014_in <- analisis_dea_in(data_2014)
+resultados_2015_in <- analisis_dea_in(data_2015)
+resultados_2016_in <- analisis_dea_in(data_2016)
+resultados_2017_in <- analisis_dea_in(data_2017)
+resultados_2018_in <- analisis_dea_in(data_2018)
 resultados_2019_in <- analisis_dea_in(data_2019)
+
+
+
+# -------------------------------------------------------- #
+# Revisar correlación del año 2014
+resultados_2014_in_vrs <- subset(resultados_2014_in$vrs, vrs > 0.9)
+
+data_2014_2 <- data_2014[data_2014$IdEstablecimiento %in% resultados_2014_in_vrs$IdEstablecimiento, ]
+
+resultados_2_2014_in <- analisis_dea_in(data_2014_2)
+resultados_2014_in_vrs_2 <- resultados_2_2014_in$vrs
+
+
+
+
+
+# Combinar los dataframes por IdEstablecimiento, manteniendo solo las columnas vrs
+resultados_combinados <- merge(
+  resultados_2014_in_vrs[, c("IdEstablecimiento", "vrs")],
+  resultados_2014_in_vrs_2[, c("IdEstablecimiento", "vrs")],
+  by = "IdEstablecimiento",
+  suffixes = c("_1", "_2")
+)
+
+# Mostrar el dataframe combinado con solo las columnas vrs
+print(resultados_combinados)
+
+
+# Calcular la correlación entre las dos columnas vrs
+correlacion <- cor(resultados_combinados$vrs_1, resultados_combinados$vrs_2, use = "pairwise.complete.obs")
+
+# Mostrar el resultado de la correlación
+print(correlacion)
+
+
 
 # Graficas #
 region_rm_2014 <- region_vrs(resultados_2014_in, 13, 2014)
@@ -52,8 +86,10 @@ print(region_rm_2019)
 
 
 
-iteracion_1 <- comparativa(resultados_2014_in, resultados_2015_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) 
-cor(iteracion_1[, c("vrs_2014", "vrs_2015", "vrs_2017", "vrs_2018", "vrs_2019")])
+iteracion_1 <- comparativa(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) 
+
+iteracion_1 <- iteracion_1[rowSums(is.na(iteracion_1)) < 2, ]
+cor(iteracion_1[, c("vrs_2014", "vrs_2015", "vrs_2016", "vrs_2017", "vrs_2018", "vrs_2019")])
 
 
 

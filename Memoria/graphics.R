@@ -19,7 +19,7 @@ chile_vrs <- function(hospitales_df) {
   mapa_chile <- ggplot(data = chile) +
     geom_sf() +
     geom_point(data = hospitales_df, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.7) +
-    scale_color_gradient(low = "red", high = "green", limits = c(0.2, 1)) +  # Rango de valores para los colores
+    scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +  # Rango de valores para los colores
     labs(title = "Eficiencia técnica hospitales públicos Chilenos (VRS)", color = "Valor", size = "Valor") +
     theme_minimal()
   
@@ -63,7 +63,7 @@ region_vrs <- function(hospitales_df, region, anio) {
     geom_sf(aes(geometry = geometry)) + 
     geom_point(data = hospitales_df_rm, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.6)  +
     
-    scale_color_gradient(low = "red", high = "green", limits = c(0.2, 1)) +  # Rango de valores para los colores
+    scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +  # Rango de valores para los colores
     labs(title = paste("Eficiencia técnica hospitales públicos en", nombre_region, "(VRS) - Año ", anio),
          color = "Valor", 
          size = "Valor") +

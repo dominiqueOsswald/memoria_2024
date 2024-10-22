@@ -10,19 +10,17 @@ library(corrplot)
 #path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
 
 consolidar_datos_por_anio <- function(anio) {
+  
   # Establecer directorio de trabajo
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+  
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
-  print("-")
   path_predicciones_grd <- paste0("data/", anio, "/", anio, "_prediciones_grd.txt")
-  print("-")
   path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
-  print("-")
   path_financiero <- paste0("data/", anio, "/", anio, "_financial_data.csv")
-  print("-")
   path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
-  print("1")
+  
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
@@ -31,17 +29,17 @@ consolidar_datos_por_anio <- function(anio) {
     select(hospital_id, X21_value, X22_value) %>% rename("IdEstablecimiento" = "hospital_id")
   financiero$X21_value <- as.numeric(financiero$X21_value)
   financiero$X22_value <- as.numeric(financiero$X22_value)
-  sheet= (anio - 2014) + 1
-  print(sheet)
-  print(anio)
-  print((anio - 2014) + 1)
+  
+  financiero <- financiero[rowSums(is.na(financiero)) < 2, ]
+  
+  
   estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 1)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
     filter(`Nombre Nivel Cuidado` == "Datos Establecimiento") %>% 
     select(-"Cód. Nivel Cuidado", -"Cód. SS/SEREMI", -"Nombre Nivel Cuidado") %>%  
     semi_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(1:5)
-  print("3")  
+
   # Procesar estadísticas
   dias_cama_disponibles <- estadisticas %>% 
     filter(Glosa == "Dias Cama Disponibles") %>%  
@@ -50,23 +48,8 @@ consolidar_datos_por_anio <- function(anio) {
   egresos <- estadisticas %>% 
     filter(Glosa == "Numero de Egresos") %>%  
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
-  print("4")
-  # Definir consultas
-  #consultas <- list("idEstablecimiento", "X07020130", "X07020230", "X07020330", "X07020331", 
-  #                  "X07020332", "X07024219", "X07020500", "X07020501", "X07020600", 
-  #                  "X07020601", "X07020700", "X07020800", "X07020801", "X07020900", 
-  #                  "X07020901", "X07021000", "X07021001", "X07021100", "X07021101", 
-  #                  "X07021230", "X07021300", "X07021301", "X07022000", "X07022001", 
-  #                  "X07021531", "X07022132", "X07022133", "X07022134", "X07021700", 
-  #                  "X07021800", "X07021801", "X07021900", "X07022130", "X07022142", 
-  #                  "X07022143", "X07022144", "X07022135", "X07022136", "X07022137", 
-  #                  "X07022700", "X07022800", "X07022900", "X07021701", "X07023100", 
-  #                  "X07023200", "X07023201", "X07023202", "X07023203", "X07023700", 
-  #                  "X07023701", "X07023702", "X07023703", "X07024000", "X07024001", 
-  #                  "X07024200", "X07030500", "X07024201", "X07024202", "X07030501", 
-  #                  "X07030502", "X07024900", "X07024915","X07024925","X07024935","X07024920","X07024816","X07024607","X07024817","X07024809","X07024705","X07024506")
-  
-  
+
+
   consultas <- list("idEstablecimiento", "X07020130", "X07020230", "X07020330", "X07020400", 
                     "X07020500", "X07020600", "X07020700", "X07020800", "X07020900", "X07024970", 
                     "X07021000", "X07021100", "X07021230", "X07021300", "X07021400", "X07024980", 
@@ -93,20 +76,18 @@ consolidar_datos_por_anio <- function(anio) {
                     "X07035200", "X07035300")
   
   
-  print("5")
+
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
-  print("5")
-  str(columnas_validas)
-  str(datos_consolidados)
+
   consultas_data <- subset(datos_consolidados, select = columnas_validas)
-  print("5")
+
   # Identificar columnas tipo character
   cols_char <- sapply(consultas_data, is.character)
   
   # Convertir columnas character a numeric
   consultas_data[, cols_char] <- lapply(consultas_data[, cols_char], function(x) as.numeric(x))
-  print("6")
+
   # Crear suma total de consultas
   consultas_data$sumaTotal <- rowSums(consultas_data[, -which(names(consultas_data) == "idEstablecimiento")], na.rm = TRUE)
   
@@ -115,7 +96,7 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Consultas)
-  print("7")
+
   # Definir quirofano
   quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
                     "X21400500","X21400600","X21800810")
@@ -124,7 +105,7 @@ consolidar_datos_por_anio <- function(anio) {
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
     mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
-  print("8")
+
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
   
@@ -133,7 +114,7 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Quirofano)
-  print("9")
+
   # Procesar egresos y predicciones GRD
   intermediate_df <- egresos %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
@@ -143,7 +124,7 @@ consolidar_datos_por_anio <- function(anio) {
   # Combinar datos financieros y días cama disponibles
   input <- left_join(financiero, dias_cama_disponibles %>% 
                        select(IdEstablecimiento, dias_cama_disponible), by = "IdEstablecimiento")
-  print("10")
+
   # Combinar todas las salidas
   output <- intermediate_df %>%
     left_join(consultas, by = "IdEstablecimiento") %>%
@@ -156,7 +137,6 @@ consolidar_datos_por_anio <- function(anio) {
   
   return(all)
 }
-
 
 analisis_dea_in <- function(data) {
 
@@ -187,9 +167,9 @@ analisis_dea_in <- function(data) {
   
   # ------------------------------------------------------------------- #
   # Ordenar dataframes según diferentes columnas
-  # eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
-  # eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
-  # eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+  eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+  eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
   # ------------------------------------------------------------------- #
 
   # Clasificar eficiencia VRS
@@ -229,7 +209,10 @@ analisis_dea_in <- function(data) {
   # print(porcentaje_crs_clasificada)
   
   # Retornar los dataframes ordenados como una lista
-  return(eficiencia_df)
+  return(list(data= eficiencia_df, 
+              vrs = eficiencia_vrs_data, 
+              crs = eficiencia_crs_data, 
+              esc = eficiencia_escala_data))
 }
 
 analisis_dea_out <- function(data) {
@@ -375,23 +358,24 @@ analisis_dea_graph <- function(data) {
 }
 
 
-comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
+comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
   
   resultados_2014_in_df <- data.frame(IdEstablecimiento = resultados_2014_in$IdEstablecimiento, vrs = resultados_2014_in$vrs)
   resultados_2015_in_df <- data.frame(IdEstablecimiento = resultados_2015_in$IdEstablecimiento, vrs = resultados_2015_in$vrs)
+  resultados_2016_in_df <- data.frame(IdEstablecimiento = resultados_2016_in$IdEstablecimiento, vrs = resultados_2016_in$vrs)
   resultados_2017_in_df <- data.frame(IdEstablecimiento = resultados_2017_in$IdEstablecimiento, vrs = resultados_2017_in$vrs)
   resultados_2018_in_df <- data.frame(IdEstablecimiento = resultados_2018_in$IdEstablecimiento, vrs = resultados_2018_in$vrs)
   resultados_2019_in_df <- data.frame(IdEstablecimiento = resultados_2019_in$IdEstablecimiento, vrs = resultados_2019_in$vrs)
   
   # Luego, aplicar reduce y full_join para combinar todos los dataframes por 'IdEstablecimiento'
-  resultados_combinados <- reduce(list(resultados_2014_in_df, resultados_2015_in_df, 
+  resultados_combinados <- reduce(list(resultados_2014_in_df, resultados_2015_in_df, resultados_2016_in_df, 
                                        resultados_2017_in_df, resultados_2018_in_df, 
                                        resultados_2019_in_df), 
                                   function(x, y) full_join(x, y, by = "IdEstablecimiento"))
   
   
   # Renombrar las columnas para indicar el año
-  colnames(resultados_combinados)[-1] <- c("vrs_2014", "vrs_2015", "vrs_2017", "vrs_2018", "vrs_2019")
+  colnames(resultados_combinados)[-1] <- c("vrs_2014", "vrs_2015", "vrs_2016", "vrs_2017", "vrs_2018", "vrs_2019")
   
   # Visualizar los resultados combinados
   #print(resultados_combinados)
@@ -399,19 +383,20 @@ comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2017_
   resultados_combinados <- resultados_combinados %>%
     mutate(
       diff_2014_2015 = vrs_2015 - vrs_2014,
-      diff_2015_2017 = vrs_2017 - vrs_2015,
+      diff_2015_2016 = vrs_2016 - vrs_2015,
+      diff_2016_2017 = vrs_2017 - vrs_2016,
       diff_2017_2018 = vrs_2018 - vrs_2017,
       diff_2018_2019 = vrs_2019 - vrs_2018
     )
-  print(resultados_combinados)
+
   # Calcular el promedio de las diferencias por fila, ignorando NA si existen
   resultados_combinados <- resultados_combinados %>%
     mutate(
-      avg_diff = rowMeans(select(., diff_2014_2015, diff_2015_2017, diff_2017_2018, diff_2018_2019), na.rm = TRUE)
+      avg_diff = rowMeans(select(., diff_2014_2015, diff_2015_2016, diff_2016_2017, diff_2017_2018, diff_2018_2019), na.rm = TRUE)
     )
   
   # Visualizar los resultados
-  print(resultados_combinados)
+  # print(resultados_combinados)
   
   return(resultados_combinados) 
   
