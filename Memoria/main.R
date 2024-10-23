@@ -3,6 +3,7 @@ library(dplyr)
 library(Benchmarking)
 library(corrplot)
 library(purrr)
+library(deaR)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -22,7 +23,6 @@ data_2019 <- consolidar_datos_por_anio(2019)
 
 
 
-
 resultados_2014_in <- analisis_dea_in(data_2014)
 resultados_2015_in <- analisis_dea_in(data_2015)
 resultados_2016_in <- analisis_dea_in(data_2016)
@@ -32,9 +32,16 @@ resultados_2019_in <- analisis_dea_in(data_2019)
 
 
 
+
+sensibilidad_parametro(data_2014, resultados_2014_in, FALSE, 0.99)
+
+vrs_2014_1 <- resultados_2014_in$vrs
+vrs_2014_2 <- resultados_2_2014_in$vrs
+
+
 # -------------------------------------------------------- #
 # Revisar correlación del año 2014
-resultados_2014_in_vrs <- subset(resultados_2014_in$vrs, vrs > 0.9)
+resultados_2014_in_vrs <- subset(resultados_2014_in$vrs, vrs < 0.3)
 
 data_2014_2 <- data_2014[data_2014$IdEstablecimiento %in% resultados_2014_in_vrs$IdEstablecimiento, ]
 

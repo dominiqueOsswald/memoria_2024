@@ -2,6 +2,7 @@ library(readxl)
 library(dplyr)
 library(Benchmarking)
 library(corrplot)
+library(rDEA)
 
 #anio <- 2014
 #path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
@@ -139,18 +140,18 @@ consolidar_datos_por_anio <- function(anio) {
 }
 
 analisis_dea_in <- function(data) {
-
+  #data <- data_2014_2
   # Preparar inputs y outputs
-  input_dea <- as.data.frame(data[c(8,9,10)])
-  output_dea <- as.data.frame(data[c(5,6,7)])
-
+  
+  model <- make_deadata(data, ni=3, no=3, dmus=3, inputs=8:10, outputs=5:7)
+  
   # Aplicar DEA orientado a los inputs
-  resultado_dea_in_vrs <- dea(X = input_dea, Y = output_dea, RTS = "vrs", ORIENTATION = "in")
-  resultado_dea_in_crs <- dea(X = input_dea, Y = output_dea, RTS = "crs", ORIENTATION = "in")
-
+  resultado_dea_in_vrs <- model_basic(model, orientation="io", rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
+  resultado_dea_in_crs <- model_basic(model, orientation="io", rts="crs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
+  
   # Calcular eficiencias
-  eficiencia_vrs <- resultado_dea_in_vrs$eff
-  eficiencia_crs <- resultado_dea_in_crs$eff
+  eficiencia_vrs <- efficiencies(resultado_dea_in_vrs)
+  eficiencia_crs <- efficiencies(resultado_dea_in_crs)
 
   # Crear dataframe con eficiencias y retorno a escala
   eficiencia_df <- data.frame(
@@ -356,6 +357,59 @@ analisis_dea_graph <- function(data) {
   # Retornar los dataframes ordenados como una lista
   return(eficiencia_df)
 }
+
+
+
+sensibilidad_parametro <- function(data, data_original,mayor,valor) {
+
+  # -------------------------------------------------------- #
+  # Revisar correlación del año 2014
+  if (mayor){
+    data_filtrada <- subset(data_original$vrs, vrs > valor)
+  }else{
+    data_filtrada <- subset(data_original$vrs, vrs < valor)
+  }
+  
+  data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
+  
+  
+  resultados_in  <- analisis_dea_in(data_set)
+
+
+  vrs_1 <- data_filtrada
+  vrs_2 <- resultados_in$vrs  
+  
+  # Combinar los dataframes por IdEstablecimiento, manteniendo solo las columnas vrs
+  resultados_combinados <- merge(
+    vrs_1[, c("IdEstablecimiento", "vrs")],
+    vrs_2[, c("IdEstablecimiento", "vrs")],
+    by = "IdEstablecimiento",
+    suffixes = c("_1", "_2")
+  )
+  
+  # Mostrar el dataframe combinado con solo las columnas vrs
+  print(resultados_combinados)
+  
+  
+  # Calcular la correlación entre las dos columnas vrs
+  correlacion <- cor(resultados_combinados$vrs_1, resultados_combinados$vrs_2, use = "pairwise.complete.obs")
+  
+  # Mostrar el resultado de la correlación
+  print(correlacion)
+  
+  
+  # Calcular los rankings
+  resultados_combinados$ranking_vrs_1 <- rank(-resultados_combinados$vrs_1)  # El '-' invierte para que sea de mayor a menor
+  resultados_combinados$ranking_vrs_2 <- rank(-resultados_combinados$vrs_2)
+  
+  # Verificar si los rankings coinciden
+  resultados_combinados$ranking_coincide <- resultados_combinados$ranking_vrs_1 == resultados_combinados$ranking_vrs_2
+  
+  # Mostrar el resultado
+  print(resultados_combinados)
+  
+}
+
 
 
 comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
