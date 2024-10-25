@@ -1,14 +1,7 @@
 library(readxl)
-library(dplyr)
-library(Benchmarking)
 library(corrplot)
-library(rDEA)
+library(deaR)
 
-#anio <- 2014
-#path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
-#path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
-#hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
-#path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
 
 consolidar_datos_por_anio <- function(anio) {
   
@@ -143,7 +136,7 @@ analisis_dea_in <- function(data) {
   #data <- data_2014_2
   # Preparar inputs y outputs
   
-  model <- make_deadata(data, ni=3, no=3, dmus=3, inputs=8:10, outputs=5:7)
+  model <- read_data(data, ni=3, no=3, dmus=3, inputs=8:10, outputs=5:7)
   
   # Aplicar DEA orientado a los inputs
   resultado_dea_in_vrs <- model_basic(model, orientation="io", rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
@@ -287,79 +280,6 @@ analisis_dea_out <- function(data) {
   return(eficiencia_df)
 }
 
-analisis_dea_graph <- function(data) {
-  
-  # Preparar inputs y outputs
-  input_dea_2019 <- as.data.frame(data[c(8,9,10)])
-  output_dea_2019 <- as.data.frame(data[c(5,6,7)])
-  
-  # Aplicar DEA orientado a los inputs
-  resultado_dea_2019_in_vrs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "vrs", ORIENTATION = "graph")
-  resultado_dea_2019_in_crs <- dea(X = input_dea_2019, Y = output_dea_2019, RTS = "crs", ORIENTATION = "graph")
-  
-  # Calcular eficiencias
-  eficiencia_vrs <- resultado_dea_2019_in_vrs$eff
-  eficiencia_crs <- resultado_dea_2019_in_crs$eff
-  
-  # Crear dataframe con eficiencias y retorno a escala
-  eficiencia_df <- data.frame(
-    IdEstablecimiento = data$IdEstablecimiento,
-    Nombre = data$'Nombre Establecimiento',
-    Region = data$'Region',
-    vrs = round(eficiencia_vrs, 3),
-    crs = round(eficiencia_crs, 3),
-    escala = round(eficiencia_vrs / eficiencia_crs, 3)
-  )
-  
-  # ------------------------------------------------------------------- #
-  # Ordenar dataframes según diferentes columnas
-  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
-  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
-  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
-  # ------------------------------------------------------------------- #
-  
-  # Clasificar eficiencia VRS
-  clasificacion_vrs <- cut(eficiencia_vrs, 
-                           breaks = c(-Inf, 0.5, 1, 1.5, Inf), 
-                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
-                           right = FALSE)
-  
-  # Clasificar eficiencia CRS
-  clasificacion_crs <- cut(eficiencia_crs, 
-                           breaks = c(-Inf, 0.5, 1, 1.5, Inf),
-                           labels = c("Menor que 0.5", "Entre 0.5 y 1", "Entre 1 y 1.5", "Mayor que 1.5"),
-                           right = FALSE)
-  
-  # Calcular frecuencia y porcentaje para VRS
-  frecuencia_vrs_clasificada <- table(clasificacion_vrs)
-  porcentaje_vrs_clasificada <- prop.table(frecuencia_vrs_clasificada) * 100
-  
-  # Calcular frecuencia y porcentaje para CRS
-  frecuencia_crs_clasificada <- table(clasificacion_crs)
-  porcentaje_crs_clasificada <- prop.table(frecuencia_crs_clasificada) * 100
-  
-  # Mostrar resultados
-  cat("Clasificación de eficiencia en VRS:\n")
-  print(frecuencia_vrs_clasificada)
-  cat("----------------------------------\n")
-  cat("Porcentaje de eficiencia en VRS:\n")
-  print(porcentaje_vrs_clasificada)
-  
-  cat("----------------------------------\n")
-  cat("----------------------------------\n")
-  
-  cat("\nClasificación de eficiencia en CRS:\n")
-  print(frecuencia_crs_clasificada)
-  cat("----------------------------------\n")
-  cat("Porcentaje de eficiencia en CRS:\n")
-  print(porcentaje_crs_clasificada)
-  
-  # Retornar los dataframes ordenados como una lista
-  return(eficiencia_df)
-}
-
-
-
 sensibilidad_parametro <- function(data, data_original,mayor,valor) {
 
   # -------------------------------------------------------- #
@@ -387,16 +307,8 @@ sensibilidad_parametro <- function(data, data_original,mayor,valor) {
     suffixes = c("_1", "_2")
   )
   
-  # Mostrar el dataframe combinado con solo las columnas vrs
-  print(resultados_combinados)
-  
-  
   # Calcular la correlación entre las dos columnas vrs
   correlacion <- cor(resultados_combinados$vrs_1, resultados_combinados$vrs_2, use = "pairwise.complete.obs")
-  
-  # Mostrar el resultado de la correlación
-  print(correlacion)
-  
   
   # Calcular los rankings
   resultados_combinados$ranking_vrs_1 <- rank(-resultados_combinados$vrs_1)  # El '-' invierte para que sea de mayor a menor
@@ -404,13 +316,14 @@ sensibilidad_parametro <- function(data, data_original,mayor,valor) {
   
   # Verificar si los rankings coinciden
   resultados_combinados$ranking_coincide <- resultados_combinados$ranking_vrs_1 == resultados_combinados$ranking_vrs_2
+  resultados_combinados$diff_ranking <- resultados_combinados$ranking_vrs_1 - resultados_combinados$ranking_vrs_2
   
-  # Mostrar el resultado
-  print(resultados_combinados)
+  print(correlacion)
+  # Mostrar el resultado de la correlación
+  return (list(correlacion = correlacion,
+              resultados = resultados_in))
   
 }
-
-
 
 comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
   
