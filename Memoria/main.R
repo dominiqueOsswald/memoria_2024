@@ -10,47 +10,52 @@ source("graphics.R")
 # Periodo previo a pandemia #
 
 # Datos #
-data_2014 <- consolidar_datos_por_anio(2014)
-data_2015 <- consolidar_datos_por_anio(2015)
-data_2016 <- consolidar_datos_por_anio(2016)
-data_2017 <- consolidar_datos_por_anio(2017)
-data_2018 <- consolidar_datos_por_anio(2018)
-data_2019 <- consolidar_datos_por_anio(2019)
+datos <- list(
+  "2014" = consolidar_datos_por_anio(2014),
+  "2015" = consolidar_datos_por_anio(2015),
+  "2016" = consolidar_datos_por_anio(2016),
+  "2017" = consolidar_datos_por_anio(2017),
+  "2018" = consolidar_datos_por_anio(2018),
+  "2019" = consolidar_datos_por_anio(2019)
+)
 
+# -------------------------------------------- #
+# -------------------------------------------- #
 
-# DEA - IN
-resultados_2014_in <- analisis_dea_in(data_2014)
-resultados_2015_in <- analisis_dea_in(data_2015)
-resultados_2016_in <- analisis_dea_in(data_2016)
-resultados_2017_in <- analisis_dea_in(data_2017)
-resultados_2018_in <- analisis_dea_in(data_2018)
-resultados_2019_in <- analisis_dea_in(data_2019)
+# DEA - INPUT
+resultados_in <- aplicar_analisis_dea(datos, "io")
 
+# SENSIBILIDAD - VRS 
+resultados_in_2_vrs <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "vrs", FALSE)
+resultados_in_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_vrs, `[[`, "data"), 0.99, "io", "vrs", FALSE)
 
+# SENSIBILIDAD - CRS 
+resultados_in_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "crs", FALSE)
+resultados_in_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_crs, `[[`, "data"), 0.99, "io", "crs", FALSE)
 
-resultados_2014_in_2 <- sensibilidad_parametro(data_2014, resultados_2014_in, FALSE, 0.99)
-resultados_2015_in_2 <- sensibilidad_parametro(data_2015, resultados_2015_in, FALSE, 0.99)
-resultados_2016_in_2 <- sensibilidad_parametro(data_2016, resultados_2016_in, FALSE, 0.99)
-resultados_2017_in_2 <- sensibilidad_parametro(data_2017, resultados_2017_in, FALSE, 0.99)
-resultados_2018_in_2 <- sensibilidad_parametro(data_2018, resultados_2018_in, FALSE, 0.99)
-resultados_2019_in_2 <- sensibilidad_parametro(data_2019, resultados_2019_in, FALSE, 0.99)
-
-
-
-resultados_2014_in_3 <- sensibilidad_parametro(data_2014, resultados_2014_in_2$resultados, FALSE, 0.99)
-resultados_2015_in_3 <- sensibilidad_parametro(data_2015, resultados_2015_in_2$resultados, FALSE, 0.99)
-resultados_2016_in_3 <- sensibilidad_parametro(data_2016, resultados_2016_in_2$resultados, FALSE, 0.99)
-resultados_2017_in_3 <- sensibilidad_parametro(data_2017, resultados_2017_in_2$resultados, FALSE, 0.99)
-resultados_2018_in_3 <- sensibilidad_parametro(data_2018, resultados_2018_in_2$resultados, FALSE, 0.99)
-resultados_2019_in_3 <- sensibilidad_parametro(data_2019, resultados_2019_in_2$resultados, FALSE, 0.99)
+# SENSIBILIDAD - ESCALA 
+# resultados_in_2_esc <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "esc")
+# resultados_in_3_esc <- aplicar_sensibilidad(datos, lapply(resultados_in_2_esc, `[[`, "data"), 0.99, "io", "esc")
 
 
 
+# -------------------------------------------- #
+# -------------------------------------------- #
+# DEA - OUTPUT
+resultados_out <- aplicar_analisis_dea(datos, "oo")
 
-# DEA - OUT
+# SENSIBILIDAD - VRS 
+# SE ELIMINAN AQUELLOS DMU QUE SON EFICIENTES
+resultados_out_2_vrs <- aplicar_sensibilidad(datos, lapply(resultados_out, `[[`, "data"), 1, "oo", "vrs", TRUE)
+resultados_out_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_vrs, `[[`, "data"), 1, "oo", "vrs", TRUE)
 
+# SENSIBILIDAD - CRS 
+resultados_out_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_out, `[[`, "data"), 1, "oo", "crs", TRUE)
+resultados_out_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_crs, `[[`, "data"), 1, "oo", "crs", TRUE)
 
-
+# SENSIBILIDAD - ESCALA 
+# resultados_in_2_esc <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "esc")
+# resultados_in_3_esc <- aplicar_sensibilidad(datos, lapply(resultados_in_2_esc, `[[`, "data"), 0.99, "io", "esc")
 
 
 
