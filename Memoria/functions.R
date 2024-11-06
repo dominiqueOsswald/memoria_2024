@@ -4,23 +4,6 @@ library(deaR)
 library(dplyr)
 
 
-
-
-aplicar_analisis_dea <- function(datos, metodo) {
-  sapply(datos, function(data) analisis_dea_general(data, metodo), simplify = FALSE)
-}
-
-# Función para aplicar la sensibilidad del parámetro general
-aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
-  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
-         datos, resultados, SIMPLIFY = FALSE)
-}
-
-
-
-
-
-
 consolidar_datos_por_anio <- function(anio) {
   
   # Establecer directorio de trabajo
@@ -239,157 +222,78 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   return (resultados = resultados_in)
 }
 
-
-
-
-sensibilidad_parametro_vrs_crs <- function(data, data_original, mayor, valor, orientacion) {
+# Función para combinar resultados de VRS y CRS en una lista de dataframes por año
+combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs) {
+  # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
+  lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
+    # Seleccionar los datos de las iteraciones de VRS
+    df_vrs_1 <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_iteracion_1 = vrs)
+    
+    df_vrs_2 <- resultados_in_2_vrs[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_iteracion_2 = vrs)
+    
+    df_vrs_3 <- resultados_in_3_vrs[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_iteracion_3 = vrs)
+    
+    # Unir los dataframes de VRS por IdEstablecimiento
+    df_vrs_combinado <- df_vrs_1 %>%
+      full_join(df_vrs_2, by = "IdEstablecimiento") %>%
+      full_join(df_vrs_3, by = "IdEstablecimiento") %>%
+      mutate(
+        vrs_iteracion_1 = ifelse(is.na(vrs_iteracion_1), "NO APLICA", vrs_iteracion_1),
+        vrs_iteracion_2 = ifelse(is.na(vrs_iteracion_2), "NO APLICA", vrs_iteracion_2),
+        vrs_iteracion_3 = ifelse(is.na(vrs_iteracion_3), "NO APLICA", vrs_iteracion_3)
+      )
+    
+    # Seleccionar los datos de las iteraciones de CRS
+    df_crs_1 <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_iteracion_1 = crs)
+    
+    df_crs_2 <- resultados_in_2_crs[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_iteracion_2 = crs)
+    
+    df_crs_3 <- resultados_in_3_crs[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_iteracion_3 = crs)
+    
+    # Unir los dataframes de CRS por IdEstablecimiento
+    df_crs_combinado <- df_crs_1 %>%
+      full_join(df_crs_2, by = "IdEstablecimiento") %>%
+      full_join(df_crs_3, by = "IdEstablecimiento") %>%
+      mutate(
+        crs_iteracion_1 = ifelse(is.na(crs_iteracion_1), "NO APLICA", crs_iteracion_1),
+        crs_iteracion_2 = ifelse(is.na(crs_iteracion_2), "NO APLICA", crs_iteracion_2),
+        crs_iteracion_3 = ifelse(is.na(crs_iteracion_3), "NO APLICA", crs_iteracion_3)
+      )
+    
+    # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento
+    df_combinado <- df_vrs_combinado %>%
+      full_join(df_crs_combinado, by = "IdEstablecimiento")
+    
+    return(df_combinado)
+  })
   
-  # Función interna para filtrar y calcular sensibilidad para vrs o crs
-  calcular_sensibilidad <- function(tipo) {
-    columna <- ifelse(tipo == "vrs", "vrs", "crs")
-    
-    if (mayor) {
-      data_filtrada <- subset(data_original[[columna]], data_original[[columna]] > valor)
-    } else {
-      data_filtrada <- subset(data_original[[columna]], data_original[[columna]] < valor)
-    }
-    
-    data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
-    
-    # Realizar el análisis DEA
-    resultados_in <- analisis_dea_general(data_set, orientacion)
-    
-    # Combinar los resultados
-    resultados_combinados <- merge(
-      data_filtrada[, c("IdEstablecimiento", columna)],
-      resultados_in[[tipo]][, c("IdEstablecimiento", columna)],
-      by = "IdEstablecimiento",
-      suffixes = c("_1", "_2")
-    )
-    
-    # Calcular la correlación
-    correlacion <- cor(resultados_combinados[[paste0(columna, "_1")]], resultados_combinados[[paste0(columna, "_2")]], use = "pairwise.complete.obs")
-    
-    # Calcular rankings
-    resultados_combinados[[paste0("ranking_", columna, "_1")]] <- rank(-resultados_combinados[[paste0(columna, "_1")]])
-    resultados_combinados[[paste0("ranking_", columna, "_2")]] <- rank(-resultados_combinados[[paste0(columna, "_2")]])
-    
-    # Verificar si los rankings coinciden
-    resultados_combinados$ranking_coincide <- resultados_combinados[[paste0("ranking_", columna, "_1")]] == resultados_combinados[[paste0("ranking_", columna, "_2")]]
-    resultados_combinados$diff_ranking <- resultados_combinados[[paste0("ranking_", columna, "_1")]] - resultados_combinados[[paste0("ranking_", columna, "_2")]]
-    
-    return(list(correlacion = correlacion, resultados_combinados = resultados_combinados))
-  }
+  # Nombrar la lista con los años para identificación
+  names(lista_resultados_combinados) <- unique(names(resultados_in))
   
-  # Calcular tanto para VRS como para CRS
-  resultados_vrs <- calcular_sensibilidad("vrs")
-  resultados_crs <- calcular_sensibilidad("crs")
-  
-  # Retornar una lista con ambos resultados
-  return(list(vrs = resultados_vrs, crs = resultados_crs))
+  return(lista_resultados_combinados)
 }
 
-
-
-
-
-
-sensibilidad_parametro_vrs <- function(data, data_original,mayor,valor, orientacion) {
-
-  # -------------------------------------------------------- #
-  # Revisar correlación del año 2014
-  if (mayor){
-    data_filtrada <- subset(data_original$vrs, vrs > valor)
-  }else{
-    data_filtrada <- subset(data_original$vrs, vrs < valor)
-  }
-  
-  data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
-  
-  
-  resultados_in  <- analisis_dea_general(data_set, orientacion)
-
-
-  vrs_1 <- data_filtrada
-  vrs_2 <- resultados_in$vrs  
-  
-  # Combinar los dataframes por IdEstablecimiento, manteniendo solo las columnas vrs
-  resultados_combinados <- merge(
-    vrs_1[, c("IdEstablecimiento", "vrs")],
-    vrs_2[, c("IdEstablecimiento", "vrs")],
-    by = "IdEstablecimiento",
-    suffixes = c("_1", "_2")
-  )
-  
-  # Calcular la correlación entre las dos columnas vrs
-  correlacion <- cor(resultados_combinados$vrs_1, resultados_combinados$vrs_2, use = "pairwise.complete.obs")
-  
-  # Calcular los rankings
-  resultados_combinados$ranking_vrs_1 <- rank(-resultados_combinados$vrs_1)  # El '-' invierte para que sea de mayor a menor
-  resultados_combinados$ranking_vrs_2 <- rank(-resultados_combinados$vrs_2)
-  
-  # Verificar si los rankings coinciden
-  resultados_combinados$ranking_coincide <- resultados_combinados$ranking_vrs_1 == resultados_combinados$ranking_vrs_2
-  resultados_combinados$diff_ranking <- resultados_combinados$ranking_vrs_1 - resultados_combinados$ranking_vrs_2
-  
-  print(correlacion)
-  # Mostrar el resultado de la correlación
-  return (list(correlacion = correlacion,
-              resultados = resultados_in))
-  
+aplicar_analisis_dea <- function(datos, metodo) {
+  sapply(datos, function(data) analisis_dea_general(data, metodo), simplify = FALSE)
 }
 
-
-sensibilidad_parametro_crs <- function(data, data_original,mayor,valor, orientacion) {
-  
-  # -------------------------------------------------------- #
-  # Revisar correlación del año 2014
-  if (mayor){
-    data_filtrada <- subset(data_original$crs, crs > valor)
-  }else{
-    data_filtrada <- subset(data_original$crs, crs < valor)
-  }
-  
-  data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
-  
-  
-  resultados_in  <- analisis_dea_general(data_set, orientacion)
-  
-  
-  crs_1 <- data_filtrada
-  crs_2 <- resultados_in$crs  
-  
-  # Combinar los dataframes por IdEstablecimiento, manteniendo solo las columnas vrs
-  resultados_combinados <- merge(
-    vrs_1[, c("IdEstablecimiento", "crs")],
-    vrs_2[, c("IdEstablecimiento", "crs")],
-    by = "IdEstablecimiento",
-    suffixes = c("_1", "_2")
-  )
-  
-  # Calcular la correlación entre las dos columnas vrs
-  correlacion <- cor(resultados_combinados$crs_1, resultados_combinados$crs_2, use = "pairwise.complete.obs")
-  
-  # Calcular los rankings
-  resultados_combinados$ranking_crs_1 <- rank(-resultados_combinados$crs_1)  # El '-' invierte para que sea de mayor a menor
-  resultados_combinados$ranking_crs_2 <- rank(-resultados_combinados$crs_2)
-  
-  # Verificar si los rankings coinciden
-  resultados_combinados$ranking_coincide <- resultados_combinados$ranking_vrs_1 == resultados_combinados$ranking_crs_2
-  resultados_combinados$diff_ranking <- resultados_combinados$ranking_vrs_1 - resultados_combinados$ranking_crs_2
-  
-  print(correlacion)
-  # Mostrar el resultado de la correlación
-  return (list(correlacion = correlacion,
-               resultados = resultados_in))
-  
+# Función para aplicar la sensibilidad del parámetro general
+aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
+  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
+         datos, resultados, SIMPLIFY = FALSE)
 }
-
-
-
-
-
-
 
 comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
   
