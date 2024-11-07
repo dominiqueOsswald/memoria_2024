@@ -135,7 +135,7 @@ consolidar_datos_por_anio <- function(anio) {
 
 analisis_dea_general <- function(data, orientation) {
   # Preparar inputs y outputs
-  model <- make_deadata(data, ni=3, no=3, dmus=3, inputs=8:10, outputs=5:7)
+  model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
   
   # Aplicar DEA con la orientación y RTS (VRS y CRS)
   resultado_dea_vrs <- model_basic(model, orientation=orientation, rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
@@ -294,6 +294,11 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
          datos, resultados, SIMPLIFY = FALSE)
 }
+
+
+
+
+
 
 comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
   
