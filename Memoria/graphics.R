@@ -91,7 +91,7 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
   
   
   # Retornar resultados de correlación entre matrices de distintos años
-  return(list(correlaciones_lista = correlaciones_lista, correlacion_entre_anios = correlacion_entre_anios))
+  return(list(correlaciones_lista = correlaciones_lista))
 }
 
 
@@ -112,7 +112,6 @@ chile_vrs <- function(hospitales_df, anio, tipo) {
   return(mapa_chile)
   
 }
-
 
 chile_crs <- function(hospitales_df, anio, tipo) {
   # Cargar el mapa de Chile
@@ -196,34 +195,70 @@ generar_graficos_por_anio_crs <- function(anio, tipo) {
 
 
 # Función general para graficar
-chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna) {
-  ggplot(data = chile) +
-    geom_sf() +
-    geom_point(
-      data = hospitales_df,
-      aes_string(
-        x = "longitud",
-        y = "latitud",
-        color = tipo_columna,
-        size = paste("(1/", tipo_columna, ") * 5"),
-        text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
-      ),
-      alpha = 0.7
-    ) +
-    scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +
-    labs(
-      title = paste(tipo, "- Año", anio),
-      color = "Valor",
-      size = "Valor"
-    ) +
-    theme_minimal()
+chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna, orientacion) {
+
+  
+  if (orientacion == "out"){
+    min <- 1
+    max <- 5
+    
+    ggplot(data = chile) +
+      geom_sf() +
+      geom_point(
+        data = hospitales_df,
+        aes_string(
+          x = "longitud",
+          y = "latitud",
+          color = tipo_columna,
+          size = paste("ifelse(", tipo_columna, " == 'vrs', (1/", tipo_columna, ") * 5, ", tipo_columna, ")"),
+          text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
+        ),
+        alpha = 0.7
+      ) +
+      scale_color_gradient(low = "green", high = "red", limits = c(min, max)) +
+      labs(
+        title = paste(tipo, "- Año", anio),
+        color = "Valor",
+        size = "Valor"
+      ) +
+      theme_minimal()
+    
+    
+    
+  } 
+  else{
+    min <- 0
+    max <- 1
+
+    ggplot(data = chile) +
+      geom_sf() +
+      geom_point(
+        data = hospitales_df,
+        aes_string(
+          x = "longitud",
+          y = "latitud",
+          color = tipo_columna,
+          size = paste("ifelse(", tipo_columna, " == 'vrs', (1/", tipo_columna, ") * 5, ", tipo_columna, ")"),
+          text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
+        ),
+        alpha = 0.7
+      ) +
+      scale_color_gradient(low = "red", high = "green", limits = c(min, max)) +
+      labs(
+        title = paste(tipo, "- Año", anio),
+        color = "Valor",
+        size = "Valor"
+      ) +
+      theme_minimal()    
+  }
+
 }
 
 
 # Función para generar gráficos por iteración
-generar_graficos_iteracion <- function(resultados, tipo, tipo_columna) {
+generar_graficos_iteracion <- function(resultados, tipo, tipo_columna, orientacion) {
   lapply(names(resultados), function(anio) {
-    chile_map_plot(resultados[[anio]]$data, anio, tipo, tipo_columna)
+    chile_map_plot(resultados[[anio]]$data, anio, tipo, tipo_columna, orientacion)
   })
 }
 

@@ -151,9 +151,9 @@ resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_out,
 # Graficas #
 # Generar y mostrar gráficos VRS
 graficos_vrs_out <- list(
-  generar_graficos_iteracion(resultados_out, "Output VRS", "vrs"),
-  generar_graficos_iteracion(resultados_out_2_vrs, "Output VRS", "vrs"),
-  generar_graficos_iteracion(resultados_out_3_vrs, "Output VRS", "vrs")
+  generar_graficos_iteracion(resultados_out, "Output VRS", "vrs", "out"),
+  generar_graficos_iteracion(resultados_out_2_vrs, "Output VRS", "vrs", "out"),
+  generar_graficos_iteracion(resultados_out_3_vrs, "Output VRS", "vrs", "out")
 )
 
 # Mostrar gráficos VRS
