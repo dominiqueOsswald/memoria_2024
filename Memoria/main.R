@@ -12,15 +12,31 @@ source("graphics.R")
 # ----------------------------------------------- #
 # Periodo previo a pandemia #
 
+anios <- c("2014", "2015", "2016", "2017", "2018", "2019","2020")
 # Datos #
-datos <- list(
+datos_iniciales <- list(
   "2014" = consolidar_datos_por_anio(2014),
   "2015" = consolidar_datos_por_anio(2015),
   "2016" = consolidar_datos_por_anio(2016),
   "2017" = consolidar_datos_por_anio(2017),
   "2018" = consolidar_datos_por_anio(2018),
-  "2019" = consolidar_datos_por_anio(2019)
+  "2019" = consolidar_datos_por_anio(2019),
+  "2020" = consolidar_datos_por_anio(2020)
+  
 )
+
+
+# Extraer los conjuntos de DMUs de cada año
+dmus_por_anio <- lapply(datos_iniciales, function(data) data$IdEstablecimiento)
+
+# Encontrar las DMUs comunes en todos los años
+dmus_comunes <- Reduce(intersect, dmus_por_anio)
+
+# Filtrar los datos de cada año para incluir solo las DMUs comunes
+datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+
+
+
 
 # -------------------------------------------- #
 # -------------------------------------------- #
@@ -36,10 +52,6 @@ resultados_in_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_vrs, `
 resultados_in_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "crs", FALSE)
 resultados_in_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_crs, `[[`, "data"), 0.99, "io", "crs", FALSE)
 
-# SENSIBILIDAD - ESCALA 
-# resultados_in_2_esc <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "esc")
-# resultados_in_3_esc <- aplicar_sensibilidad(datos, lapply(resultados_in_2_esc, `[[`, "data"), 0.99, "io", "esc")
-
 
 # Llamar a la función
 lista_resultados_combinados_in <- combinar_resultados_iteraciones(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs)
@@ -49,8 +61,6 @@ lista_resultados_combinados_in <- combinar_resultados_iteraciones(resultados_in,
 # CALCULO Y VISUALIZACION DE CORRELACION DE DATOS SENSIBILIZADOS
 
 
-
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019")
 resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_in, anios)
 
 
@@ -59,9 +69,9 @@ resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_in, 
 # Graficas #
 # Generar y mostrar gráficos VRS
 graficos_vrs <- list(
-  generar_graficos_iteracion(resultados_in, "Input VRS", "vrs"),
-  generar_graficos_iteracion(resultados_in_2_vrs, "Input VRS", "vrs"),
-  generar_graficos_iteracion(resultados_in_3_vrs, "Input VRS", "vrs")
+  generar_graficos_iteracion(resultados_in, "Input VRS", "vrs", "in"),
+  generar_graficos_iteracion(resultados_in_2_vrs, "Input VRS", "vrs", "in"),
+  generar_graficos_iteracion(resultados_in_3_vrs, "Input VRS", "vrs", "in")
 )
 
 # Mostrar gráficos VRS
@@ -71,9 +81,9 @@ lapply(graficos_vrs, function(graficos) {
 
 # Generar y mostrar gráficos CRS
 graficos_crs <- list(
-  generar_graficos_iteracion(resultados_in, "Input CRS", "crs"),
-  generar_graficos_iteracion(resultados_in_2_crs, "Input CRS", "crs"),
-  generar_graficos_iteracion(resultados_in_3_crs, "Input CRS", "crs")
+  generar_graficos_iteracion(resultados_in, "Input CRS", "crs", "in"),
+  generar_graficos_iteracion(resultados_in_2_crs, "Input CRS", "crs", "in"),
+  generar_graficos_iteracion(resultados_in_3_crs, "Input CRS", "crs", "in")
 )
 
 # Mostrar gráficos CRS
@@ -83,7 +93,6 @@ lapply(graficos_crs, function(graficos) {
 
 
 # Iterar sobre los años y mostrar los gráficos
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019")
 for (anio in anios) {
   graficos_vrs <- generar_graficos_por_anio(anio, "Input - VRS")
   # Mostrar los gráficos en una fila (3 gráficos por año)
@@ -98,16 +107,8 @@ for (anio in anios) {
 }
 
 
-
-
-
-
-
 # MALQUIST #
-
-
-
-dea_malquist <- function(datos)
+# dea_malquist <- function(datos)
   
 
 
@@ -128,10 +129,6 @@ resultados_out_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_vrs,
 resultados_out_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_out, `[[`, "data"), 1, "oo", "crs", TRUE)
 resultados_out_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_crs, `[[`, "data"), 1, "oo", "crs", TRUE)
 
-# SENSIBILIDAD - ESCALA 
-# resultados_in_2_esc <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "esc")
-# resultados_in_3_esc <- aplicar_sensibilidad(datos, lapply(resultados_in_2_esc, `[[`, "data"), 0.99, "io", "esc")
-
 
 # Llamar a la función
 lista_resultados_combinados_out <- combinar_resultados_iteraciones(resultados_out, resultados_out_2_vrs, resultados_out_3_vrs, resultados_out_2_crs, resultados_out_3_crs)
@@ -139,14 +136,7 @@ lista_resultados_combinados_out <- combinar_resultados_iteraciones(resultados_ou
 
 # ------------------------------------------------------------- #
 # CALCULO Y VISUALIZACION DE CORRELACION DE DATOS SENSIBILIZADOS
-
-
-
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019")
 resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_out, anios)
-
-
-
 
 # Graficas #
 # Generar y mostrar gráficos VRS
@@ -191,6 +181,10 @@ for (anio in anios) {
 
 
 
+# ----------------------------------- #
+#    MALMQUIST 
+
+malmquist <- calcular_malmquist(datos)
 
 
 
@@ -202,42 +196,6 @@ for (anio in anios) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ----------------------------------------------- #
-# Periodo pandémico #
-
-data_2020 <- consolidar_datos_por_anio(2020)
-resultados_2020_in <- analisis_dea_in(data_2020)
 
 # Falta esta data
 #data_2021 <- consolidar_datos_por_anio(2021)
@@ -247,8 +205,8 @@ resultados_2020_in <- analisis_dea_in(data_2020)
 
 
 
-region_rm_2020 <- region_vrs(resultados_2020_in, 13, 2020)
-print(region_rm_2020)
+#region_rm_2020 <- region_vrs(resultados_2020_in, 13, 2020)
+#print(region_rm_2020)
 
 #region_rm_2021 <- region_vrs(resultados_2021_in, 13, 2021)
 #print(region_rm_2021)
@@ -259,7 +217,7 @@ print(region_rm_2020)
 
 # -------------------------------------------- #
 
-mapa_interactivo <- ggplotly(region, tooltip = "text")
-print(mapa_interactivo)
+#mapa_interactivo <- ggplotly(region, tooltip = "text")
+#print(mapa_interactivo)
 
 # ------------------------------------------- #

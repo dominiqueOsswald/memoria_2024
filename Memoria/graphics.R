@@ -238,7 +238,7 @@ chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna, orientacion)
           x = "longitud",
           y = "latitud",
           color = tipo_columna,
-          size = paste("ifelse(", tipo_columna, " == 'vrs', (1/", tipo_columna, ") * 5, ", tipo_columna, ")"),
+          size = paste("(1/", tipo_columna, ") * 5"),
           text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
         ),
         alpha = 0.7

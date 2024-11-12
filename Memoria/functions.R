@@ -2,6 +2,8 @@ library(readxl)
 library(corrplot)
 library(deaR)
 library(dplyr)
+library(Benchmarking)
+library(tidyr)
 
 
 consolidar_datos_por_anio <- function(anio) {
@@ -130,20 +132,22 @@ consolidar_datos_por_anio <- function(anio) {
     left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud), by = "IdEstablecimiento") %>%
     relocate(region_id, .after = Region)
   
-  return(all)
+  all_sin_duplicados <- distinct(all)
+  return(all_sin_duplicados)
 }
 
 analisis_dea_general <- function(data, orientation) {
-  # Preparar inputs y outputs
+  # --- Preparar inputs y outputs
   model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
   
-  # Aplicar DEA con la orientación y RTS (VRS y CRS)
+  # ---Aplicar DEA con la orientación y RTS (VRS y CRS)
   resultado_dea_vrs <- model_basic(model, orientation=orientation, rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
   resultado_dea_crs <- model_basic(model, orientation=orientation, rts="crs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
   
-  # Calcular eficiencias
-  eficiencia_vrs <- efficiencies(resultado_dea_vrs)
-  eficiencia_crs <- efficiencies(resultado_dea_crs)
+  #--- Calcular eficiencias
+  eficiencia_vrs <- deaR::efficiencies(resultado_dea_vrs)
+  eficiencia_crs <- deaR::efficiencies(resultado_dea_crs)
+  
   
   # Crear dataframe con eficiencias y retorno a escala
   eficiencia_df <- data.frame(
@@ -159,27 +163,23 @@ analisis_dea_general <- function(data, orientation) {
   )
   
   # Ordenar dataframes según diferentes columnas
-  eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
-  eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
-  eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
+  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
+  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
+  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
   
   # Retornar los dataframes ordenados como una lista
+  
   return(list(data = eficiencia_df, 
-              vrs = eficiencia_vrs_data, 
-              crs = eficiencia_crs_data, 
-              esc = eficiencia_escala_data))
+              dea_vrs = resultado_dea_vrs,
+              dea_crs = resultado_dea_crs))
+  
+  #return(list(data = eficiencia_df)) 
+  #            vrs = eficiencia_vrs_data, 
+  #            crs = eficiencia_crs_data, 
+  #            esc = eficiencia_escala_data))
 }
 
 sensibilidad_parametro_general <- function(data, data_original, mayor, valor, orientacion, tipo) {
-  #data <- datos[["2014"]]
-  #tipo <- "vrs"
-  #data_original <- resultados_out[["2014"]]$data
-  #mayor <- FALSE
-  #valor <- 0.99
-  #orientacion <- "oo"
-  
-  #sensibilidad_parametro_general(datos[["2014"]], resultados_in[["2014"]], FALSE, 0.99, "io", "vrs")
-  # head(data)
   # Determinar la columna a trabajar (vrs o crs)
   columna <- ifelse(tipo == "vrs", "vrs", ifelse(tipo == "crs", "crs", "esc"))
   
@@ -196,33 +196,75 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   # Aplicar el análisis DEA
   resultados_in  <- analisis_dea_general(data_set, orientacion)
   
-  # Combinar los dataframes por IdEstablecimiento, manteniendo solo las columnas de interés
-  #resultados_combinados <- merge(
-  #  data_filtrada[, c("IdEstablecimiento", columna)],
-  #  resultados_in[[tipo]][, c("IdEstablecimiento", columna)],
-  #  by = "IdEstablecimiento",
-  # suffixes = c("_1", "_2")
-  #)
-  
-  # Calcular la correlación entre las dos columnas
-  #correlacion <- cor(resultados_combinados[[paste0(columna, "_1")]], resultados_combinados[[paste0(columna, "_2")]], use = "pairwise.complete.obs")
-  
-  # Calcular los rankings
-  #resultados_combinados[[paste0("ranking_", columna, "_1")]] <- rank(-resultados_combinados[[paste0(columna, "_1")]])  # Invertir para mayor a menor
-  #resultados_combinados[[paste0("ranking_", columna, "_2")]] <- rank(-resultados_combinados[[paste0(columna, "_2")]])
-  
-  # Verificar si los rankings coinciden
-  #resultados_combinados$ranking_coincide <- resultados_combinados[[paste0("ranking_", columna, "_1")]] == resultados_combinados[[paste0("ranking_", columna, "_2")]]
-  #resultados_combinados$diff_ranking <- resultados_combinados[[paste0("ranking_", columna, "_1")]] - resultados_combinados[[paste0("ranking_", columna, "_2")]]
-  
-  #print(correlacion)
-  
-  # Retornar los resultados
-  #return (list(correlacion = correlacion, resultados = resultados_in))
   return (resultados = resultados_in)
 }
 
-# Función para combinar resultados de VRS y CRS en una lista de dataframes por año
+calcular_malmquist <- function(datos) {
+  
+  # Inicializar listas y vectores para almacenar inputs, outputs, ID y TIME
+  input_data <- list()
+  output_data <- list()
+  ID <- vector()
+  TIME <- vector()
+  
+  # Iterar sobre cada año
+  for (year in names(datos)) {
+    # Acceder a la lista 'data' dentro de cada año
+    data_year <- datos[[year]]
+    
+    # Extraer los inputs y outputs usando posiciones de columnas
+    inputs <- as.matrix(data_year[, 8:10])  # Columnas 8 a 10 como inputs
+    outputs <- as.matrix(data_year[, 5:7])  # Columnas 5 a 7 como outputs
+    
+    # Agregar los datos de este año a las listas
+    input_data[[year]] <- inputs
+    output_data[[year]] <- outputs
+    
+    # Crear vectores de ID y tiempo
+    ID <- c(ID, data_year$IdEstablecimiento)  # Suponiendo que IdEstablecimiento es el ID de cada DMU
+    TIME <- c(TIME, rep(year, nrow(data_year)))
+  }
+  
+  # Verificar si hay combinaciones duplicadas de ID y TIME
+  temp_df <- data.frame(ID = ID, TIME = TIME)
+  duplicated_rows <- temp_df[duplicated(temp_df), ]
+  
+  if (nrow(duplicated_rows) > 0) {
+    message("Se encontraron combinaciones de ID y TIME duplicadas:")
+    print(duplicated_rows)
+    
+    # Eliminar duplicados en ID y TIME
+    temp_df <- temp_df[!duplicated(temp_df), ]
+    input_data <- input_data[!duplicated(temp_df), ]
+    output_data <- output_data[!duplicated(temp_df), ]
+  } else {
+    message("No hay duplicados.")
+  }
+  
+  # Convertir listas a matrices para el análisis sin duplicados
+  input_matrix <- do.call(rbind, input_data)
+  output_matrix <- do.call(rbind, output_data)
+  
+  # Realizar el análisis Malmquist
+  malmquist_index <- malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
+                               RTS = "vrs", ORIENTATION = "in")
+  
+  # Crear el dataframe de resultados
+  efficiency_df <- data.frame(
+    ID = malmquist_index$id,
+    TIME = malmquist_index$time,
+    Efficiency = malmquist_index$e11
+  )
+  
+  # Ordenar el dataframe por ID y TIME
+  efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
+  
+  # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
+  efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
+  
+  return(efficiency_wide)
+}
+
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs) {
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
@@ -289,58 +331,7 @@ aplicar_analisis_dea <- function(datos, metodo) {
   sapply(datos, function(data) analisis_dea_general(data, metodo), simplify = FALSE)
 }
 
-# Función para aplicar la sensibilidad del parámetro general
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
          datos, resultados, SIMPLIFY = FALSE)
-}
-
-
-
-
-
-
-comparativa <- function(resultados_2014_in, resultados_2015_in, resultados_2016_in, resultados_2017_in, resultados_2018_in, resultados_2019_in) {
-  
-  resultados_2014_in_df <- data.frame(IdEstablecimiento = resultados_2014_in$IdEstablecimiento, vrs = resultados_2014_in$vrs)
-  resultados_2015_in_df <- data.frame(IdEstablecimiento = resultados_2015_in$IdEstablecimiento, vrs = resultados_2015_in$vrs)
-  resultados_2016_in_df <- data.frame(IdEstablecimiento = resultados_2016_in$IdEstablecimiento, vrs = resultados_2016_in$vrs)
-  resultados_2017_in_df <- data.frame(IdEstablecimiento = resultados_2017_in$IdEstablecimiento, vrs = resultados_2017_in$vrs)
-  resultados_2018_in_df <- data.frame(IdEstablecimiento = resultados_2018_in$IdEstablecimiento, vrs = resultados_2018_in$vrs)
-  resultados_2019_in_df <- data.frame(IdEstablecimiento = resultados_2019_in$IdEstablecimiento, vrs = resultados_2019_in$vrs)
-  
-  # Luego, aplicar reduce y full_join para combinar todos los dataframes por 'IdEstablecimiento'
-  resultados_combinados <- reduce(list(resultados_2014_in_df, resultados_2015_in_df, resultados_2016_in_df, 
-                                       resultados_2017_in_df, resultados_2018_in_df, 
-                                       resultados_2019_in_df), 
-                                  function(x, y) full_join(x, y, by = "IdEstablecimiento"))
-  
-  
-  # Renombrar las columnas para indicar el año
-  colnames(resultados_combinados)[-1] <- c("vrs_2014", "vrs_2015", "vrs_2016", "vrs_2017", "vrs_2018", "vrs_2019")
-  
-  # Visualizar los resultados combinados
-  #print(resultados_combinados)
-  
-  resultados_combinados <- resultados_combinados %>%
-    mutate(
-      diff_2014_2015 = vrs_2015 - vrs_2014,
-      diff_2015_2016 = vrs_2016 - vrs_2015,
-      diff_2016_2017 = vrs_2017 - vrs_2016,
-      diff_2017_2018 = vrs_2018 - vrs_2017,
-      diff_2018_2019 = vrs_2019 - vrs_2018
-    )
-
-  # Calcular el promedio de las diferencias por fila, ignorando NA si existen
-  resultados_combinados <- resultados_combinados %>%
-    mutate(
-      avg_diff = rowMeans(select(., diff_2014_2015, diff_2015_2016, diff_2016_2017, diff_2017_2018, diff_2018_2019), na.rm = TRUE)
-    )
-  
-  # Visualizar los resultados
-  # print(resultados_combinados)
-  
-  return(resultados_combinados) 
-  
-  
 }
