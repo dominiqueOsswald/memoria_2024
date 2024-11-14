@@ -1,8 +1,3 @@
-library(corrplot)
-library(gridExtra)
-library(purrr)
-
-
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
@@ -107,9 +102,6 @@ for (anio in anios) {
 }
 
 
-# MALQUIST #
-# dea_malquist <- function(datos)
-  
 
 
 
@@ -180,19 +172,46 @@ for (anio in anios) {
 }
 
 
+#------------------------------------- #
+
+# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
+in_vrs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_in)) {
+  in_vrs_df[[year]] <- resultados_in[[year]][["data"]][["vrs"]]
+  in_crs_df[[year]] <- resultados_in[[year]][["data"]][["crs"]]
+}
+
+out_vrs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_in)) {
+  out_vrs_df[[year]] <- resultados_out[[year]][["data"]][["vrs"]]
+  out_crs_df[[year]] <- resultados_out[[year]][["data"]][["crs"]]
+}
+
 
 # ----------------------------------- #
 #    MALMQUIST 
 
-malmquist <- calcular_malmquist(datos)
+
+malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
+malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
+malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
+malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
 
 
 
 
 
+correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
+  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
+})
 
-
-
+correlaciones
 
 
 

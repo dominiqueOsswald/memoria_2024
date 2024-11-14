@@ -4,6 +4,9 @@ library(deaR)
 library(dplyr)
 library(Benchmarking)
 library(tidyr)
+library(corrplot)
+library(gridExtra)
+library(purrr)
 
 
 consolidar_datos_por_anio <- function(anio) {
@@ -199,7 +202,7 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   return (resultados = resultados_in)
 }
 
-calcular_malmquist <- function(datos) {
+calcular_malmquist <- function(datos, tipo, orientacion) {
   
   # Inicializar listas y vectores para almacenar inputs, outputs, ID y TIME
   input_data <- list()
@@ -247,7 +250,7 @@ calcular_malmquist <- function(datos) {
   
   # Realizar el análisis Malmquist
   malmquist_index <- malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
-                               RTS = "vrs", ORIENTATION = "in")
+                               RTS = tipo, ORIENTATION = orientacion)
   
   # Crear el dataframe de resultados
   efficiency_df <- data.frame(
