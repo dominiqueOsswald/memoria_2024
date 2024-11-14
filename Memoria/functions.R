@@ -9,6 +9,9 @@ library(gridExtra)
 library(purrr)
 
 
+# -------------------------------------------- #
+#  CONSOLIDACIÓN DE DATOS
+# -------------------------------------------- #
 consolidar_datos_por_anio <- function(anio) {
   
   # Establecer directorio de trabajo
@@ -139,6 +142,10 @@ consolidar_datos_por_anio <- function(anio) {
   return(all_sin_duplicados)
 }
 
+# -------------------------------------------- #
+#  APLICACIÓN DE ANÁLISIS ENVOLVENTE DE DATOS
+#  PARA UN AÑO EN ESPECÍFICO
+# -------------------------------------------- #
 analisis_dea_general <- function(data, orientation) {
   # --- Preparar inputs y outputs
   model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
@@ -182,6 +189,10 @@ analisis_dea_general <- function(data, orientation) {
   #            esc = eficiencia_escala_data))
 }
 
+# -------------------------------------------- #
+#  ELIMINACIÓN DE DATOS SEGÚN VALOR ENTREGADO Y SEGUN 
+#  SU TIPO DE DEA (VRS O CRS)
+# -------------------------------------------- #
 sensibilidad_parametro_general <- function(data, data_original, mayor, valor, orientacion, tipo) {
   # Determinar la columna a trabajar (vrs o crs)
   columna <- ifelse(tipo == "vrs", "vrs", ifelse(tipo == "crs", "crs", "esc"))
@@ -201,6 +212,7 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   
   return (resultados = resultados_in)
 }
+
 
 calcular_malmquist <- function(datos, tipo, orientacion) {
   
@@ -340,13 +352,13 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
 }
 
 
-resultados_iteracion <- function(datos){
+resultados_iteracion <- function(datos, orientacion){
   
-  original <-  aplicar_analisis_dea(datos, "io")
-  iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, "io", "vrs", FALSE)
-  iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, "io", "vrs", FALSE)
-  iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, "io", "crs", FALSE)
-  iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, "io", "crs", FALSE)
+  original <-  aplicar_analisis_dea(datos, orientacion)
+  iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+  iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+  iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+  iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
   
   resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios)
@@ -354,9 +366,14 @@ resultados_iteracion <- function(datos){
   
   
   # Crear una lista vacía para almacenar los valores atípicos por año
-  lista_outliers <- list()
+  lista_outliers_vrs <- list()
   # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
-  vector_outliers <- c()
+  vector_outliers_vrs <- c()
+  
+  lista_outliers_crs <- list()
+  # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
+  vector_outliers_crs <- c()
+  
   
   # Especificar los años que quieres iterar
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
@@ -375,16 +392,43 @@ resultados_iteracion <- function(datos){
     points(rep(1, length(outliers_vrs)), outliers_vrs, col = "red", pch = 16)
     
     # Filtrar el dataframe para obtener los IDs de los valores atípicos
-    ids_outliers <- original[[anio]][["data"]] %>%
+    ids_outliers_vrs <- original[[anio]][["data"]] %>%
       filter(vrs %in% outliers_vrs) %>%
       select(IdEstablecimiento, vrs)
     
     # Añadir los valores atípicos del año actual a la lista, con el nombre del año
-    lista_outliers[[anio]] <- ids_outliers
+    lista_outliers_vrs[[anio]] <- ids_outliers_vrs
     
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
-    vector_outliers <- unique(c(vector_outliers, ids_outliers$IdEstablecimiento))
+    vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
+    
+    
+    
+    # Generar el boxplot para la columna "vrs" del año actual
+    boxplot(original[[anio]][["data"]]$crs, 
+            main = paste("Boxplot de VRS - Año", anio), 
+            ylab = "VRS", 
+            col = "lightgray")
+    
+    # Obtener los valores atípicos en la columna "vrs" del año actual
+    outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
+    points(rep(1, length(outliers_crs)), outliers_crs, col = "red", pch = 16)
+    
+    # Filtrar el dataframe para obtener los IDs de los valores atípicos
+    ids_outliers_crs <- original[[anio]][["data"]] %>%
+      filter(crs %in% outliers_crs) %>%
+      select(IdEstablecimiento, crs)
+    
+    # Añadir los valores atípicos del año actual a la lista, con el nombre del año
+    lista_outliers_crs[[anio]] <- ids_outliers_crs
+    
+    # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
+    vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
+  
+  
+  
+  
   
   
   
@@ -392,13 +436,15 @@ resultados_iteracion <- function(datos){
   
   list(
     original =  original,
-    iteracion_1_vrs = iteracion_1_vrs,
-    iteracion_2_vrs = iteracion_2_vrs,
-    iteracion_1_crs = iteracion_1_crs,
-    iteracion_2_crs = iteracion_2_crs,
+    #iteracion_1_vrs = iteracion_1_vrs,
+    #iteracion_2_vrs = iteracion_2_vrs,
+    #iteracion_1_crs = iteracion_1_crs,
+    #iteracion_2_crs = iteracion_2_crs,
     resultados_combinados = resultados_combinados,
     resultados_correlacion = resultados_correlacion,
-    lista_outliers = lista_outliers,
-    vector_outliers = vector_outliers
+    lista_outliers_vrs = lista_outliers_vrs,
+    vector_outliers_vrs = vector_outliers_vrs,
+    lista_outliers_crs = lista_outliers_crs,
+    vector_outliers_crs = vector_outliers_crs
   )
 }

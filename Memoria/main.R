@@ -1,4 +1,3 @@
-
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("functions.R")
@@ -6,8 +5,12 @@ source("graphics.R")
 
 # ----------------------------------------------- #
 
+# -------------------------------------------- #
+#  CÁLCULO DEA INPUT
+# -------------------------------------------- #
+
 anios <- c("2014", "2015", "2016", "2017", "2018", "2019","2020")
-# Datos #
+
 datos_iniciales <- list(
   "2014" = consolidar_datos_por_anio(2014),
   "2015" = consolidar_datos_por_anio(2015),
@@ -31,17 +34,48 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 # -------------------------------------------- #
 
 
-resultados_in <- resultados_iteracion(datos)
+resultados_in <- resultados_iteracion(datos, "io")
 
 # Eliminacion de datos atipicos
 
-datos_cut <- lapply(datos, function(df) {
-  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers"]]))
+datos_cut_in_vrs <- lapply(datos, function(df) {
+  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_vrs"]]))
+})
+
+datos_cut_in_crs <- lapply(datos, function(df) {
+  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_crs"]]))
 })
 
 
 
-resultados_in_cut <- resultados_iteracion(datos_cut)
+resultados_in_cut_vrs <- resultados_iteracion(datos_cut_in_vrs, "io")
+resultados_in_cut_crs <- resultados_iteracion(datos_cut_in_crs, "io")
+
+
+
+# -------------------------------------------- #
+#  CÁLCULO DEA OUTPUT
+# -------------------------------------------- #
+
+
+
+resultados_out <- aplicar_analisis_dea(datos, "oo")
+
+
+# Eliminacion de datos atipicos
+
+datos_cut_out_vrs <- lapply(datos, function(df) {
+  df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_vrs"]]))
+})
+
+datos_cut_out_crs <- lapply(datos, function(df) {
+  df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_crs"]]))
+})
+
+
+
+resultados_out_cut_vrs <- resultados_iteracion(datos_cut_out_vrs, "oo")
+resultados_out_cut_crs <- resultados_iteracion(datos_cut_out_crs, "oo")
 
 
 
@@ -49,6 +83,79 @@ resultados_in_cut <- resultados_iteracion(datos_cut)
 
 
 
+# -------------------------------------------- #
+#    MALMQUIST 
+# -------------------------------------------- #
+
+
+malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
+malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
+malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
+malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
+
+
+
+
+# -------------------------------------------- #
+#    COMPARACIÓN DE METODOS
+# -------------------------------------------- #
+
+
+# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
+in_vrs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_in)) {
+  in_vrs_df[[year]] <- resultados_in[[year]][["data"]][["vrs"]]
+  in_crs_df[[year]] <- resultados_in[[year]][["data"]][["crs"]]
+}
+
+out_vrs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_in)) {
+  out_vrs_df[[year]] <- resultados_out[[year]][["data"]][["vrs"]]
+  out_crs_df[[year]] <- resultados_out[[year]][["data"]][["crs"]]
+}
+
+
+
+correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
+  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
+})
+
+correlaciones
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------------- #
+#  GRAFICA DEA INPUT
+# -------------------------------------------- #
 
 
 # Graficas #
@@ -97,39 +204,14 @@ for (anio in anios) {
 
 
 
+
+
+
+
+
 # -------------------------------------------- #
+#  GRAFICA DEA OUTPUT
 # -------------------------------------------- #
-# DEA - OUTPUT
-resultados_out <- aplicar_analisis_dea(datos, "oo")
-
-# SENSIBILIDAD - VRS 
-# SE ELIMINAN AQUELLOS DMU QUE SON EFICIENTES
-resultados_out_2_vrs <- aplicar_sensibilidad(datos, lapply(resultados_out, `[[`, "data"), 1, "oo", "vrs", TRUE)
-resultados_out_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_vrs, `[[`, "data"), 1, "oo", "vrs", TRUE)
-
-# SENSIBILIDAD - CRS 
-resultados_out_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_out, `[[`, "data"), 1, "oo", "crs", TRUE)
-resultados_out_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_crs, `[[`, "data"), 1, "oo", "crs", TRUE)
-
-
-# Llamar a la función
-lista_resultados_combinados_out <- combinar_resultados_iteraciones(resultados_out, resultados_out_2_vrs, resultados_out_3_vrs, resultados_out_2_crs, resultados_out_3_crs)
-
-
-
-
-
-
-
-# ------------------------------------------------------------- #
-# CALCULO Y VISUALIZACION DE CORRELACION DE DATOS SENSIBILIZADOS
-resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_out, anios)
-
-
-
-
-
-
 
 
 
@@ -177,44 +259,7 @@ for (anio in anios) {
 
 #------------------------------------- #
 
-# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
-in_vrs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
-in_crs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
 
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in)) {
-  in_vrs_df[[year]] <- resultados_in[[year]][["data"]][["vrs"]]
-  in_crs_df[[year]] <- resultados_in[[year]][["data"]][["crs"]]
-}
-
-out_vrs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
-out_crs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
-
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in)) {
-  out_vrs_df[[year]] <- resultados_out[[year]][["data"]][["vrs"]]
-  out_crs_df[[year]] <- resultados_out[[year]][["data"]][["crs"]]
-}
-
-
-# ----------------------------------- #
-#    MALMQUIST 
-
-
-malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
-malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
-malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
-malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
-
-
-
-
-
-correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
-  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
-})
-
-correlaciones
 
 
 
