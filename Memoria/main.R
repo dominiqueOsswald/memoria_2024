@@ -5,7 +5,6 @@ source("functions.R")
 source("graphics.R")
 
 # ----------------------------------------------- #
-# Periodo previo a pandemia #
 
 anios <- c("2014", "2015", "2016", "2017", "2018", "2019","2020")
 # Datos #
@@ -21,42 +20,33 @@ datos_iniciales <- list(
 )
 
 
-# Extraer los conjuntos de DMUs de cada año
-dmus_por_anio <- lapply(datos_iniciales, function(data) data$IdEstablecimiento)
-
-# Encontrar las DMUs comunes en todos los años
-dmus_comunes <- Reduce(intersect, dmus_por_anio)
-
-# Filtrar los datos de cada año para incluir solo las DMUs comunes
+# Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
+dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
 
 
-
 # -------------------------------------------- #
+#  CÁLCULO DEA INPUT
 # -------------------------------------------- #
 
-# DEA - INPUT
-resultados_in <- aplicar_analisis_dea(datos, "io")
 
-# SENSIBILIDAD - VRS 
-resultados_in_2_vrs <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "vrs", FALSE)
-resultados_in_3_vrs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_vrs, `[[`, "data"), 0.99, "io", "vrs", FALSE)
+resultados_in <- resultados_iteracion(datos)
 
-# SENSIBILIDAD - CRS 
-resultados_in_2_crs <- aplicar_sensibilidad(datos, lapply(resultados_in, `[[`, "data"), 0.99, "io", "crs", FALSE)
-resultados_in_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_in_2_crs, `[[`, "data"), 0.99, "io", "crs", FALSE)
+# Eliminacion de datos atipicos
+
+datos_cut <- lapply(datos, function(df) {
+  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers"]]))
+})
 
 
-# Llamar a la función
-lista_resultados_combinados_in <- combinar_resultados_iteraciones(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs)
+
+resultados_in_cut <- resultados_iteracion(datos_cut)
 
 
-# ------------------------------------------------------------- #
-# CALCULO Y VISUALIZACION DE CORRELACION DE DATOS SENSIBILIZADOS
 
 
-resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_in, anios)
+
 
 
 
@@ -126,9 +116,22 @@ resultados_out_3_crs <- aplicar_sensibilidad(datos, lapply(resultados_out_2_crs,
 lista_resultados_combinados_out <- combinar_resultados_iteraciones(resultados_out, resultados_out_2_vrs, resultados_out_3_vrs, resultados_out_2_crs, resultados_out_3_crs)
 
 
+
+
+
+
+
 # ------------------------------------------------------------- #
 # CALCULO Y VISUALIZACION DE CORRELACION DE DATOS SENSIBILIZADOS
 resultados <- calcular_y_graficar_correlaciones(lista_resultados_combinados_out, anios)
+
+
+
+
+
+
+
+
 
 # Graficas #
 # Generar y mostrar gráficos VRS

@@ -338,3 +338,67 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
          datos, resultados, SIMPLIFY = FALSE)
 }
+
+
+resultados_iteracion <- function(datos){
+  
+  original <-  aplicar_analisis_dea(datos, "io")
+  iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, "io", "vrs", FALSE)
+  iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, "io", "vrs", FALSE)
+  iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, "io", "crs", FALSE)
+  iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, "io", "crs", FALSE)
+  resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
+  
+  resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios)
+  
+  
+  
+  # Crear una lista vacía para almacenar los valores atípicos por año
+  lista_outliers <- list()
+  # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
+  vector_outliers <- c()
+  
+  # Especificar los años que quieres iterar
+  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
+  
+  # Iterar sobre cada año
+  for (anio in anios) {
+    
+    # Generar el boxplot para la columna "vrs" del año actual
+    boxplot(original[[anio]][["data"]]$vrs, 
+            main = paste("Boxplot de VRS - Año", anio), 
+            ylab = "VRS", 
+            col = "lightgray")
+    
+    # Obtener los valores atípicos en la columna "vrs" del año actual
+    outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
+    points(rep(1, length(outliers_vrs)), outliers_vrs, col = "red", pch = 16)
+    
+    # Filtrar el dataframe para obtener los IDs de los valores atípicos
+    ids_outliers <- original[[anio]][["data"]] %>%
+      filter(vrs %in% outliers_vrs) %>%
+      select(IdEstablecimiento, vrs)
+    
+    # Añadir los valores atípicos del año actual a la lista, con el nombre del año
+    lista_outliers[[anio]] <- ids_outliers
+    
+    # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
+    vector_outliers <- unique(c(vector_outliers, ids_outliers$IdEstablecimiento))
+  }
+  
+  
+  
+  
+  
+  list(
+    original =  original,
+    iteracion_1_vrs = iteracion_1_vrs,
+    iteracion_2_vrs = iteracion_2_vrs,
+    iteracion_1_crs = iteracion_1_crs,
+    iteracion_2_crs = iteracion_2_crs,
+    resultados_combinados = resultados_combinados,
+    resultados_correlacion = resultados_correlacion,
+    lista_outliers = lista_outliers,
+    vector_outliers = vector_outliers
+  )
+}
