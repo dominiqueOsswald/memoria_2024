@@ -9,6 +9,89 @@ library(gridExtra)
 library(purrr)
 
 
+resumen_eficiencia <- function(datos) {
+  # Lista para almacenar las posiciones por establecimiento
+  posiciones <- list()
+  # Lista para almacenar los porcentajes por región
+  porcentajes <- list()
+  
+  # Iteramos sobre cada año
+  for (año in names(datos)) {
+    df_año <- datos[[año]]
+    
+    # Guardamos la posición de cada establecimiento
+    posiciones[[año]] <- data.frame(
+      IdEstablecimiento = df_año$IdEstablecimiento,
+      Region = df_año$Region,
+      IDRegion = df_año$region_id,
+      Posicion = seq_len(nrow(df_año)),
+      Año = año
+    )
+    
+    # Calculamos el porcentaje de ocurrencia de cada región
+    porcentaje_region <- as.data.frame(prop.table(table(df_año$Region)) * 100)
+    colnames(porcentaje_region) <- c("Region", "Porcentaje")
+    
+    # Añadimos la columna IDRegion basada en la relación con la región
+    id_region <- unique(df_año[, c("Region", "region_id")])
+    porcentaje_region <- merge(porcentaje_region, id_region, by = "Region")
+    
+    porcentaje_region$Año <- año
+    porcentajes[[año]] <- porcentaje_region
+  }
+  
+  # Unimos todas las posiciones en un solo dataframe
+  posiciones_df <- do.call(rbind, posiciones)
+  
+  # Transformamos posiciones_df para que cada columna sea un año
+  posiciones_wide <- posiciones_df %>%
+    pivot_wider(names_from = Año, values_from = Posicion)
+  
+  # Unimos todos los porcentajes en un solo dataframe
+  porcentajes_df <- do.call(rbind, porcentajes)
+  
+  # Transformamos porcentajes_df para que cada columna sea un año y conservamos IDRegion
+  porcentajes_wide <- porcentajes_df %>%
+    pivot_wider(names_from = Año, values_from = Porcentaje, values_fill = list(Porcentaje = 0))
+  
+  # Retornamos una lista con los resultados
+  list(Posiciones = posiciones_wide, Porcentajes = porcentajes_wide)
+}
+
+
+top_eficiencia <- function(datos, tipo, cantidad, best){
+  # Creamos una lista vacía para almacenar los resultados
+  mejores_tipo <- list()
+  
+  # Iteramos sobre cada año en la lista principal
+  for (año in names(datos[["original"]])) {
+    # Accedemos al dataframe de cada año
+    df_año <- datos[["original"]][[año]][["data"]]
+    
+    # Ordenamos el dataframe por la variable 'vrs' de forma descendente
+    if (tipo == "vrs"){
+      df_ordenado <- df_año[order(-df_año$vrs), ]
+    }else{
+      df_ordenado <- df_año[order(-df_año$crs), ]
+    }
+    
+    if (best){
+      mejores <- head(df_ordenado, cantidad)
+      
+    }else{
+      mejores <- tail(df_ordenado, cantidad)
+    }
+    
+    # Guardamos el resultado en la lista
+    mejores_tipo[[año]] <- mejores
+  }
+  
+  # La lista mejores_25_vrs contendrá los 25 mejores valores de 'vrs' para cada año
+  # mejores_25_vrs
+  
+  return (mejores_tipo)
+}
+
 # -------------------------------------------- #
 #  CONSOLIDACIÓN DE DATOS
 # -------------------------------------------- #
@@ -355,10 +438,20 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
 resultados_iteracion <- function(datos, orientacion){
   
   original <-  aplicar_analisis_dea(datos, orientacion)
-  iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-  iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-  iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-  iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+  if (orientacion == "io"){
+      iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+      iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+      iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+      iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+      
+    
+  }else{
+    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    
+  }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
   
   resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios)
@@ -378,18 +471,10 @@ resultados_iteracion <- function(datos, orientacion){
   # Especificar los años que quieres iterar
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
   
-  # Iterar sobre cada año
   for (anio in anios) {
     
-    # Generar el boxplot para la columna "vrs" del año actual
-    boxplot(original[[anio]][["data"]]$vrs, 
-            main = paste("Boxplot de VRS - Año", anio), 
-            ylab = "VRS", 
-            col = "lightgray")
-    
-    # Obtener los valores atípicos en la columna "vrs" del año actual
+    # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
-    points(rep(1, length(outliers_vrs)), outliers_vrs, col = "red", pch = 16)
     
     # Filtrar el dataframe para obtener los IDs de los valores atípicos
     ids_outliers_vrs <- original[[anio]][["data"]] %>%
@@ -402,17 +487,8 @@ resultados_iteracion <- function(datos, orientacion){
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
     
-    
-    
-    # Generar el boxplot para la columna "vrs" del año actual
-    boxplot(original[[anio]][["data"]]$crs, 
-            main = paste("Boxplot de VRS - Año", anio), 
-            ylab = "VRS", 
-            col = "lightgray")
-    
-    # Obtener los valores atípicos en la columna "vrs" del año actual
+    # Generar y almacenar los valores atípicos de CRS
     outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
-    points(rep(1, length(outliers_crs)), outliers_crs, col = "red", pch = 16)
     
     # Filtrar el dataframe para obtener los IDs de los valores atípicos
     ids_outliers_crs <- original[[anio]][["data"]] %>%
@@ -426,20 +502,12 @@ resultados_iteracion <- function(datos, orientacion){
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
   
-  
-  
-  
-  
-  
-  
-  
-  
   list(
     original =  original,
-    #iteracion_1_vrs = iteracion_1_vrs,
-    #iteracion_2_vrs = iteracion_2_vrs,
-    #iteracion_1_crs = iteracion_1_crs,
-    #iteracion_2_crs = iteracion_2_crs,
+    iteracion_1_vrs = iteracion_1_vrs,
+    iteracion_2_vrs = iteracion_2_vrs,
+    iteracion_1_crs = iteracion_1_crs,
+    iteracion_2_crs = iteracion_2_crs,
     resultados_combinados = resultados_combinados,
     resultados_correlacion = resultados_correlacion,
     lista_outliers_vrs = lista_outliers_vrs,

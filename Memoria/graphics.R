@@ -6,6 +6,47 @@ library(plotly)
 library(chilemapas)
 
 
+
+colorear_region <- function(resumen){
+  chile_comunas <- chilemapas::mapa_comunas
+  
+  # Convertir el mapa a nivel de regiones, agrupando las comunas por región
+  chile_regiones <- chile_comunas %>%
+    group_by(codigo_region) %>%
+    summarize(geometry = st_union(geometry), .groups = "drop") %>%
+    st_as_sf()
+  
+  # Asegurarse de que la columna IDRegion en los datos de porcentaje sea de tipo character
+  resumen$Porcentajes <- resumen$Porcentajes %>%
+    mutate(region_id = as.character(region_id))
+  
+  # Unir el dataframe de porcentajes con el mapa de Chile usando el IDRegion
+  chile_porcentaje <- chile_regiones %>%
+    left_join(resumen$Porcentajes, by = c("codigo_region" = "region_id"))
+  
+  chile_porcentaje <- chile_porcentaje %>%
+    #filter(!is.na(Region)) %>%
+    mutate(across(starts_with("20"), as.numeric))  # Cambia "20" si tus columnas de año tienen otro prefijo
+  
+  
+  # Generar un gráfico para cada año
+  for (year in names(chile_porcentaje)[4:ncol(chile_porcentaje)]) { # Ajusta el índice según las columnas de año en tu data
+    
+    g <- ggplot(data = chile_porcentaje) +
+      geom_sf(aes(fill = !!sym(year)), color = "black") +
+      scale_fill_gradient(low = "#b2d8b2", high = "green", na.value = "white") +
+      labs(title = paste("Mapa de Chile - Año", year), fill = "Porcentaje") +
+      theme_minimal() 
+    #+  ggsave(paste0("mapa_chile_", year, ".png"))
+    print(g)
+  }
+  
+}
+
+
+
+
+
 # Cargar los datos de Chile
 world <- ne_countries(scale = "medium", returnclass = "sf")
 chile <- world[world$name == "Chile", ]
@@ -304,6 +345,62 @@ generar_graficos_iteracion <- function(resultados, tipo, tipo_columna, orientaci
     chile_map_plot(resultados[[anio]]$data, anio, tipo, tipo_columna, orientacion)
   })
 }
+
+
+
+
+
+
+
+region_mayoria <- function(hospitales_df, region, anio, tipo, datos_porcentaje) {
+  
+  
+  
+  
+  # Filtro de hospitales para la región seleccionada
+  hospitales_df_rm <- hospitales_df %>%
+    filter(region_id == region) %>%
+    filter(IdEstablecimiento != 112107)
+  
+  nombre_region <- hospitales_df_rm$Region[[1]]
+  
+  if (region == 13){
+    nombre_region = "Región Metropolitana"
+  }
+  
+  # Verificar si la región tiene hospitales después del filtro
+  if (nrow(hospitales_df_rm) == 0) {
+    stop("No hay hospitales en la región seleccionada.")
+  }
+  
+  codigo <- ifelse(region < 10, paste0("0", as.character(region)), as.character(region))
+  
+  # Filtrar las comunas de la región seleccionada
+  rm_comunas <- comunas_sf[comunas_sf$codigo_region == codigo, ]
+  
+  # Verificar si hay comunas en la región seleccionada
+  if (nrow(rm_comunas) == 0) {
+    stop("No hay comunas disponibles para la región seleccionada.")
+  }
+  
+  
+  # Crear el mapa de la región seleccionada
+  mapa_rm <- ggplot(data = rm_comunas) +
+    geom_sf(aes(geometry = geometry)) + 
+    geom_point(data = hospitales_df_rm, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.6)  +
+    
+    scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +  # Rango de valores para los colores
+    labs(title = paste("Eficiencia técnica hospitales públicos en", nombre_region, "(",tipo,") - Año ", anio),
+         color = "Valor", 
+         size = "Valor") +
+    theme_minimal()
+  
+  return(mapa_rm)
+}
+
+
+
+
 
 
 

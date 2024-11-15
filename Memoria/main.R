@@ -6,7 +6,7 @@ source("graphics.R")
 # ----------------------------------------------- #
 
 # -------------------------------------------- #
-#  CÁLCULO DEA INPUT
+#  CONSOLIDADO DE DATOS POR AÑO
 # -------------------------------------------- #
 
 anios <- c("2014", "2015", "2016", "2017", "2018", "2019","2020")
@@ -22,21 +22,135 @@ datos_iniciales <- list(
   
 )
 
-
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
+
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
-
 
 
 # -------------------------------------------- #
 #  CÁLCULO DEA INPUT
 # -------------------------------------------- #
 
-
 resultados_in <- resultados_iteracion(datos, "io")
 
-# Eliminacion de datos atipicos
+# -------------------------------------------- #
+#  CÁLCULO DEA OUTPUT
+# -------------------------------------------- #
+
+resultados_out <- resultados_iteracion(datos, "oo")
+
+
+# -------------------------------------------- #
+#    MALMQUIST 
+# -------------------------------------------- #
+
+
+malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
+malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
+malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
+malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
+
+
+
+
+# -------------------------------------------- #
+#    COMPARACIÓN DE METODOS 
+# -------------------------------------------- #
+
+
+# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
+in_vrs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_in[["original"]])) {
+  print(year)
+  in_vrs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["vrs"]]
+  in_crs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["crs"]]
+}
+
+
+
+
+out_vrs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Iterar sobre cada año para llenar los dataframes
+for (year in names(resultados_out[["original"]])) {
+  out_vrs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["vrs"]]
+  out_crs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["crs"]]
+}
+
+
+
+correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
+  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
+})
+
+correlaciones
+
+
+
+
+# Creamos una lista vacía para almacenar los resultados
+
+mejores_25 <- list("in_vrs" =top_eficiencia(resultados_in, "vrs", 25, TRUE),
+                   "in_crs" = top_eficiencia(resultados_in, "crs", 25, TRUE),
+                   "out_vrs" = top_eficiencia(resultados_out, "vrs", 25, TRUE),
+                   "out_crs" = top_eficiencia(resultados_out, "crs", 25, TRUE)) 
+
+
+
+
+resumen <- resumen_eficiencia(mejores_25$in_vrs)
+
+
+
+colorear_region(resumen)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------------- #
+#  ELIMINACIÓN DE DATOS ATÍPICOS INPUT
+# -------------------------------------------- #
+
 
 datos_cut_in_vrs <- lapply(datos, function(df) {
   df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_vrs"]]))
@@ -51,18 +165,9 @@ datos_cut_in_crs <- lapply(datos, function(df) {
 resultados_in_cut_vrs <- resultados_iteracion(datos_cut_in_vrs, "io")
 resultados_in_cut_crs <- resultados_iteracion(datos_cut_in_crs, "io")
 
-
-
 # -------------------------------------------- #
-#  CÁLCULO DEA OUTPUT
+#  ELIMINACIÓN DE DATOS ATÍPICOS OUTPUT
 # -------------------------------------------- #
-
-
-
-resultados_out <- aplicar_analisis_dea(datos, "oo")
-
-
-# Eliminacion de datos atipicos
 
 datos_cut_out_vrs <- lapply(datos, function(df) {
   df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_vrs"]]))
@@ -83,41 +188,32 @@ resultados_out_cut_crs <- resultados_iteracion(datos_cut_out_crs, "oo")
 
 
 
-# -------------------------------------------- #
-#    MALMQUIST 
-# -------------------------------------------- #
-
-
-malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
-malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
-malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
-malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
-
-
-
-
-# -------------------------------------------- #
-#    COMPARACIÓN DE METODOS
-# -------------------------------------------- #
 
 
 # Crear un dataframe para almacenar los valores de VRS y CRS por cada año
-in_vrs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
-in_crs_df <- data.frame(ID = resultados_in[["2014"]][["data"]][["IdEstablecimiento"]])
+in_vrs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
 
+in_vrs_df_cut <-
+in_vrs_df_cut <-  
+  
 # Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in)) {
-  in_vrs_df[[year]] <- resultados_in[[year]][["data"]][["vrs"]]
-  in_crs_df[[year]] <- resultados_in[[year]][["data"]][["crs"]]
+for (year in names(resultados_in[["original"]])) {
+  print(year)
+  in_vrs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["vrs"]]
+  in_crs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["crs"]]
 }
 
-out_vrs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
-out_crs_df <- data.frame(ID = resultados_out[["2014"]][["data"]][["IdEstablecimiento"]])
+
+
+
+out_vrs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
 
 # Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in)) {
-  out_vrs_df[[year]] <- resultados_out[[year]][["data"]][["vrs"]]
-  out_crs_df[[year]] <- resultados_out[[year]][["data"]][["crs"]]
+for (year in names(resultados_out[["original"]])) {
+  out_vrs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["vrs"]]
+  out_crs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["crs"]]
 }
 
 
@@ -140,16 +236,11 @@ correlaciones
 
 
 
-
-
-
-
-
-
-
-
-
-
+graficos_vrs <- list(
+  generar_graficos_iteracion(resultados_in, "Input VRS", "vrs", "in"),
+  generar_graficos_iteracion(resultados_in_2_vrs, "Input VRS", "vrs", "in"),
+  generar_graficos_iteracion(resultados_in_3_vrs, "Input VRS", "vrs", "in")
+)
 
 
 
