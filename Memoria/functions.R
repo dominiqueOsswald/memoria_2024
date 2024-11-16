@@ -9,6 +9,64 @@ library(gridExtra)
 library(purrr)
 
 
+combinar_resultados_in_out <- function(resultados_in, resultados_out) {
+  # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
+  lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
+    # Seleccionar los datos de las iteraciones de VRS
+    df_vrs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_input = vrs)
+    
+    df_vrs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_output = vrs)
+    
+    # Unir los dataframes de VRS por IdEstablecimiento
+    df_vrs_combinado <- df_vrs_input %>%
+      full_join(df_vrs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        vrs_input = ifelse(is.na(vrs_input), "NO APLICA", vrs_input),
+        vrs_output = ifelse(is.na(vrs_output), "NO APLICA", vrs_output),
+      )
+    
+    # Seleccionar los datos de las iteraciones de CRS
+    df_crs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_input = crs)
+    
+    df_crs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_output = crs)
+    
+    
+    # Unir los dataframes de CRS por IdEstablecimiento
+    df_crs_combinado <- df_crs_input %>%
+      full_join(df_crs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        crs_input = ifelse(is.na(crs_input), "NO APLICA", crs_input),
+        crs_output = ifelse(is.na(crs_output), "NO APLICA", crs_output)
+      )
+    
+    # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento
+    df_combinado <- df_vrs_combinado %>%
+      full_join(df_crs_combinado, by = "IdEstablecimiento")
+    
+    return(df_combinado)
+  })
+  
+  # Nombrar la lista con los años para identificación
+  names(lista_resultados_combinados) <- unique(names(resultados_in))
+  
+  return(lista_resultados_combinados)
+}
+
+
+
+
+normalize_min_max <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
 resumen_eficiencia <- function(datos) {
   # Lista para almacenar las posiciones por establecimiento
   posiciones <- list()
@@ -347,6 +405,30 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
   malmquist_index <- malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
                                RTS = tipo, ORIENTATION = orientacion)
   
+  
+  # Se generan dataframe que entreguen la info de indice, cambio de eficiencia y tecnologico
+  resultados_df <- data.frame(
+    ID = malmquist_index$id,
+    Año = malmquist_index$time,             # Periodo o año
+    MalmquistIndex = malmquist_index$m,     # Índice Malmquist total
+    Effch = malmquist_index$ec,          # Cambio en eficiencia
+    Techch = malmquist_index$tc        # Cambio tecnológico
+  )
+  
+  # Se construye cada uno de los dataframe
+  malmquist_df <- resultados_df %>%
+    select(ID, Año, MalmquistIndex) %>%
+    pivot_wider(names_from = Año, values_from = MalmquistIndex)
+  
+  effch_df <- resultados_df %>%
+    select(ID, Año, Effch) %>%
+    pivot_wider(names_from = Año, values_from = Effch)
+  
+  # Tercer dataframe solo con Techch
+  techch_df <- resultados_df %>%
+    select(ID, Año, Techch) %>%
+    pivot_wider(names_from = Año, values_from = Techch)
+  
   # Crear el dataframe de resultados
   efficiency_df <- data.frame(
     ID = malmquist_index$id,
@@ -354,13 +436,21 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
     Efficiency = malmquist_index$e11
   )
   
+  # Se elimina la columna que no tienen ningun valor
+  malmquist_df <- Filter(function(x) !all(is.na(x)),malmquist_df)
+  effch_df <- Filter(function(x) !all(is.na(x)),effch_df)
+  techch_df <- Filter(function(x) !all(is.na(x)), techch_df)
+  
   # Ordenar el dataframe por ID y TIME
   efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
   
   # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
   efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
   
-  return(efficiency_wide)
+  return(list(eficiencia = efficiency_wide, 
+              index = malmquist_df,
+              tech = techch_df,
+              eff = effch_df))
 }
 
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs) {
@@ -446,11 +536,33 @@ resultados_iteracion <- function(datos, orientacion){
       
     
   }else{
+    
+    
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", TRUE)
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", TRUE)
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", TRUE)
     iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", TRUE)
+
+    #print(iteracion_1_vrs[[year]][["data"]]$vrs)
     
+        
+    # Normalizando los datos
+    for (year in names(original)) {
+      # Normalizar VRS
+      original[[year]][["data"]]$vrs <- normalize_min_max(original[[year]][["data"]]$vrs)
+      iteracion_1_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_1_vrs[[year]][["data"]]$vrs)
+      iteracion_2_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_2_vrs[[year]][["data"]]$vrs)
+      
+      
+      
+      # Normalizar CRS
+      original[[year]][["data"]]$crs <- normalize_min_max(original[[year]][["data"]]$crs)
+      iteracion_1_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_1_crs[[year]][["data"]]$crs)
+      iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
+      
+    }
+    
+    #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
   

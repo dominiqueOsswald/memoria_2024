@@ -41,6 +41,11 @@ resultados_in <- resultados_iteracion(datos, "io")
 resultados_out <- resultados_iteracion(datos, "oo")
 
 
+# COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
+
+input_output_original <- combinar_resultados_in_out(resultados_in[["original"]], resultados_out[["original"]])
+graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios)
+
 # -------------------------------------------- #
 #    MALMQUIST 
 # -------------------------------------------- #
@@ -52,6 +57,20 @@ malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
 malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
 
 
+
+
+malmquist_long <- malmquist_df %>%
+  pivot_longer(cols = -ID, names_to = "Año", values_to = "MalmquistIndex") %>%
+  mutate(Año = as.numeric(Año)) # Convertir Año a numérico para el eje x
+
+# Crear el gráfico de puntos
+ggplot(malmquist_long, aes(x = Año, y = MalmquistIndex, color = as.factor(ID))) +
+  geom_point() +
+  labs(title = "Índice Malmquist por Año",
+       x = "Año",
+       y = "Índice Malmquist",
+       color = "ID") +
+  theme_minimal()
 
 
 # -------------------------------------------- #
