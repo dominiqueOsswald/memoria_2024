@@ -8,114 +8,14 @@ library(corrplot)
 library(gridExtra)
 library(purrr)
 
-
-combinar_resultados_in_out <- function(resultados_in, resultados_out) {
-  # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
-  lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
-    # Seleccionar los datos de las iteraciones de VRS
-    df_vrs_input <- resultados_in[[anio]]$data %>%
-      select(IdEstablecimiento, vrs) %>%
-      rename(vrs_input = vrs)
-    
-    df_vrs_output <- resultados_out[[anio]]$data %>%
-      select(IdEstablecimiento, vrs) %>%
-      rename(vrs_output = vrs)
-    
-    # Unir los dataframes de VRS por IdEstablecimiento
-    df_vrs_combinado <- df_vrs_input %>%
-      full_join(df_vrs_output, by = "IdEstablecimiento") %>%
-      mutate(
-        vrs_input = ifelse(is.na(vrs_input), "NO APLICA", vrs_input),
-        vrs_output = ifelse(is.na(vrs_output), "NO APLICA", vrs_output),
-      )
-    
-    # Seleccionar los datos de las iteraciones de CRS
-    df_crs_input <- resultados_in[[anio]]$data %>%
-      select(IdEstablecimiento, crs) %>%
-      rename(crs_input = crs)
-    
-    df_crs_output <- resultados_out[[anio]]$data %>%
-      select(IdEstablecimiento, crs) %>%
-      rename(crs_output = crs)
-    
-    
-    # Unir los dataframes de CRS por IdEstablecimiento
-    df_crs_combinado <- df_crs_input %>%
-      full_join(df_crs_output, by = "IdEstablecimiento") %>%
-      mutate(
-        crs_input = ifelse(is.na(crs_input), "NO APLICA", crs_input),
-        crs_output = ifelse(is.na(crs_output), "NO APLICA", crs_output)
-      )
-    
-    # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento
-    df_combinado <- df_vrs_combinado %>%
-      full_join(df_crs_combinado, by = "IdEstablecimiento")
-    
-    return(df_combinado)
-  })
-  
-  # Nombrar la lista con los años para identificación
-  names(lista_resultados_combinados) <- unique(names(resultados_in))
-  
-  return(lista_resultados_combinados)
+aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
+  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
+         datos, resultados, SIMPLIFY = FALSE)
 }
-
-
-
 
 normalize_min_max <- function(x) {
   (x - min(x)) / (max(x) - min(x))
 }
-
-resumen_eficiencia <- function(datos) {
-  # Lista para almacenar las posiciones por establecimiento
-  posiciones <- list()
-  # Lista para almacenar los porcentajes por región
-  porcentajes <- list()
-  
-  # Iteramos sobre cada año
-  for (año in names(datos)) {
-    df_año <- datos[[año]]
-    
-    # Guardamos la posición de cada establecimiento
-    posiciones[[año]] <- data.frame(
-      IdEstablecimiento = df_año$IdEstablecimiento,
-      Region = df_año$Region,
-      IDRegion = df_año$region_id,
-      Posicion = seq_len(nrow(df_año)),
-      Año = año
-    )
-    
-    # Calculamos el porcentaje de ocurrencia de cada región
-    porcentaje_region <- as.data.frame(prop.table(table(df_año$Region)) * 100)
-    colnames(porcentaje_region) <- c("Region", "Porcentaje")
-    
-    # Añadimos la columna IDRegion basada en la relación con la región
-    id_region <- unique(df_año[, c("Region", "region_id")])
-    porcentaje_region <- merge(porcentaje_region, id_region, by = "Region")
-    
-    porcentaje_region$Año <- año
-    porcentajes[[año]] <- porcentaje_region
-  }
-  
-  # Unimos todas las posiciones en un solo dataframe
-  posiciones_df <- do.call(rbind, posiciones)
-  
-  # Transformamos posiciones_df para que cada columna sea un año
-  posiciones_wide <- posiciones_df %>%
-    pivot_wider(names_from = Año, values_from = Posicion)
-  
-  # Unimos todos los porcentajes en un solo dataframe
-  porcentajes_df <- do.call(rbind, porcentajes)
-  
-  # Transformamos porcentajes_df para que cada columna sea un año y conservamos IDRegion
-  porcentajes_wide <- porcentajes_df %>%
-    pivot_wider(names_from = Año, values_from = Porcentaje, values_fill = list(Porcentaje = 0))
-  
-  # Retornamos una lista con los resultados
-  list(Posiciones = posiciones_wide, Porcentajes = porcentajes_wide)
-}
-
 
 top_eficiencia <- function(datos, tipo, cantidad, best){
   # Creamos una lista vacía para almacenar los resultados
@@ -133,19 +33,13 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
       df_ordenado <- df_año[order(-df_año$crs), ]
     }
     
-    if (best){
-      mejores <- head(df_ordenado, cantidad)
-      
-    }else{
-      mejores <- tail(df_ordenado, cantidad)
-    }
+    if (best){mejores <- head(df_ordenado, cantidad)
     
-    # Guardamos el resultado en la lista
+    }else{mejores <- tail(df_ordenado, cantidad)}
+    
     mejores_tipo[[año]] <- mejores
   }
   
-  # La lista mejores_25_vrs contendrá los 25 mejores valores de 'vrs' para cada año
-  # mejores_25_vrs
   
   return (mejores_tipo)
 }
@@ -354,7 +248,9 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   return (resultados = resultados_in)
 }
 
-
+# -------------------------------------------- #
+#  CÁLCULO DE INDICE MALMQUIST
+# -------------------------------------------- #
 calcular_malmquist <- function(datos, tipo, orientacion) {
   
   # Inicializar listas y vectores para almacenar inputs, outputs, ID y TIME
@@ -453,6 +349,9 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
               eff = effch_df))
 }
 
+# -------------------------------------------- #
+#  
+# -------------------------------------------- #
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs) {
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
@@ -515,19 +414,14 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
   return(lista_resultados_combinados)
 }
 
-aplicar_analisis_dea <- function(datos, metodo) {
-  sapply(datos, function(data) analisis_dea_general(data, metodo), simplify = FALSE)
-}
-
-aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
-  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
-         datos, resultados, SIMPLIFY = FALSE)
-}
-
-
+# -------------------------------------------- #
+#  
+# -------------------------------------------- #
 resultados_iteracion <- function(datos, orientacion){
   
-  original <-  aplicar_analisis_dea(datos, orientacion)
+  original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
+  
+  #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
       iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
@@ -628,3 +522,132 @@ resultados_iteracion <- function(datos, orientacion){
     vector_outliers_crs = vector_outliers_crs
   )
 }
+
+# -------------------------------------------- #
+#  función para calcular la correlación entre VRS y CRS para cada año
+# -------------------------------------------- #
+calcular_correlaciones <- function(df1, df2, id_col = "ID") {
+  # Encontrar IDs comunes
+  ids_comunes <- intersect(df1[[id_col]], df2[[id_col]])
+  
+  # Filtrar dataframes con los IDs comunes
+  df1_filtrado <- df1[df1[[id_col]] %in% ids_comunes, ]
+  df2_filtrado <- df2[df2[[id_col]] %in% ids_comunes, ]
+  
+  # Calcular correlaciones por año
+  correlaciones <- sapply(names(df1_filtrado)[-1], function(year) {
+    cor(df1_filtrado[[year]], df2_filtrado[[year]], use = "complete.obs")
+  })
+  
+  return(correlaciones)
+}
+
+# -------------------------------------------- #
+#  
+# -------------------------------------------- #
+combinar_resultados_in_out <- function(resultados_in, resultados_out) {
+  # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
+  lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
+    # Seleccionar los datos de las iteraciones de VRS
+    df_vrs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_input = vrs)
+    
+    df_vrs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_output = vrs)
+    
+    # Unir los dataframes de VRS por IdEstablecimiento
+    df_vrs_combinado <- df_vrs_input %>%
+      full_join(df_vrs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        vrs_input = ifelse(is.na(vrs_input), "NO APLICA", vrs_input),
+        vrs_output = ifelse(is.na(vrs_output), "NO APLICA", vrs_output),
+      )
+    
+    # Seleccionar los datos de las iteraciones de CRS
+    df_crs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_input = crs)
+    
+    df_crs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_output = crs)
+    
+    
+    # Unir los dataframes de CRS por IdEstablecimiento
+    df_crs_combinado <- df_crs_input %>%
+      full_join(df_crs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        crs_input = ifelse(is.na(crs_input), "NO APLICA", crs_input),
+        crs_output = ifelse(is.na(crs_output), "NO APLICA", crs_output)
+      )
+    
+    # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento
+    df_combinado <- df_vrs_combinado %>%
+      full_join(df_crs_combinado, by = "IdEstablecimiento")
+    
+    return(df_combinado)
+  })
+  
+  # Nombrar la lista con los años para identificación
+  names(lista_resultados_combinados) <- unique(names(resultados_in))
+  
+  return(lista_resultados_combinados)
+}
+
+# -------------------------------------------- #
+#  
+# -------------------------------------------- #
+resumen_eficiencia <- function(datos) {
+  # Lista para almacenar las posiciones por establecimiento
+  posiciones <- list()
+  # Lista para almacenar los porcentajes por región
+  porcentajes <- list()
+  
+  # Iteramos sobre cada año
+  for (año in names(datos)) {
+    df_año <- datos[[año]]
+    
+    # Guardamos la posición de cada establecimiento
+    posiciones[[año]] <- data.frame(
+      IdEstablecimiento = df_año$IdEstablecimiento,
+      Region = df_año$Region,
+      IDRegion = df_año$region_id,
+      Posicion = seq_len(nrow(df_año)),
+      Año = año
+    )
+    
+    # Calculamos el porcentaje de ocurrencia de cada región
+    porcentaje_region <- as.data.frame(prop.table(table(df_año$Region)) * 100)
+    colnames(porcentaje_region) <- c("Region", "Porcentaje")
+    
+    # Añadimos la columna IDRegion basada en la relación con la región
+    id_region <- unique(df_año[, c("Region", "region_id")])
+    porcentaje_region <- merge(porcentaje_region, id_region, by = "Region")
+    
+    porcentaje_region$Año <- año
+    porcentajes[[año]] <- porcentaje_region
+  }
+  
+  # Unimos todas las posiciones en un solo dataframe
+  posiciones_df <- do.call(rbind, posiciones)
+  
+  # Transformamos posiciones_df para que cada columna sea un año
+  posiciones_wide <- posiciones_df %>%
+    pivot_wider(names_from = Año, values_from = Posicion)
+  
+  # Unimos todos los porcentajes en un solo dataframe
+  porcentajes_df <- do.call(rbind, porcentajes)
+  
+  # Transformamos porcentajes_df para que cada columna sea un año y conservamos IDRegion
+  porcentajes_wide <- porcentajes_df %>%
+    pivot_wider(names_from = Año, values_from = Porcentaje, values_fill = list(Porcentaje = 0))
+  
+  # Retornamos una lista con los resultados
+  list(Posiciones = posiciones_wide, Porcentajes = porcentajes_wide)
+}
+
+
+
+

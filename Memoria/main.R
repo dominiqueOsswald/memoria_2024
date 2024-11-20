@@ -4,7 +4,7 @@ source("functions.R")
 source("graphics.R")
 
 # ----------------------------------------------- #
-
+# ==============================================
 # -------------------------------------------- #
 #  CONSOLIDADO DE DATOS POR AÑO
 # -------------------------------------------- #
@@ -28,24 +28,90 @@ dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimien
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
 
+# ==============================================
 # -------------------------------------------- #
-#  CÁLCULO DEA INPUT
+#  CÁLCULO DEA - SENSIBILIDAD
 # -------------------------------------------- #
+
+#  INPUT
 
 resultados_in <- resultados_iteracion(datos, "io")
 
-# -------------------------------------------- #
-#  CÁLCULO DEA OUTPUT
-# -------------------------------------------- #
+#  OUTPUT
 
 resultados_out <- resultados_iteracion(datos, "oo")
 
-
-# COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
+#  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 
 input_output_original <- combinar_resultados_in_out(resultados_in[["original"]], resultados_out[["original"]])
 graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios)
 
+# ==============================================
+# -------------------------------------------- #
+#  ELIMINACIÓN DE DATOS ATÍPICOS
+# -------------------------------------------- #
+
+# INPUT
+
+datos_cut_in_vrs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_vrs"]]))})
+datos_cut_in_crs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_crs"]]))})
+
+resultados_in_cut_vrs <- resultados_iteracion(datos_cut_in_vrs, "io")
+resultados_in_cut_crs <- resultados_iteracion(datos_cut_in_crs, "io")
+
+# OUTPUT
+
+datos_cut_out_vrs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_vrs"]]))})
+datos_cut_out_crs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_crs"]]))})
+
+resultados_out_cut_vrs <- resultados_iteracion(datos_cut_out_vrs, "oo")
+resultados_out_cut_crs <- resultados_iteracion(datos_cut_out_crs, "oo")
+
+# ==============================================
+# -------------------------------------------- #
+#    COMPARACIÓN DE METODOS 
+# -------------------------------------------- #
+
+# Crear dataframes base de ID
+in_vrs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_vrs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+
+in_vrs_por_anio_cut <- data.frame(ID = resultados_in_cut_vrs[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+in_crs_por_anio_cut <- data.frame(ID = resultados_in_cut_crs[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_vrs_por_anio_cut <- data.frame(ID = resultados_out_cut_vrs[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+out_crs_por_anio_cut <- data.frame(ID = resultados_out_cut_crs[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+
+# Llenar los dataframes con los valores de VRS y CRS por cada año
+for (year in names(resultados_in[["original"]])) {
+  in_vrs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["vrs"]]
+  in_crs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["crs"]]
+  
+  in_vrs_por_anio_cut[[year]] <- resultados_in_cut_vrs[["original"]][[year]][["data"]][["vrs"]]
+  in_crs_por_anio_cut[[year]] <- resultados_in_cut_crs[["original"]][[year]][["data"]][["crs"]]
+  
+  out_vrs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["vrs"]]
+  out_crs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["crs"]]
+  
+  out_vrs_por_anio_cut[[year]] <- resultados_out_cut_vrs[["original"]][[year]][["data"]][["vrs"]]
+  out_crs_por_anio_cut[[year]] <- resultados_out_cut_crs[["original"]][[year]][["data"]][["crs"]]
+}
+
+# Calcular las correlaciones utilizando la función creada
+correlaciones_in_vrs <- calcular_correlaciones(in_vrs_df, in_vrs_por_anio_cut)
+correlaciones_in_crs <- calcular_correlaciones(in_crs_df, in_crs_por_anio_cut)
+correlaciones_out_vrs <- calcular_correlaciones(out_vrs_df, out_vrs_por_anio_cut)
+correlaciones_out_crs <- calcular_correlaciones(out_crs_df, out_crs_por_anio_cut)
+
+# Imprimir las correlaciones 
+
+print(correlaciones_in_vrs)
+print(correlaciones_in_crs)
+print(correlaciones_out_vrs)
+print(correlaciones_out_crs)
+
+# ==============================================
 # -------------------------------------------- #
 #    MALMQUIST 
 # -------------------------------------------- #
@@ -57,62 +123,24 @@ malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
 malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
 
 
+malmquist_in_vrs[["index"]][, -1] <- lapply(malmquist_in_vrs[["index"]][, -1], as.numeric)
 
-
-malmquist_long <- malmquist_df %>%
-  pivot_longer(cols = -ID, names_to = "Año", values_to = "MalmquistIndex") %>%
-  mutate(Año = as.numeric(Año)) # Convertir Año a numérico para el eje x
-
-# Crear el gráfico de puntos
-ggplot(malmquist_long, aes(x = Año, y = MalmquistIndex, color = as.factor(ID))) +
-  geom_point() +
-  labs(title = "Índice Malmquist por Año",
-       x = "Año",
-       y = "Índice Malmquist",
-       color = "ID") +
-  theme_minimal()
-
-
-# -------------------------------------------- #
-#    COMPARACIÓN DE METODOS 
-# -------------------------------------------- #
-
-
-# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
-in_vrs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-in_crs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in[["original"]])) {
-  print(year)
-  in_vrs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["vrs"]]
-  in_crs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["crs"]]
+# Calcular la tasa de crecimiento año a año
+tasa_crecimiento <- malmquist_in_vrs[["index"]]
+#tasa_crecimiento_pre <- malmquist_in_vrs[["index"]][, -ncol(malmquist_in_vrs[["index"]])]
+for (i in 3:ncol(malmquist_in_vrs[["index"]])) {
+  tasa_crecimiento[[i]] <- (malmquist_in_vrs[["index"]][[i]] - malmquist_in_vrs[["index"]][[i-1]]) / malmquist_in_vrs[["index"]][[i-1]]
+  #tasa_crecimiento_pre[[i]] <- (malmquist_in_vrs[["index"]][[i]] - malmquist_in_vrs[["index"]][[i-1]]) / malmquist_in_vrs[["index"]][[i-1]]
 }
 
+colnames(tasa_crecimiento)[-1] <- paste0("Crecimiento_", colnames(malmquist_in_vrs[["index"]])[-1])
+tasa_promedio <- rowMeans(tasa_crecimiento[, -1], na.rm = TRUE)
+tasa_crecimiento$Tasa_Promedio_Pre_Pandemia <- tasa_promedio
 
-
-
-out_vrs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-out_crs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_out[["original"]])) {
-  out_vrs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["vrs"]]
-  out_crs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["crs"]]
-}
-
-
-
-correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
-  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
-})
-
-correlaciones
-
-
-
-
-# Creamos una lista vacía para almacenar los resultados
+# ==============================================
+# -------------------------------------------- #
+#    GRAFICA DE MEJORES RESULTADOS 
+# -------------------------------------------- #
 
 mejores_25 <- list("in_vrs" =top_eficiencia(resultados_in, "vrs", 25, TRUE),
                    "in_crs" = top_eficiencia(resultados_in, "crs", 25, TRUE),
@@ -120,149 +148,11 @@ mejores_25 <- list("in_vrs" =top_eficiencia(resultados_in, "vrs", 25, TRUE),
                    "out_crs" = top_eficiencia(resultados_out, "crs", 25, TRUE)) 
 
 
-
-
 resumen <- resumen_eficiencia(mejores_25$in_vrs)
-
-
 
 colorear_region(resumen)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# -------------------------------------------- #
-#  ELIMINACIÓN DE DATOS ATÍPICOS INPUT
-# -------------------------------------------- #
-
-
-datos_cut_in_vrs <- lapply(datos, function(df) {
-  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_vrs"]]))
-})
-
-datos_cut_in_crs <- lapply(datos, function(df) {
-  df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_crs"]]))
-})
-
-
-
-resultados_in_cut_vrs <- resultados_iteracion(datos_cut_in_vrs, "io")
-resultados_in_cut_crs <- resultados_iteracion(datos_cut_in_crs, "io")
-
-# -------------------------------------------- #
-#  ELIMINACIÓN DE DATOS ATÍPICOS OUTPUT
-# -------------------------------------------- #
-
-datos_cut_out_vrs <- lapply(datos, function(df) {
-  df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_vrs"]]))
-})
-
-datos_cut_out_crs <- lapply(datos, function(df) {
-  df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_crs"]]))
-})
-
-
-
-resultados_out_cut_vrs <- resultados_iteracion(datos_cut_out_vrs, "oo")
-resultados_out_cut_crs <- resultados_iteracion(datos_cut_out_crs, "oo")
-
-
-
-
-
-
-
-
-
-# Crear un dataframe para almacenar los valores de VRS y CRS por cada año
-in_vrs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-in_crs_df <- data.frame(ID = resultados_in[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-
-in_vrs_df_cut <-
-in_vrs_df_cut <-  
-  
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_in[["original"]])) {
-  print(year)
-  in_vrs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["vrs"]]
-  in_crs_df[[year]] <- resultados_in[["original"]][[year]][["data"]][["crs"]]
-}
-
-
-
-
-out_vrs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-out_crs_df <- data.frame(ID = resultados_out[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-
-# Iterar sobre cada año para llenar los dataframes
-for (year in names(resultados_out[["original"]])) {
-  out_vrs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["vrs"]]
-  out_crs_df[[year]] <- resultados_out[["original"]][[year]][["data"]][["crs"]]
-}
-
-
-
-correlaciones <- sapply(names(in_vrs_df)[-1], function(year) {
-  cor(in_vrs_df[[year]], malmquist_in_vrs[[year]], use = "complete.obs")
-})
-
-correlaciones
-
-
-
-
-
-
-
-
-
-
-
-
-
-graficos_vrs <- list(
-  generar_graficos_iteracion(resultados_in, "Input VRS", "vrs", "in"),
-  generar_graficos_iteracion(resultados_in_2_vrs, "Input VRS", "vrs", "in"),
-  generar_graficos_iteracion(resultados_in_3_vrs, "Input VRS", "vrs", "in")
-)
-
-
-
+# ==============================================
 # -------------------------------------------- #
 #  GRAFICA DEA INPUT
 # -------------------------------------------- #
@@ -270,28 +160,18 @@ graficos_vrs <- list(
 
 # Graficas #
 # Generar y mostrar gráficos VRS
-graficos_vrs <- list(
-  generar_graficos_iteracion(resultados_in, "Input VRS", "vrs", "in"),
-  generar_graficos_iteracion(resultados_in_2_vrs, "Input VRS", "vrs", "in"),
-  generar_graficos_iteracion(resultados_in_3_vrs, "Input VRS", "vrs", "in")
-)
+
+grafica <- generar_graficos_iteracion(resultados_in[["original"]], "Input VRS", "vrs", "in")
+print(grafica)
+
+
+do.call(grid.arrange, c(grafica, nrow = 2, ncol = 4)) # Ajusta según tus necesidades
 
 # Mostrar gráficos VRS
 lapply(graficos_vrs, function(graficos) {
   grid.arrange(grobs = graficos, ncol = 3)
 })
 
-# Generar y mostrar gráficos CRS
-graficos_crs <- list(
-  generar_graficos_iteracion(resultados_in, "Input CRS", "crs", "in"),
-  generar_graficos_iteracion(resultados_in_2_crs, "Input CRS", "crs", "in"),
-  generar_graficos_iteracion(resultados_in_3_crs, "Input CRS", "crs", "in")
-)
-
-# Mostrar gráficos CRS
-lapply(graficos_crs, function(graficos) {
-  grid.arrange(grobs = graficos, ncol = 3)
-})
 
 
 # Iterar sobre los años y mostrar los gráficos
@@ -301,78 +181,150 @@ for (anio in anios) {
   grid.arrange(grobs = graficos_vrs, ncol = 3, top = paste("Comparación de Eficiencia Input VRS - Año", anio))
 }
 
+# ==============================================
+#-------------------------------------#
+# DETERMINANTES #
+#-------------------------------------#
+datos_consolidados <- read.table("data/2014/2014_consolidated_data.csv", sep=";", header=TRUE)
 
-for (anio in anios) {
-  graficos_crs <- generar_graficos_por_anio_crs(anio, "CRS")
-  # Mostrar los gráficos en una fila (3 gráficos por año)
-  grid.arrange(grobs = graficos, ncol = 3, top = paste("Comparación de Eficiencia Input CRS - Año", anio))
-}
-
-
-
+variables_independientes <- colnames(datos_consolidados)
 
 
+variances <- apply(datos_consolidados[, variables_independientes], 2, var, na.rm = TRUE)
+filtered_vars <- names(variances[variances > 0.1])  # Umbral ajustable
 
-
-
-
+filtered_data <- datos_consolidados[, filtered_vars]
 
 
 
-# -------------------------------------------- #
-#  GRAFICA DEA OUTPUT
-# -------------------------------------------- #
+setdiff(filtered_vars,colnames(datos_consolidados))
+
+valid_filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
+print(valid_filtered_vars)
+
+
+# No me tinca esto, revisar para que pueda traer todas kas variables
+filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
+
+
+data_filtered_vars <- datos_consolidados %>% select(all_of(filtered_vars))
+
+df_vrs <- resultados_in[["original"]][["2014"]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+  rename("idEstablecimiento" = "IdEstablecimiento")
+
+df_filtered <- data_filtered_vars %>%
+  filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+
+# Combinar los dataframes por la columna "ID"
+df_merged <- merge(df_filtered, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+
+df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
+
+
+df_merged[is.na(df_merged)] <- 0
+
+# Seleccionar solo columnas numéricas
+numeric_columns <- sapply(df_merged, is.numeric)
+df_numeric <- df_merged[, numeric_columns]
+
+correlations <- sapply(df_numeric, function(x) cor(x, df_numeric$vrs, use = "complete.obs"))
+filtered_vars <- names(correlations[abs(correlations) > 0.1])  # Umbral ajustable
 
 
 
-# Graficas #
-# Generar y mostrar gráficos VRS
-graficos_vrs_out <- list(
-  generar_graficos_iteracion(resultados_out, "Output VRS", "vrs", "out"),
-  generar_graficos_iteracion(resultados_out_2_vrs, "Output VRS", "vrs", "out"),
-  generar_graficos_iteracion(resultados_out_3_vrs, "Output VRS", "vrs", "out")
-)
 
-# Mostrar gráficos VRS
-lapply(graficos_vrs_out, function(graficos) {
-  grid.arrange(grobs = graficos, ncol = 3)
+
+
+
+
+#datos_consolidados$idEstablecimiento
+
+
+
+
+
+
+
+
+library(AER)
+
+
+df_merged[is.na(df_merged)] <- 0
+
+# Dividir las variables en bloques de 1000
+chunk_size <- 10
+chunks <- split(variables_independientes, ceiling(seq_along(variables_independientes) / chunk_size))
+
+variables_independientes[1:10]
+
+formula <- as.formula(paste("vrs ~", paste(variables_independientes[1:10], collapse = " + ")))
+tobit_1 <- tobit(formula, data = df_merged[,-1], left = 0)
+
+
+
+sapply(df_merged, function(x) if (is.factor(x)) levels(x))
+
+# Ajustar modelos por partes
+resultados <- lapply(chunks, function(vars) {
+  formula <- as.formula(paste("vrs ~", paste(vars, collapse = " + ")))
+  tobit(formula, data = df_merged[,-1], left = 0)
 })
 
-# Generar y mostrar gráficos CRS
-graficos_crs_out <- list(
-  generar_graficos_iteracion(resultados_out, "Output CRS", "crs"),
-  generar_graficos_iteracion(resultados_out_2_crs, "Output CRS", "crs"),
-  generar_graficos_iteracion(resultados_out_3_crs, "Output CRS", "crs")
-)
-
-# Mostrar gráficos CRS
-lapply(graficos_crs_out, function(graficos) {
-  grid.arrange(grobs = graficos, ncol = 3)
-})
-
-
-# Iterar sobre los años y mostrar los gráficos
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019")
-for (anio in anios) {
-  graficos_vrs <- generar_graficos_por_anio(anio, "Output - VRS")
-  # Mostrar los gráficos en una fila (3 gráficos por año)
-  grid.arrange(grobs = graficos_vrs, ncol = 3, top = paste("Comparación de Eficiencia Output VRS - Año", anio))
-}
-
-
-for (anio in anios) {
-  graficos_crs <- generar_graficos_por_anio_crs(anio, "CRS")
-  # Mostrar los gráficos en una fila (3 gráficos por año)
-  grid.arrange(grobs = graficos, ncol = 3, top = paste("Comparación de Eficiencia Output CRS - Año", anio))
-}
-
-
-#------------------------------------- #
+# Combinar resultados (puedes analizar significancia o métricas)
+summary(resultados[[1]])  # Ejemplo con el primer modelo
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+formula <- as.formula(paste("y ~", paste(variables_independientes, collapse = " + ")))
+
+
+
+variances <- apply(datos_consolidados[, variables_independientes], 2, var)
+
+# Explorar estadísticas descriptivas
+summary(variances)
+hist(variances, breaks = 50, main = "Distribución de Varianzas", xlab = "Varianza")
+
+
+
+
+
+variances <- apply(datos_consolidados[, variables_independientes], 2, var)
+threshold <- 1e-6  # Ajusta según el caso
+filtered_vars <- names(variances[variances > threshold])
+
+
+
+
+
+# Resultado
+print(df_merged)
+
+
+library(glmnet)
+
+# Convertir datos a matrices
+X <- as.matrix(datos_consolidados[, variables_independientes])
+Y <- datos_consolidados$y
+
+# Ajustar modelo LASSO
+modelo_lasso <- cv.glmnet(X, Y, alpha = 1, family = "gaussian")  # Alpha = 1 para LASSO
+
+# Variables seleccionadas
+coeficientes <- coef(modelo_lasso, s = "lambda.min")
+print(coeficientes)
 
 # Falta esta data
 #data_2021 <- consolidar_datos_por_anio(2021)
