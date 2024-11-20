@@ -186,50 +186,44 @@ for (anio in anios) {
 # DETERMINANTES #
 #-------------------------------------#
 datos_consolidados <- read.table("data/2014/2014_consolidated_data.csv", sep=";", header=TRUE)
+df <- datos_consolidados
+df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
 
-variables_independientes <- colnames(datos_consolidados)
 
-
-variances <- apply(datos_consolidados[, variables_independientes], 2, var, na.rm = TRUE)
-filtered_vars <- names(variances[variances > 0.1])  # Umbral ajustable
-
-filtered_data <- datos_consolidados[, filtered_vars]
+variables_independientes <- colnames(df[,-1])
 
 
 
-setdiff(filtered_vars,colnames(datos_consolidados))
 
-valid_filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
-print(valid_filtered_vars)
+#setdiff(filtered_vars,colnames(datos_normalizados))
+
+#valid_filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
+#print(valid_filtered_vars)
 
 
 # No me tinca esto, revisar para que pueda traer todas kas variables
-filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
+# filtered_vars <- intersect(filtered_vars, colnames(datos_normalizados))
 
 
-data_filtered_vars <- datos_consolidados %>% select(all_of(filtered_vars))
+# data_filtered_vars <- datos_consolidados %>% select(all_of(filtered_vars))
 
 df_vrs <- resultados_in[["original"]][["2014"]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
   rename("idEstablecimiento" = "IdEstablecimiento")
 
-df_filtered <- data_filtered_vars %>%
+df_w_vrs <- df %>%
   filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
 
 # Combinar los dataframes por la columna "ID"
-df_merged <- merge(df_filtered, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
 
 df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
 
 
 df_merged[is.na(df_merged)] <- 0
 
-# Seleccionar solo columnas numéricas
-numeric_columns <- sapply(df_merged, is.numeric)
-df_numeric <- df_merged[, numeric_columns]
 
 correlations <- sapply(df_numeric, function(x) cor(x, df_numeric$vrs, use = "complete.obs"))
 filtered_vars <- names(correlations[abs(correlations) > 0.1])  # Umbral ajustable
-
 
 
 
@@ -249,15 +243,14 @@ filtered_vars <- names(correlations[abs(correlations) > 0.1])  # Umbral ajustabl
 library(AER)
 
 
-df_merged[is.na(df_merged)] <- 0
 
 # Dividir las variables en bloques de 1000
-chunk_size <- 10
+chunk_size <- 1000
 chunks <- split(variables_independientes, ceiling(seq_along(variables_independientes) / chunk_size))
 
 variables_independientes[1:10]
 
-formula <- as.formula(paste("vrs ~", paste(variables_independientes[1:10], collapse = " + ")))
+formula <- as.formula(paste("vrs ~", paste(variables_independientes[1:600], collapse = " + ")))
 tobit_1 <- tobit(formula, data = df_merged[,-1], left = 0)
 
 
