@@ -66,40 +66,7 @@ region_vrs <- function(hospitales_df, region, anio, tipo) {
 # -------------------------------------- #
 # Graficar Chile según el criterio de orientacion y variacion
 # -------------------------------------- #
-chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna, orientacion) {
-
-  
-  if (orientacion == "out"){
-    min <- 1
-    max <- 5
-    
-    ggplot(data = chile) +
-      geom_sf() +
-      geom_point(
-        data = hospitales_df,
-        aes_string(
-          x = "longitud",
-          y = "latitud",
-          color = tipo_columna,
-          size = paste("ifelse(", tipo_columna, " == 'vrs', (1/", tipo_columna, ") * 5, ", tipo_columna, ")"),
-          text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
-        ),
-        alpha = 0.7
-      ) +
-      scale_color_gradient(low = "green", high = "red", limits = c(min, max)) +
-      labs(
-        title = paste(tipo, "- Año", anio),
-        color = "Valor",
-        size = "Valor"
-      ) +
-      theme_minimal()
-    
-    
-    
-  } 
-  else{
-    min <- 0
-    max <- 1
+chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna) {
 
     ggplot(data = chile) +
       geom_sf() +
@@ -114,14 +81,13 @@ chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna, orientacion)
         ),
         alpha = 0.7
       ) +
-      scale_color_gradient(low = "red", high = "green", limits = c(min, max)) +
+      scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +
       labs(
         title = paste(tipo, "- Año", anio),
         color = "Valor",
         size = "Valor"
       ) +
       theme_minimal()    
-  }
 
 }
 
@@ -198,29 +164,39 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
   filas <- ceiling(sqrt(num_graficos))
   columnas <- ceiling(num_graficos / filas)
   
-  # Ajustar la ventana gráfica y graficar las matrices de correlación
-  par(mfrow = c(filas, columnas), mar = c(1, 1, 1, 3))
+  
+  
+  
+  # Ajustar la ventana gráfica y definir una configuración para múltiples gráficos
+  colores_personalizados <- colorRampPalette(c("red", "yellow", "green"))(200)  # De rojo (mínimo) a verde (máximo)
+  par(mfrow = c(filas, columnas), mar = c(2, 2, 2, 2), oma = c(4, 4, 4, 4))  # Ajustar márgenes (oma es el margen externo)
+  
+  # Crear las gráficas
   for (anio in names(correlaciones_lista)) {
-    corrplot(correlaciones_lista[[anio]], method = "color", title = paste("Matriz de Correlación - Año", anio))
+    corrplot(
+      correlaciones_lista[[anio]], 
+      col = colores_personalizados, 
+      method = "color", 
+      title = paste("Matriz de Correlación - Año", anio),
+      mar = c(0, 0, 2, 0)  # Márgenes más pequeños para cada gráfico
+    )
   }
+  
+  # Agregar un título general
+  mtext(
+    "Matrices de Correlación de métodos por Año", 
+    outer = TRUE, 
+    cex = 1.5,  # Tamaño del texto
+    font = 2    # Estilo en negrita
+  )
   
   # Restablecer la configuración gráfica por defecto
   par(mfrow = c(1, 1))
   
   
   
-  # Calcular las matrices de correlación para cada dataframe en la lista
-  correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
-    df_num <- df %>%
-      select(-IdEstablecimiento) %>%
-      mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
-      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
-    
-    cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
-  })
   
-  # Nombrar la lista con los años para identificación
-  names(correlaciones_lista) <- names(lista_resultados_combinados_in)
+  
   
   # Calcular la correlación entre todas las combinaciones de años y almacenar en una matriz 6x6
   correlacion_matriz <- matrix(NA, nrow = length(anios), ncol = length(anios), dimnames = list(anios, anios))
@@ -234,20 +210,26 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
     }
   }
   
+  print(correlacion_matriz)
+  
   # Convertir la matriz a formato largo para ggplot2
   correlacion_df <- melt(correlacion_matriz, varnames = c("Año1", "Año2"), value.name = "Correlacion")
   
+  print(correlacion_df)
   # Crear el gráfico de calor
   grafico <- ggplot(correlacion_df, aes(x = Año1, y = Año2, fill = Correlacion)) +
     geom_tile(color = "white") +
-    scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
-    labs(title = "Correlación entre matrices de correlación de distintos años", x = "Año", y = "Año") +
+    scale_fill_gradient2(low = "red", mid = "yellow", high = "green", midpoint = 0) +
+    geom_text(aes(label = round(Correlacion, 2)), color = "black", size = 3) + # Añadir valores redondeados en los recuadros
+    labs(
+      title = "Correlación entre matrices de correlación entre años",
+      x = "Año",
+      y = "Año"
+    ) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-  # Mostrar el gráfico
   print(grafico)
-  
   
   # Retornar resultados de correlación entre matrices de distintos años
   return(list(correlaciones_lista = correlaciones_lista))
