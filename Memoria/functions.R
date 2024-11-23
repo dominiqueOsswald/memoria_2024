@@ -420,7 +420,7 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 resultados_iteracion <- function(datos, orientacion){
   
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
-  
+  print("1")
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
@@ -455,15 +455,15 @@ resultados_iteracion <- function(datos, orientacion){
       iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
       
     }
-    
+    print("2")
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
-  
+  print("3")
   resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios)
   
   
-  
+  print("4")
   # Crear una lista vacía para almacenar los valores atípicos por año
   lista_outliers_vrs <- list()
   # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
@@ -476,7 +476,7 @@ resultados_iteracion <- function(datos, orientacion){
   
   # Especificar los años que quieres iterar
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
-  
+  print("5")
   for (anio in anios) {
     
     # Generar y almacenar los valores atípicos de VRS
@@ -507,7 +507,7 @@ resultados_iteracion <- function(datos, orientacion){
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
-  
+  print("6")
   list(
     original =  original,
     iteracion_1_vrs = iteracion_1_vrs,
@@ -649,5 +649,35 @@ resumen_eficiencia <- function(datos) {
 }
 
 
+analizar_nas <- function(datos) {
+  # Porcentaje de NA's por variable
+  nas_por_variable <- colMeans(is.na(datos)) * 100
+  
+  # Patrón de NA's por fila
+  nas_por_fila <- rowMeans(is.na(datos)) * 100
+  
+  # Correlación entre NA's
+  na_matriz <- is.na(datos) * 1
+  correlacion_nas <- cor(na_matriz, use = "pairwise.complete.obs")
+  
+  # Clasificación de filas por porcentaje de NA's
+  clasificacion <- data.frame(
+    "Rango NA (%)" = c("0-10%", "10-25%", "25-50%", "50-75%", ">75%"),
+    "Cantidad de Filas" = c(
+      sum(nas_por_fila <= 10),
+      sum(nas_por_fila > 10 & nas_por_fila <= 25),
+      sum(nas_por_fila > 25 & nas_por_fila <= 50),
+      sum(nas_por_fila > 50 & nas_por_fila <= 75),
+      sum(nas_por_fila > 75)
+    )
+  )
+  
+  return(list(
+    porcentaje_por_variable = sort(nas_por_variable, decreasing = TRUE),
+    porcentaje_por_fila = nas_por_fila,
+    correlacion = correlacion_nas,
+    clasificacion = clasificacion
+  ))
+}
 
 
