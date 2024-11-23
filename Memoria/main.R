@@ -190,7 +190,7 @@ df <- datos_consolidados
 df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
 
 
-variables_independientes <- colnames(df[,-1])
+#variables_independientes <- colnames(df[,-1])
 
 
 
@@ -219,7 +219,270 @@ df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
 df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
 
 
-df_merged[is.na(df_merged)] <- 0
+df_merged <- df_merged %>% select(where(~ !all(is.na(.))))
+
+
+nas_por_hospital <- rowMeans(is.na(df_merged)) * 100
+#df_merged[is.na(df_merged)] <- 0
+
+
+analizar_nas <- function(datos) {
+  # Porcentaje de NA's por variable
+  nas_por_variable <- colMeans(is.na(datos)) * 100
+  
+  # Patrón de NA's por fila
+  nas_por_fila <- rowMeans(is.na(datos)) * 100
+  
+  # Correlación entre NA's
+  na_matriz <- is.na(datos) * 1
+  correlacion_nas <- cor(na_matriz, use = "pairwise.complete.obs")
+  
+  # Clasificación de filas por porcentaje de NA's
+  clasificacion <- data.frame(
+    "Rango NA (%)" = c("0-10%", "10-25%", "25-50%", "50-75%", ">75%"),
+    "Cantidad de Filas" = c(
+      sum(nas_por_fila <= 10),
+      sum(nas_por_fila > 10 & nas_por_fila <= 25),
+      sum(nas_por_fila > 25 & nas_por_fila <= 50),
+      sum(nas_por_fila > 50 & nas_por_fila <= 75),
+      sum(nas_por_fila > 75)
+    )
+  )
+  
+  return(list(
+    porcentaje_por_variable = sort(nas_por_variable, decreasing = TRUE),
+    porcentaje_por_fila = nas_por_fila,
+    correlacion = correlacion_nas,
+    clasificacion = clasificacion
+  ))
+}
+
+
+# Función para diferentes estrategias de manejo de NA's
+comparar_estrategias_na <- function(datos, var_dependiente, vars_independientes) {
+  # 1. Eliminar filas con NA
+  datos_complete <- na.omit(datos[c(var_dependiente, vars_independientes)])
+  
+  # 2. Reemplazar con 0
+  datos_zero <- datos
+  datos_zero[is.na(datos_zero)] <- 0
+  
+  # 3. Reemplazar con mediana por grupo
+  datos_median <- datos %>%
+    group_by(tipo_hospital) %>%  # Asumiendo que tienes una columna tipo_hospital
+    mutate(across(everything(), ~ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+    ungroup()
+  
+  # 4. Estrategia mixta: 0 para procedimientos no realizados, mediana para datos faltantes
+  datos_mixed <- datos
+  # Asumiendo que tienes una forma de identificar verdaderos ceros vs NA's
+  
+  # Ajustar modelos con diferentes tratamientos
+  resultados <- list()
+  
+  # Función auxiliar para ajustar modelo
+  ajustar_modelo <- function(datos_subset) {
+    tryCatch({
+      formula_str <- paste(var_dependiente, "~", 
+                           paste(vars_independientes, collapse = " + "))
+      modelo <- censReg(as.formula(formula_str),
+                        data = datos_subset,
+                        left = 0,
+                        right = 1)
+      return(modelo)
+    }, error = function(e) {
+      return(NULL)
+    })
+  }
+  
+  # Ajustar modelos con diferentes tratamientos
+  modelos <- list(
+    completo = ajustar_modelo(datos_complete),
+    zeros = ajustar_modelo(datos_zero),
+    medianas = ajustar_modelo(datos_median)
+  )
+  
+  # Comparar resultados
+  comparacion <- lapply(modelos, function(mod) {
+    if(is.null(mod)) return(NULL)
+    
+    resumen <- summary(mod)
+    list(
+      coeficientes = resumen@coef,
+      loglik = logLik(mod),
+      n_obs = nobs(mod)
+    )
+  })
+  
+  return(list(
+    modelos = modelos,
+    comparacion = comparacion
+  ))
+}
+
+# Función para análisis de sensibilidad
+analisis_sensibilidad_nas <- function(datos, var_dependiente, vars_independientes) {
+  # Crear varios escenarios de reemplazo
+  escenarios <- list(
+    zero = 0,
+    min = function(x) min(x, na.rm = TRUE),
+    median = function(x) median(x, na.rm = TRUE),
+    mean = function(x) mean(x, na.rm = TRUE)
+  )
+  
+  resultados <- list()
+  
+  for(nombre_escenario in names(escenarios)) {
+    datos_temp <- datos
+    reemplazo <- escenarios[[nombre_escenario]]
+    
+    if(is.function(reemplazo)) {
+      for(var in vars_independientes) {
+        datos_temp[[var]][is.na(datos_temp[[var]])] <- reemplazo(datos_temp[[var]])
+      }
+    } else {
+      datos_temp[is.na(datos_temp)] <- reemplazo
+    }
+    
+    formula_str <- paste(var_dependiente, "~", 
+                         paste(vars_independientes, collapse = " + "))
+    
+    modelo <- tryCatch({
+      censReg(as.formula(formula_str),
+              data = datos_temp,
+              left = 0,
+              right = 1)
+    }, error = function(e) NULL)
+    
+    if(!is.null(modelo)) {
+      resultados[[nombre_escenario]] <- list(
+        coeficientes = summary(modelo)@coef,
+        loglik = logLik(modelo),
+        aic = AIC(modelo)
+      )
+    }
+  }
+  
+  return(resultados)
+}
+
+
+
+result <- analizar_nas(df_merged)
+
+
+
+resultados_comparacion <- comparar_estrategias_na(df_merged, 
+                                                  "vrs", 
+                                                  variables_independientes)
+
+# Análisis de sensibilidad
+sensibilidad <- analisis_sensibilidad_nas(df_merged, 
+                                          "vrs", 
+                                          variables_independientes)
+
+
+
+
+
+variables_independientes <- colnames(df_merged[,-1])
+
+
+
+
+
+library(AER)
+library(censReg)
+library(VGAM)
+library(dplyr)
+
+# Función para preparar los datos y realizar análisis Tobit
+realizar_analisis_tobit <- function(datos, var_dependiente, vars_independientes, 
+                                    limite_inferior = 0, limite_superior = Inf) {
+  
+  datos <- df_merged
+  var_dependiente <- "vrs"
+  vars_independientes <- variables_independientes 
+  
+  # 1. Preparación de datos
+  # Eliminar filas con NA
+  datos_clean <- datos %>%
+    select(all_of(c(var_dependiente, vars_independientes))) %>%
+    na.omit()
+  
+  # 2. Crear fórmula para el modelo
+  formula_str <- paste(var_dependiente, "~", 
+                       paste(vars_independientes, collapse = " + "))
+  options(expressions = 50000)
+  formula_modelo <- as.formula(formula_str)
+  
+  # 3. Ajustar modelo Tobit
+  tryCatch({
+    # Intentar ajustar con censReg (más eficiente para datasets grandes)
+    modelo_tobit <- censReg(formula_modelo, 
+                            data = datos_clean,
+                            left = limite_inferior,
+                            right = limite_superior)
+    
+    # Resumen del modelo
+    resumen <- summary(modelo_tobit)
+    
+    # Calcular pseudo R²
+    loglik_full <- logLik(modelo_tobit)
+    modelo_null <- censReg(as.formula(paste(var_dependiente, "~ 1")),
+                           data = datos_clean,
+                           left = limite_inferior,
+                           right = limite_superior)
+    loglik_null <- logLik(modelo_null)
+    pseudo_r2 <- 1 - (loglik_full/loglik_null)
+    
+    # Crear lista con resultados
+    resultados <- list(
+      modelo = modelo_tobit,
+      resumen = resumen,
+      pseudo_r2 = pseudo_r2,
+      datos_utilizados = nrow(datos_clean),
+      vars_significativas = row.names(resumen@coef)[abs(resumen@coef[,"z value"]) > 1.96]
+    )
+    
+    return(resultados)
+    
+  }, error = function(e) {
+    # Si falla censReg, intentar con VGAM (más robusto pero más lento)
+    mensaje <- paste("Error en censReg:", e$message, 
+                     "\nIntentando con VGAM...")
+    print(mensaje)
+    
+    modelo_tobit <- vglm(formula_modelo,
+                         tobit(Lower = limite_inferior, Upper = limite_superior),
+                         data = datos_clean)
+    
+    return(list(
+      modelo = modelo_tobit,
+      resumen = summary(modelo_tobit),
+      datos_utilizados = nrow(datos_clean)
+    ))
+  })
+}
+
+# Ejemplo de uso
+# datos <- tu_dataframe
+# variables_independientes <- c("var1", "var2", "var3")
+resultados <- realizar_analisis_tobit(df_merged, 
+                                   "vrs",
+                                   variables_independientes)
+# 
+# # Ver resultados
+# print(resultados$resumen)
+# print(paste("Pseudo R²:", resultados$pseudo_r2))
+# print(paste("Variables significativas:", 
+#            paste(resultados$vars_significativas, collapse=", ")))
+
+
+
+
+
+
 
 
 correlations <- sapply(df_numeric, function(x) cor(x, df_numeric$vrs, use = "complete.obs"))
