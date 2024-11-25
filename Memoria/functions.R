@@ -681,3 +681,105 @@ analizar_nas <- function(datos) {
 }
 
 
+
+
+
+ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
+  data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
+  print(data_path)
+  # Leer los datos consolidados
+  datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
+  df <- datos_consolidados
+  
+  left_cens <- 0
+  right_cens <- 1
+  #print("1")
+  #print(head(df))
+  # Convertir columnas a enteros
+  df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
+  
+  # Filtrar los resultados de VRS
+  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+    rename("idEstablecimiento" = "IdEstablecimiento")
+  #print("2")
+  #print(head(df_vrs))
+  df_w_vrs <- df %>%
+    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+  
+  # Combinar los DataFrames
+  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+  
+  # Eliminar columnas completamente NA
+  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
+  #print(colnames(df_merged))
+  #print("3")
+  #print(head(df_merged))
+  # Calcular correlaciones
+  correlaciones <- cor(df_merged)["vrs", ]
+  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+  #print(correlaciones_ordenadas)
+  #print("4")
+  # Seleccionar las top_n variables más correlacionadas
+  top_vars <- names(head(correlaciones_ordenadas, top_n))
+  
+  #print(top_vars)
+  columnas_a_incluir <- c("idEstablecimiento", "vrs", top_vars)
+  
+  # Crear el DataFrame con las variables seleccionadas
+  df_top <- df_merged[, columnas_a_incluir]
+  
+  # Eliminar filas con NA en las columnas seleccionadas
+  df_clean <- df_top[complete.cases(df_top), ]
+  
+  dimensiones <- dim(df_clean)
+  #print(paste("Número de filas:", dimensiones[1]))
+  #print(paste("Número de columnas:", dimensiones[2]))
+  
+  # Crear la fórmula para el modelo Tobit
+  independent_vars <- paste(top_vars, collapse = " + ")
+  tobit_formula <- as.formula(paste("vrs ~", independent_vars))
+  #print(tobit_formula)
+  
+  cor_matrix <- cor(df_clean[, top_vars], use = "complete.obs")
+  #print(cor_matrix)
+  
+  #print(anyNA(df_clean))
+  #print(setdiff(top_vars, colnames(df_clean)))
+  
+  
+  
+  
+  
+  
+  
+  
+  #print("5")
+  # Ajustar el modelo Tobit
+  tobit_model <- censReg(tobit_formula, left = left_cens, right = right_cens, data = df_clean)
+  #print(tobit_model)
+  # Extraer y procesar los coeficientes
+  coeficientes <- summary(tobit_model)$estimate
+  coef_df <- data.frame(
+    Variable = rownames(coeficientes),
+    Coeficiente = coeficientes[, "Estimate"]
+  )
+  #print(coef_df)
+  print("6")
+  # Ordenar por el valor absoluto del coeficiente
+  coef_df <- coef_df[order(abs(coef_df$Coeficiente), decreasing = TRUE), ]
+  
+  # Excluir el intercepto
+  coef_df <- coef_df[coef_df$Variable != "(Intercept)", ]
+  
+  # Visualizar las top 10 variables con mayor coeficiente
+  top_coef <- head(coef_df, 10)
+  print("7")
+  return(list(
+    top_coefficients = top_coef,
+    tobit_model = tobit_model,
+    cleaned_data = df_clean
+  ))
+}
+
+

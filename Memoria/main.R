@@ -185,260 +185,56 @@ for (anio in anios) {
 #-------------------------------------#
 # DETERMINANTES #
 #-------------------------------------#
-datos_consolidados <- read.table("data/2014/2014_consolidated_data.csv", sep=";", header=TRUE)
-df <- datos_consolidados
-df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
 
 
-#variables_independientes <- colnames(df[,-1])
+datos_iniciales <- list(
+  "2014" = analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50),
+  "2015" = analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 5),
 
-
-
-
-#setdiff(filtered_vars,colnames(datos_normalizados))
-
-#valid_filtered_vars <- intersect(filtered_vars, colnames(datos_consolidados))
-#print(valid_filtered_vars)
-
-
-# No me tinca esto, revisar para que pueda traer todas kas variables
-# filtered_vars <- intersect(filtered_vars, colnames(datos_normalizados))
-
-
-# data_filtered_vars <- datos_consolidados %>% select(all_of(filtered_vars))
-
-df_vrs <- resultados_in[["original"]][["2014"]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
-  rename("idEstablecimiento" = "IdEstablecimiento")
-
-df_w_vrs <- df %>%
-  filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
-
-# Combinar los dataframes por la columna "ID"
-df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
-
-df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
-
-
-df_merged <- df_merged %>% select(where(~ !all(is.na(.))))
-
-# Omitiendo las columnas que tienen valores NA
-df_clean <- df_merged %>%
-  select(where(~ !any(is.na(.))))
-
-# nas_por_hospital <- rowMeans(is.na(df_clean)) * 100
-#df_merged[is.na(df_merged)] <- 0
-
-
-
-set.seed(123)  # Para reproducibilidad
-
-# Seleccionar 100 columnas al azar
-columnas_aleatorias <- sample(ncol(df_clean[,-1]), 99)  # Índices de 100 columnas al azar
-
-df_seleccion <- df_clean[, columnas_aleatorias]
-
-
-
-variables_independientes <- colnames(df_seleccion[,-1])
-
-
-
-
-
-library(AER)
-library(censReg)
-library(VGAM)
-library(dplyr)
-
-# Función para preparar los datos y realizar análisis Tobit
-realizar_analisis_tobit <- function(datos, var_dependiente, vars_independientes, 
-                                    limite_inferior = 0, limite_superior = Inf) {
   
-  datos <- df_merged
-  var_dependiente <- "vrs"
-  vars_independientes <- variables_independientes 
-  
-  # 1. Preparación de datos
-  # Eliminar filas con NA
-  datos_clean <- datos %>%
-    select(all_of(c(var_dependiente, vars_independientes))) %>%
-    na.omit()
-  
-  # 2. Crear fórmula para el modelo
-  formula_str <- paste(var_dependiente, "~", 
-                       paste(vars_independientes, collapse = " + "))
-  options(expressions = 50000)
-  formula_modelo <- as.formula(formula_str)
-  
-  # 3. Ajustar modelo Tobit
-  tryCatch({
-    # Intentar ajustar con censReg (más eficiente para datasets grandes)
-    modelo_tobit <- censReg(formula_modelo, 
-                            data = datos_clean,
-                            left = limite_inferior,
-                            right = limite_superior)
-    
-    # Resumen del modelo
-    resumen <- summary(modelo_tobit)
-    
-    # Calcular pseudo R²
-    loglik_full <- logLik(modelo_tobit)
-    modelo_null <- censReg(as.formula(paste(var_dependiente, "~ 1")),
-                           data = datos_clean,
-                           left = limite_inferior,
-                           right = limite_superior)
-    loglik_null <- logLik(modelo_null)
-    pseudo_r2 <- 1 - (loglik_full/loglik_null)
-    
-    # Crear lista con resultados
-    resultados <- list(
-      modelo = modelo_tobit,
-      resumen = resumen,
-      pseudo_r2 = pseudo_r2,
-      datos_utilizados = nrow(datos_clean),
-      vars_significativas = row.names(resumen@coef)[abs(resumen@coef[,"z value"]) > 1.96]
-    )
-    
-    return(resultados)
-    
-  }, error = function(e) {
-    # Si falla censReg, intentar con VGAM (más robusto pero más lento)
-    mensaje <- paste("Error en censReg:", e$message, 
-                     "\nIntentando con VGAM...")
-    print(mensaje)
-    
-    modelo_tobit <- vglm(formula_modelo,
-                         tobit(Lower = limite_inferior, Upper = limite_superior),
-                         data = datos_clean)
-    
-    return(list(
-      modelo = modelo_tobit,
-      resumen = summary(modelo_tobit),
-      datos_utilizados = nrow(datos_clean)
-    ))
-  })
-}
+)
 
-# Ejemplo de uso
-# datos <- tu_dataframe
-# variables_independientes <- c("var1", "var2", "var3")
-resultados <- realizar_analisis_tobit(df_clean, 
-                                   "vrs",
-                                   variables_independientes)
-# 
-# # Ver resultados
-# print(resultados$resumen)
-# print(paste("Pseudo R²:", resultados$pseudo_r2))
-# print(paste("Variables significativas:", 
-#            paste(resultados$vars_significativas, collapse=", ")))
+TOBIT_2014 <- analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50)
+TOBIT_2015 <- analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 5)
+TOBIT_2016 <- analyze_tobit_model(resultados_in = resultados_in,year = 2016,top_n = 50)
+TOBIT_2017 <- analyze_tobit_model(resultados_in = resultados_in,year = 2017,top_n = 5)
+TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
+TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
+TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
 
 
 
 
+# Ver las top 10 variables con mayor coeficiente
+print(TOBIT_2014$top_coefficients)
+print(TOBIT_2015$top_coefficients)
+print(TOBIT_2016$top_coefficients)
+print(TOBIT_2017$top_coefficients)
+print(TOBIT_2018$top_coefficients)
+print(TOBIT_2019$top_coefficients)
+print(TOBIT_2020$top_coefficients)
 
 
 
 
-correlations <- sapply(df_numeric, function(x) cor(x, df_numeric$vrs, use = "complete.obs"))
-filtered_vars <- names(correlations[abs(correlations) > 0.1])  # Umbral ajustable
 
 
+library(ggplot2)
 
+# Crear un gráfico de barras para las 10 variables con mayor impacto
+ggplot(top_coef, aes(x = reorder(Variable, abs(Coeficiente)), y = Coeficiente)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    title = "Variables con Mayor Coeficiente en el Modelo Tobit",
+    x = "Variable",
+    y = "Coeficiente"
+  ) +
+  theme_minimal()
 
 
 
 
-#datos_consolidados$idEstablecimiento
-
-
-
-
-
-
-
-
-library(AER)
-
-
-
-# Dividir las variables en bloques de 1000
-chunk_size <- 1000
-chunks <- split(variables_independientes, ceiling(seq_along(variables_independientes) / chunk_size))
-
-variables_independientes[1:10]
-
-formula <- as.formula(paste("vrs ~", paste(variables_independientes[1:600], collapse = " + ")))
-tobit_1 <- tobit(formula, data = df_merged[,-1], left = 0)
-
-
-
-sapply(df_merged, function(x) if (is.factor(x)) levels(x))
-
-# Ajustar modelos por partes
-resultados <- lapply(chunks, function(vars) {
-  formula <- as.formula(paste("vrs ~", paste(vars, collapse = " + ")))
-  tobit(formula, data = df_merged[,-1], left = 0)
-})
-
-# Combinar resultados (puedes analizar significancia o métricas)
-summary(resultados[[1]])  # Ejemplo con el primer modelo
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-formula <- as.formula(paste("y ~", paste(variables_independientes, collapse = " + ")))
-
-
-
-variances <- apply(datos_consolidados[, variables_independientes], 2, var)
-
-# Explorar estadísticas descriptivas
-summary(variances)
-hist(variances, breaks = 50, main = "Distribución de Varianzas", xlab = "Varianza")
-
-
-
-
-
-variances <- apply(datos_consolidados[, variables_independientes], 2, var)
-threshold <- 1e-6  # Ajusta según el caso
-filtered_vars <- names(variances[variances > threshold])
-
-
-
-
-
-# Resultado
-print(df_merged)
-
-
-library(glmnet)
-
-# Convertir datos a matrices
-X <- as.matrix(datos_consolidados[, variables_independientes])
-Y <- datos_consolidados$y
-
-# Ajustar modelo LASSO
-modelo_lasso <- cv.glmnet(X, Y, alpha = 1, family = "gaussian")  # Alpha = 1 para LASSO
-
-# Variables seleccionadas
-coeficientes <- coef(modelo_lasso, s = "lambda.min")
-print(coeficientes)
-
-# Falta esta data
-#data_2021 <- consolidar_datos_por_anio(2021)
-#resultados_2021_in <- analisis_dea_in(data_2021)
 
 
 
