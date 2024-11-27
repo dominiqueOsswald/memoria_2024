@@ -460,7 +460,7 @@ resultados_iteracion <- function(datos, orientacion){
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
   print("3")
-  resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios)
+  resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios, orientacion)
   
   
   print("4")

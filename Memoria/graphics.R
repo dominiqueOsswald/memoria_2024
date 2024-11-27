@@ -137,7 +137,7 @@ colorear_region <- function(resumen){
 # -------------------------------------- #
 # Colorear regiones según porcentaje
 # -------------------------------------- #
-calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, anios) {
+calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, anios, orientacion) {
   # Instalar y cargar las librerías necesarias
   if (!require(corrplot)) install.packages("corrplot")
   library(corrplot)
@@ -182,9 +182,19 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
     )
   }
   
+  if (orientacion == "io"){
+    texto <- "Matrices de correlación de métodos orientado a entradas por año"
+    texto2 <- "Correlación entre matrices de correlación entre años \n Orientado a entradas"
+  }else if (orientacion == "oo"){
+    texto <- "Matrices de correlación de métodos orientado a salidas por año"
+    texto2 <- "Correlación entre matrices de correlación entre años \n Orientado a salidas"
+  }else{
+    texto <- "Matrices de correlación de métodos por año"
+    texto2 <- "Correlación entre matrices de correlación entre años"
+  }
   # Agregar un título general
   mtext(
-    "Matrices de Correlación de métodos por Año", 
+    texto, 
     outer = TRUE, 
     cex = 1.5,  # Tamaño del texto
     font = 2    # Estilo en negrita
@@ -216,20 +226,25 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
   correlacion_df <- melt(correlacion_matriz, varnames = c("Año1", "Año2"), value.name = "Correlacion")
   
   print(correlacion_df)
-  # Crear el gráfico de calor
   grafico <- ggplot(correlacion_df, aes(x = Año1, y = Año2, fill = Correlacion)) +
     geom_tile(color = "white") +
     scale_fill_gradient2(low = "red", mid = "yellow", high = "green", midpoint = 0) +
     geom_text(aes(label = round(Correlacion, 2)), color = "black", size = 3) + # Añadir valores redondeados en los recuadros
     labs(
-      title = "Correlación entre matrices de correlación entre años",
+      title = texto2,
       x = "Año",
       y = "Año"
     ) +
+    scale_x_continuous(breaks = unique(correlacion_df$Año1)) + # Mostrar todos los años en el eje X
+    scale_y_continuous(breaks = unique(correlacion_df$Año2)) + # Mostrar todos los años en el eje Y
     theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(size = 16, face = "bold", hjust = 0.5) # Cambiar tamaño y estilo del título
+    )
   
   print(grafico)
+  
   
   # Retornar resultados de correlación entre matrices de distintos años
   return(list(correlaciones_lista = correlaciones_lista))

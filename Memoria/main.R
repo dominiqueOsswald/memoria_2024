@@ -44,7 +44,7 @@ resultados_out <- resultados_iteracion(datos, "oo")
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 
 input_output_original <- combinar_resultados_in_out(resultados_in[["original"]], resultados_out[["original"]])
-graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios)
+graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios, "ambos")
 
 # ==============================================
 # -------------------------------------------- #
@@ -98,7 +98,7 @@ for (year in names(resultados_in[["original"]])) {
   out_crs_por_anio_cut[[year]] <- resultados_out_cut_crs[["original"]][[year]][["data"]][["crs"]]
 }
 
-# Calcular las correlaciones utilizando la función creada
+# Calcular las correlaciones
 correlaciones_in_vrs <- calcular_correlaciones(in_vrs_df, in_vrs_por_anio_cut)
 correlaciones_in_crs <- calcular_correlaciones(in_crs_df, in_crs_por_anio_cut)
 correlaciones_out_vrs <- calcular_correlaciones(out_vrs_df, out_vrs_por_anio_cut)
@@ -133,9 +133,16 @@ for (i in 3:ncol(malmquist_in_vrs[["index"]])) {
   #tasa_crecimiento_pre[[i]] <- (malmquist_in_vrs[["index"]][[i]] - malmquist_in_vrs[["index"]][[i-1]]) / malmquist_in_vrs[["index"]][[i-1]]
 }
 
-colnames(tasa_crecimiento)[-1] <- paste0("Crecimiento_", colnames(malmquist_in_vrs[["index"]])[-1])
-tasa_promedio <- rowMeans(tasa_crecimiento[, -1], na.rm = TRUE)
+
+columnas <- colnames(malmquist_in_vrs[["index"]])[-1] 
+nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
+nuevos_nombres <- c("2014_2015", nuevos_nombres)
+
+colnames(tasa_crecimiento)[-1] <- nuevos_nombres
+tasa_promedio <- rowMeans(tasa_crecimiento[, -c(1, ncol(tasa_crecimiento))], na.rm = TRUE)
 tasa_crecimiento$Tasa_Promedio_Pre_Pandemia <- tasa_promedio
+
+
 
 # ==============================================
 # -------------------------------------------- #
@@ -180,6 +187,8 @@ for (anio in anios) {
   # Mostrar los gráficos en una fila (3 gráficos por año)
   grid.arrange(grobs = graficos_vrs, ncol = 3, top = paste("Comparación de Eficiencia Input VRS - Año", anio))
 }
+
+
 
 # ==============================================
 #-------------------------------------#
