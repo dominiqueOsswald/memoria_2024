@@ -7,6 +7,7 @@ library(tidyr)
 library(corrplot)
 library(gridExtra)
 library(purrr)
+library(censReg)
 
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
@@ -649,42 +650,51 @@ resumen_eficiencia <- function(datos) {
 }
 
 
-analizar_nas <- function(datos) {
-  # Porcentaje de NA's por variable
-  nas_por_variable <- colMeans(is.na(datos)) * 100
+# -------------------------------------------- #
+#  sensibilidad vs atipicos
+# -------------------------------------------- #
+# Función para procesar datos y calcular correlaciones
+procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs, resultados_in_cut_crs, 
+                           resultados_out_cut_vrs, resultados_out_cut_crs) {
   
-  # Patrón de NA's por fila
-  nas_por_fila <- rowMeans(is.na(datos)) * 100
+  # Crear función interna para generar dataframes base
+  generar_dataframe_base <- function(resultados, key) {
+    df <- data.frame(ID = resultados[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
+    for (year in names(resultados[["original"]])) {
+      df[[year]] <- resultados[["original"]][[year]][["data"]][[key]]
+    }
+    return(df)
+  }
   
-  # Correlación entre NA's
-  na_matriz <- is.na(datos) * 1
-  correlacion_nas <- cor(na_matriz, use = "pairwise.complete.obs")
+  # Crear dataframes para cada caso
+  in_vrs_df <- generar_dataframe_base(resultados_in, "vrs")
+  in_crs_df <- generar_dataframe_base(resultados_in, "crs")
+  out_vrs_df <- generar_dataframe_base(resultados_out, "vrs")
+  out_crs_df <- generar_dataframe_base(resultados_out, "crs")
   
-  # Clasificación de filas por porcentaje de NA's
-  clasificacion <- data.frame(
-    "Rango NA (%)" = c("0-10%", "10-25%", "25-50%", "50-75%", ">75%"),
-    "Cantidad de Filas" = c(
-      sum(nas_por_fila <= 10),
-      sum(nas_por_fila > 10 & nas_por_fila <= 25),
-      sum(nas_por_fila > 25 & nas_por_fila <= 50),
-      sum(nas_por_fila > 50 & nas_por_fila <= 75),
-      sum(nas_por_fila > 75)
-    )
-  )
+  in_vrs_por_anio_cut <- generar_dataframe_base(resultados_in_cut_vrs, "vrs")
+  in_crs_por_anio_cut <- generar_dataframe_base(resultados_in_cut_crs, "crs")
+  out_vrs_por_anio_cut <- generar_dataframe_base(resultados_out_cut_vrs, "vrs")
+  out_crs_por_anio_cut <- generar_dataframe_base(resultados_out_cut_crs, "crs")
   
+  # Calcular las correlaciones
+  correlaciones_in_vrs <- calcular_correlaciones(in_vrs_df, in_vrs_por_anio_cut)
+  correlaciones_in_crs <- calcular_correlaciones(in_crs_df, in_crs_por_anio_cut)
+  correlaciones_out_vrs <- calcular_correlaciones(out_vrs_df, out_vrs_por_anio_cut)
+  correlaciones_out_crs <- calcular_correlaciones(out_crs_df, out_crs_por_anio_cut)
+  
+  # Retornar las correlaciones en una lista
   return(list(
-    porcentaje_por_variable = sort(nas_por_variable, decreasing = TRUE),
-    porcentaje_por_fila = nas_por_fila,
-    correlacion = correlacion_nas,
-    clasificacion = clasificacion
+    correlaciones_in_vrs = correlaciones_in_vrs,
+    correlaciones_in_crs = correlaciones_in_crs,
+    correlaciones_out_vrs = correlaciones_out_vrs,
+    correlaciones_out_crs = correlaciones_out_crs
   ))
 }
 
 
 
-
-
- analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
+analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   print(data_path)
   # Leer los datos consolidados
@@ -693,7 +703,7 @@ analizar_nas <- function(datos) {
   
   left_cens <- 0
   right_cens <- 1
-  #print("1")
+  print("1")
   #print(head(df))
   # Convertir columnas a enteros
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
@@ -701,7 +711,7 @@ analizar_nas <- function(datos) {
   # Filtrar los resultados de VRS
   df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
     rename("idEstablecimiento" = "IdEstablecimiento")
-  #print("2")
+  print("2")
   #print(head(df_vrs))
   df_w_vrs <- df %>%
     filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
@@ -712,34 +722,37 @@ analizar_nas <- function(datos) {
   # Eliminar columnas completamente NA
   df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
   #print(colnames(df_merged))
-  #print("3")
-  #print(head(df_merged))
+  print("3")
+  print(head(df_merged$IdEstablecimiento))
   # Calcular correlaciones
-  correlaciones <- cor(df_merged)["vrs", ]
+  correlaciones <- cor(df_merged[,-1])["vrs", ]
   correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
   correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   #print(correlaciones_ordenadas)
-  #print("4")
+  print("4")
   # Seleccionar las top_n variables más correlacionadas
   top_vars <- names(head(correlaciones_ordenadas, top_n))
   
+  print(head(top_vars))
   #print(top_vars)
   columnas_a_incluir <- c("idEstablecimiento", "vrs", top_vars)
   
   # Crear el DataFrame con las variables seleccionadas
   df_top <- df_merged[, columnas_a_incluir]
   
+  print("5")
   # Eliminar filas con NA en las columnas seleccionadas
   df_clean <- df_top[complete.cases(df_top), ]
   
+  print(head(df_clean))
   dimensiones <- dim(df_clean)
-  #print(paste("Número de filas:", dimensiones[1]))
-  #print(paste("Número de columnas:", dimensiones[2]))
+  print(paste("Número de filas:", dimensiones[1]))
+  print(paste("Número de columnas:", dimensiones[2]))
   
   # Crear la fórmula para el modelo Tobit
   independent_vars <- paste(top_vars, collapse = " + ")
   tobit_formula <- as.formula(paste("vrs ~", independent_vars))
-  #print(tobit_formula)
+  print(tobit_formula)
   
   cor_matrix <- cor(df_clean[, top_vars], use = "complete.obs")
   #print(cor_matrix)
@@ -764,7 +777,7 @@ analizar_nas <- function(datos) {
     Variable = rownames(coeficientes),
     Coeficiente = coeficientes[, "Estimate"]
   )
-  #print(coef_df)
+  print(coef_df)
   print("6")
   # Ordenar por el valor absoluto del coeficiente
   coef_df <- coef_df[order(abs(coef_df$Coeficiente), decreasing = TRUE), ]

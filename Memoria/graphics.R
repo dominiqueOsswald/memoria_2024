@@ -66,7 +66,7 @@ region_vrs <- function(hospitales_df, region, anio, tipo) {
 # -------------------------------------- #
 # Graficar Chile según el criterio de orientacion y variacion
 # -------------------------------------- #
-chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna) {
+chile_map_plot <- function(hospitales_df, anio, tipo) {
 
     ggplot(data = chile) +
       geom_sf() +
@@ -75,9 +75,8 @@ chile_map_plot <- function(hospitales_df, anio, tipo, tipo_columna) {
         aes_string(
           x = "longitud",
           y = "latitud",
-          color = tipo_columna,
-          size = paste("(1/", tipo_columna, ") * 5"),
-          text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo_columna, ", '<br>Region:', region_id)")
+          color = tipo,
+          text = paste0("paste('Hospital:', Nombre, '<br>", tipo, ":', ", tipo, ", '<br>Region:', region_id)")
         ),
         alpha = 0.7
       ) +
@@ -177,9 +176,10 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
       correlaciones_lista[[anio]], 
       col = colores_personalizados, 
       method = "color", 
-      title = paste("Matriz de Correlación - Año", anio),
-      mar = c(0, 0, 2, 0)  # Márgenes más pequeños para cada gráfico
-    )
+      title = paste("Año", anio),
+      mar = c(0, 0, 2, 0),  # Márgenes más pequeños para cada gráfico
+      addCoef.col = "black"
+      )
   }
   
   if (orientacion == "io"){
