@@ -206,11 +206,66 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 
 TOBIT_2014 <- analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50)
 TOBIT_2015 <- analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 50)
+
+tail(TOBIT_2015)
+summary(TOBIT_2015)
 TOBIT_2016 <- analyze_tobit_model(resultados_in = resultados_in,year = 2016,top_n = 50)
 TOBIT_2017 <- analyze_tobit_model(resultados_in = resultados_in,year = 2017,top_n = 5)
 TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
 TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
 TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
+
+
+
+
+year <- 2015
+
+data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
+print(data_path)
+# Leer los datos consolidados
+datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
+df <- datos_consolidados
+
+left_cens <- 0
+right_cens <- 1
+print("1")
+#print(head(df))
+# Convertir columnas a enteros
+df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
+
+# Filtrar los resultados de VRS
+df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+  rename("idEstablecimiento" = "IdEstablecimiento")
+print("2")
+#print(head(df_vrs))
+df_w_vrs <- df %>%
+  filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+
+# Combinar los DataFrames
+df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+df_merged <- df_merged[,-1]
+# Eliminar columnas completamente NA
+df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
+#print(colnames(df_merged))
+print("3")
+
+
+df_merged <- df_merged[, sapply(df_merged, is.numeric)]  # Mantener solo las columnas numéricas
+df_merged <- df_merged[, sapply(df_merged, function(x) sd(x, na.rm = TRUE) > 0)]  # Eliminar las constantes
+
+
+
+
+# Calcular correlaciones
+correlaciones <- cor(df_merged)["vrs", ]
+correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+
+
+
+
+
+
 
 
 
