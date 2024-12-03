@@ -203,100 +203,85 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 # ==============================================
 
 
-
-TOBIT_2014 <- analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50)
-TOBIT_2015 <- analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 50)
-
-tail(TOBIT_2015)
-summary(TOBIT_2015)
-TOBIT_2016 <- analyze_tobit_model(resultados_in = resultados_in,year = 2016,top_n = 50)
-TOBIT_2017 <- analyze_tobit_model(resultados_in = resultados_in,year = 2017,top_n = 5)
-TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
-TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
-TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
+# ESTO NO FUNCIONA ;-;
+#TOBIT_2014 <- analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50)
+#TOBIT_2015 <- analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 50)
+#TOBIT_2016 <- analyze_tobit_model(resultados_in = resultados_in,year = 2016,top_n = 50)
+#TOBIT_2017 <- analyze_tobit_model(resultados_in = resultados_in,year = 2017,top_n = 5)
+#TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
+#TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
+#TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
 
 
 
 
-year <- 2015
-
-data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
-print(data_path)
-# Leer los datos consolidados
-datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
-df <- datos_consolidados
-
-left_cens <- 0
-right_cens <- 1
-print("1")
-#print(head(df))
-# Convertir columnas a enteros
-df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
-
-# Filtrar los resultados de VRS
-df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
-  rename("idEstablecimiento" = "IdEstablecimiento")
-print("2")
-#print(head(df_vrs))
-df_w_vrs <- df %>%
-  filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
-
-# Combinar los DataFrames
-df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
-df_merged <- df_merged[,-1]
-# Eliminar columnas completamente NA
-df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
-#print(colnames(df_merged))
-print("3")
+test_2014 <-  analize_rf(2014,resultados_in = resultados_in)
+test_2015 <- analize_rf(2015,resultados_in = resultados_in)
+test_2016 <- analize_rf(2016,resultados_in = resultados_in)
+test_2017 <- analize_rf(2017,resultados_in = resultados_in)
+test_2018 <- analize_rf(2018,resultados_in = resultados_in)
+test_2019 <- analize_rf(2019,resultados_in = resultados_in)
+test_2020 <- analize_rf(2020,resultados_in = resultados_in)
 
 
-df_merged <- df_merged[, sapply(df_merged, is.numeric)]  # Mantener solo las columnas numéricas
-df_merged <- df_merged[, sapply(df_merged, function(x) sd(x, na.rm = TRUE) > 0)]  # Eliminar las constantes
+top_50_2014 <- test_2014[order(test_2014[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2015 <- test_2015[order(test_2015[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2016 <- test_2016[order(test_2016[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2017 <- test_2017[order(test_2017[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2018 <- test_2018[order(test_2018[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2019 <- test_2019[order(test_2019[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+top_50_2020 <- test_2020[order(test_2020[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
 
 
 
 
-# Calcular correlaciones
-correlaciones <- cor(df_merged)["vrs", ]
-correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
-correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+
+# Extraer nombres de las variables
+variables_2014 <- rownames(top_50_2014)
+variables_2015 <- rownames(top_50_2015)
+variables_2016 <- rownames(top_50_2016)
+variables_2017 <- rownames(top_50_2017)
+variables_2018 <- rownames(top_50_2018)
+variables_2019 <- rownames(top_50_2019)
+variables_2020 <- rownames(top_50_2020)
 
 
 
 
 
 
+# Combinar todas las variables en una sola lista
+todas_las_variables <- c(variables_2014, variables_2015, variables_2016, 
+                         variables_2017, variables_2018, variables_2019, variables_2020)
 
+# Calcular las frecuencias de cada variable
+frecuencias <- table(todas_las_variables)
 
+# Ordenar por frecuencia en orden descendente
+frecuencias_ordenadas <- sort(frecuencias, decreasing = TRUE)
 
+# Mostrar las variables con sus frecuencias
+print(frecuencias_ordenadas)
 
-# Ver las top 10 variables con mayor coeficiente
-summary(TOBIT_2014$tobit_model)
-print(TOBIT_2014$top_coefficients)
-print(TOBIT_2015$top_coefficients)
-print(TOBIT_2016$top_coefficients)
-print(TOBIT_2017$top_coefficients)
-print(TOBIT_2018$top_coefficients)
-print(TOBIT_2019$top_coefficients)
-print(TOBIT_2020$top_coefficients)
-
-
+# Opcional: filtrar las variables que se repiten en al menos dos años
+frecuencias_filtradas <- frecuencias_ordenadas[frecuencias_ordenadas > 1]
+print("Variables que se repiten en al menos dos años:")
+print(frecuencias_filtradas)
 
 
 
 
 library(ggplot2)
 
-# Crear un gráfico de barras para las 10 variables con mayor impacto
-ggplot(top_coef, aes(x = reorder(Variable, abs(Coeficiente)), y = Coeficiente)) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(
-    title = "Variables con Mayor Coeficiente en el Modelo Tobit",
-    x = "Variable",
-    y = "Coeficiente"
-  ) +
-  theme_minimal()
+# Convertir las frecuencias en un dataframe
+df_frecuencias <- as.data.frame(frecuencias_filtradas)
+colnames(df_frecuencias) <- c("Variable", "Frecuencia")
+
+# Graficar las frecuencias
+ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Frecuencia de variables entre años", x = "Variable", y = "Frecuencia") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
 

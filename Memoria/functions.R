@@ -803,3 +803,81 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
 }
 
 
+
+
+analize_rf <- function(year, resultados_in){
+  
+  data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
+  print(data_path)
+  # Leer los datos consolidados
+  datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
+  df <- datos_consolidados
+  
+  #print(head(df))
+  # Convertir columnas a enteros
+  df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
+  
+  # Filtrar los resultados de VRS
+  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+    rename("idEstablecimiento" = "IdEstablecimiento")
+  print("2")
+  #print(head(df_vrs))
+  df_w_vrs <- df %>%
+    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+  
+  # Combinar los DataFrames
+  df_merged_original <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+
+  df_merged_clean <- df_merged_original[,-1]
+  
+  df_merged_clean <- df_merged_clean[, colSums(is.na(df_merged_clean)) == 0]
+  
+  # PROBANDO RANDOM FOREST
+  
+  set.seed(123)  # Para reproducibilidad
+  library(caret)
+  trainIndex <- createDataPartition(df_merged_original$vrs, p = 0.7, list = FALSE)
+  
+  trainData <- df_merged_clean[trainIndex, ]
+  testData <- df_merged_clean[-trainIndex, ]
+  
+  
+  library(randomForest)
+  
+  # Ajustar el modelo de Random Forest
+  modelo_rf <- randomForest(vrs ~ ., 
+                            data = trainData, 
+                            importance = TRUE, 
+                            ntree = 500)
+  
+  # Ver el modelo ajustado
+  print(modelo_rf)
+  
+  
+  # Predicciones en el conjunto de prueba
+  predicciones <- predict(modelo_rf, newdata = testData)
+  
+  # Evaluar el rendimiento
+  library(Metrics)
+  r2 <- R2(predicciones, testData$vrs)
+  rmse <- rmse(predicciones, testData$eficiencia)
+  cat("R²:", r2, "\nRMSE:", rmse)
+  
+  
+  
+  # Importancia de las variables
+  importancia <- importance(modelo_rf)
+  print(importancia)
+  
+  # Graficar la importancia
+  varImpPlot(modelo_rf)
+  
+  return(importancia)
+  
+}
+
+
+
+
+
+
