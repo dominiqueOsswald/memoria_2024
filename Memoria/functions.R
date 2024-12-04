@@ -806,7 +806,7 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
 
 
 analize_rf <- function(year, resultados_in){
-  
+  #year <- 2014
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   print(data_path)
   # Leer los datos consolidados
@@ -828,18 +828,36 @@ analize_rf <- function(year, resultados_in){
   # Combinar los DataFrames
   df_merged_original <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
 
-  df_merged_clean <- df_merged_original[,-1]
+  #df_merged_clean <- df_merged_original[,-1]
+  #print("VARIABLES QUE NO COINCIDEN")
+  #no_coinciden <- setdiff(names(df_merged_original), names(df_merged_clean))
+  #print(no_coinciden)
   
-  df_merged_clean <- df_merged_clean[, colSums(is.na(df_merged_clean)) == 0]
+  df_merged_clean <- df_merged_original[, colSums(is.na(df_merged_original)) == 0]
+  
+  
+  correlaciones <- cor(df_merged_clean[,-1])["vrs", ]
+  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+  
+  top_correlacion <- head(correlaciones_ordenadas, n=50)
+  top_variables <- names(top_correlacion)
+  
+  
+  columnas_a_incluir <- c("vrs", top_variables)
+  
+  # Crear el DataFrame con las variables seleccionadas
+  df_top <- df_merged_clean[, columnas_a_incluir]
+  
   
   # PROBANDO RANDOM FOREST
   
   set.seed(123)  # Para reproducibilidad
   library(caret)
-  trainIndex <- createDataPartition(df_merged_original$vrs, p = 0.7, list = FALSE)
+  trainIndex <- createDataPartition(df_top$vrs, p = 0.7, list = FALSE)
   
-  trainData <- df_merged_clean[trainIndex, ]
-  testData <- df_merged_clean[-trainIndex, ]
+  trainData <- df_top[trainIndex, ]
+  testData <- df_top[-trainIndex, ]
   
   
   library(randomForest)
@@ -851,7 +869,7 @@ analize_rf <- function(year, resultados_in){
                             ntree = 500)
   
   # Ver el modelo ajustado
-  print(modelo_rf)
+  #print(modelo_rf)
   
   
   # Predicciones en el conjunto de prueba
@@ -867,10 +885,11 @@ analize_rf <- function(year, resultados_in){
   
   # Importancia de las variables
   importancia <- importance(modelo_rf)
-  print(importancia)
+  #print(importancia)
   
   # Graficar la importancia
   varImpPlot(modelo_rf)
+  
   
   return(importancia)
   

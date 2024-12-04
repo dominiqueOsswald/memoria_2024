@@ -215,7 +215,7 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 
 
 
-test_2014 <-  analize_rf(2014,resultados_in = resultados_in)
+test_2014 <- analize_rf(2014,resultados_in = resultados_in)
 test_2015 <- analize_rf(2015,resultados_in = resultados_in)
 test_2016 <- analize_rf(2016,resultados_in = resultados_in)
 test_2017 <- analize_rf(2017,resultados_in = resultados_in)
@@ -224,26 +224,26 @@ test_2019 <- analize_rf(2019,resultados_in = resultados_in)
 test_2020 <- analize_rf(2020,resultados_in = resultados_in)
 
 
-top_50_2014 <- test_2014[order(test_2014[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2015 <- test_2015[order(test_2015[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2016 <- test_2016[order(test_2016[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2017 <- test_2017[order(test_2017[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2018 <- test_2018[order(test_2018[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2019 <- test_2019[order(test_2019[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-top_50_2020 <- test_2020[order(test_2020[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2014 <- test_2014[order(test_2014[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2015 <- test_2015[order(test_2015[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2016 <- test_2016[order(test_2016[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2017 <- test_2017[order(test_2017[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2018 <- test_2018[order(test_2018[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2019 <- test_2019[order(test_2019[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
+#top_50_2020 <- test_2020[order(test_2020[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
 
 
 
 
 
 # Extraer nombres de las variables
-variables_2014 <- rownames(top_50_2014)
-variables_2015 <- rownames(top_50_2015)
-variables_2016 <- rownames(top_50_2016)
-variables_2017 <- rownames(top_50_2017)
-variables_2018 <- rownames(top_50_2018)
-variables_2019 <- rownames(top_50_2019)
-variables_2020 <- rownames(top_50_2020)
+variables_2014 <- rownames(test_2014)
+variables_2015 <- rownames(test_2015)
+variables_2016 <- rownames(test_2016)
+variables_2017 <- rownames(test_2017)
+variables_2018 <- rownames(test_2018)
+variables_2019 <- rownames(test_2019)
+variables_2020 <- rownames(test_2020)
 
 
 
