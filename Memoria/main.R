@@ -215,8 +215,8 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 
 
 
-test_2014 <- analize_rf(2014,resultados_in = resultados_in)
-test_2015 <- analize_rf(2015,resultados_in = resultados_in)
+test_2014 <- analize_rf(2014,resultados_in = resultados_in, 200)
+test_2015 <- analize_rf(2015,resultados_in = resultados_in, 300)
 test_2016 <- analize_rf(2016,resultados_in = resultados_in)
 test_2017 <- analize_rf(2017,resultados_in = resultados_in)
 test_2018 <- analize_rf(2018,resultados_in = resultados_in)

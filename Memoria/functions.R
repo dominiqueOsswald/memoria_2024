@@ -805,7 +805,7 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
 
 
 
-analize_rf <- function(year, resultados_in){
+analize_rf <- function(year, resultados_in, n_top){
   #year <- 2014
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   print(data_path)
@@ -840,7 +840,7 @@ analize_rf <- function(year, resultados_in){
   correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
   correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   
-  top_correlacion <- head(correlaciones_ordenadas, n=50)
+  top_correlacion <- head(correlaciones_ordenadas, n=n_top)
   top_variables <- names(top_correlacion)
   
   
@@ -859,6 +859,7 @@ analize_rf <- function(year, resultados_in){
   trainData <- df_top[trainIndex, ]
   testData <- df_top[-trainIndex, ]
   
+  control <- trainControl(method = "cv", number = 10)  # 10-fold CV
   
   library(randomForest)
   
@@ -866,10 +867,18 @@ analize_rf <- function(year, resultados_in){
   modelo_rf <- randomForest(vrs ~ ., 
                             data = trainData, 
                             importance = TRUE, 
-                            ntree = 500)
+                            trControl = control, 
+                            ntree = 700,
+                            do.trace = 100 )
   
   # Ver el modelo ajustado
   #print(modelo_rf)
+  
+  
+  #plot(modelo_rf$err.rate[, 1], 
+  #     type = "l",
+  #     xlab = "Número de árboles",
+  #     ylab = "Error OOB")
   
   
   # Predicciones en el conjunto de prueba
@@ -878,7 +887,7 @@ analize_rf <- function(year, resultados_in){
   # Evaluar el rendimiento
   library(Metrics)
   r2 <- R2(predicciones, testData$vrs)
-  rmse <- rmse(predicciones, testData$eficiencia)
+  rmse <- rmse(predicciones, testData$vrs)
   cat("R²:", r2, "\nRMSE:", rmse)
   
   
