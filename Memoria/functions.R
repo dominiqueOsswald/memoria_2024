@@ -1,13 +1,33 @@
-library(readxl)
-library(corrplot)
-library(deaR)
-library(dplyr)
 library(Benchmarking)
-library(tidyr)
-library(corrplot)
 library(gridExtra)
-library(purrr)
+library(corrplot)
 library(censReg)
+library(readxl)
+library(purrr)
+library(tidyr)
+library(dplyr)
+library(deaR)
+
+# ******************************* #
+# Eliminación de datos atípicos y recalculo DEA
+calcular_corte <- function(datos, vector_outliers) {
+  lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
+}
+
+resultados_corte <- function(resultados, tipo) {
+  list(
+    vrs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo),
+    crs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_crs")]]), tipo)
+  )
+}
+
+malmquist <- function(tipo, orientacion) {
+  calcular_malmquist(datos, tipo, orientacion)
+}
+
+
+# ******************************* #
+
 
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
@@ -259,7 +279,7 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
   output_data <- list()
   ID <- vector()
   TIME <- vector()
-  
+  print(1)
   # Iterar sobre cada año
   for (year in names(datos)) {
     # Acceder a la lista 'data' dentro de cada año
@@ -277,29 +297,31 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
     ID <- c(ID, data_year$IdEstablecimiento)  # Suponiendo que IdEstablecimiento es el ID de cada DMU
     TIME <- c(TIME, rep(year, nrow(data_year)))
   }
-  
+  print(2)
   # Verificar si hay combinaciones duplicadas de ID y TIME
   temp_df <- data.frame(ID = ID, TIME = TIME)
   duplicated_rows <- temp_df[duplicated(temp_df), ]
   
   if (nrow(duplicated_rows) > 0) {
-    message("Se encontraron combinaciones de ID y TIME duplicadas:")
-    print(duplicated_rows)
-    
     # Eliminar duplicados en ID y TIME
     temp_df <- temp_df[!duplicated(temp_df), ]
     input_data <- input_data[!duplicated(temp_df), ]
     output_data <- output_data[!duplicated(temp_df), ]
-  } else {
-    message("No hay duplicados.")
-  }
+  } 
+  
+  print(3)
   
   # Convertir listas a matrices para el análisis sin duplicados
   input_matrix <- do.call(rbind, input_data)
   output_matrix <- do.call(rbind, output_data)
   
+  print("--------------")
+  print(head(ID))
+  print("--------------")
+  print(head(TIME))
+  print("--------------")
   # Realizar el análisis Malmquist
-  malmquist_index <- malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
+  malmquist_index <- Benchmarking::malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
                                RTS = tipo, ORIENTATION = orientacion)
   
   
@@ -311,7 +333,7 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
     Effch = malmquist_index$ec,          # Cambio en eficiencia
     Techch = malmquist_index$tc        # Cambio tecnológico
   )
-  
+  print(4)
   # Se construye cada uno de los dataframe
   malmquist_df <- resultados_df %>%
     select(ID, Año, MalmquistIndex) %>%
@@ -332,6 +354,8 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
     TIME = malmquist_index$time,
     Efficiency = malmquist_index$e11
   )
+  
+  print(5)
   
   # Se elimina la columna que no tienen ningun valor
   malmquist_df <- Filter(function(x) !all(is.na(x)),malmquist_df)
@@ -421,7 +445,6 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 resultados_iteracion <- function(datos, orientacion){
   
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
-  print("1")
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
@@ -456,15 +479,12 @@ resultados_iteracion <- function(datos, orientacion){
       iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
       
     }
-    print("2")
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
-  print("3")
   resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios, orientacion)
   
   
-  print("4")
   # Crear una lista vacía para almacenar los valores atípicos por año
   lista_outliers_vrs <- list()
   # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
@@ -477,7 +497,7 @@ resultados_iteracion <- function(datos, orientacion){
   
   # Especificar los años que quieres iterar
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
-  print("5")
+
   for (anio in anios) {
     
     # Generar y almacenar los valores atípicos de VRS
@@ -508,7 +528,7 @@ resultados_iteracion <- function(datos, orientacion){
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
-  print("6")
+
   list(
     original =  original,
     iteracion_1_vrs = iteracion_1_vrs,
@@ -523,6 +543,7 @@ resultados_iteracion <- function(datos, orientacion){
     vector_outliers_crs = vector_outliers_crs
   )
 }
+
 
 # -------------------------------------------- #
 #  función para calcular la correlación entre VRS y CRS para cada año
@@ -703,15 +724,14 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
   
   left_cens <- 0
   right_cens <- 1
-  print("1")
-  #print(head(df))
+
   # Convertir columnas a enteros
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
   
   # Filtrar los resultados de VRS
   df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
     rename("idEstablecimiento" = "IdEstablecimiento")
-  print("2")
+
   #print(head(df_vrs))
   df_w_vrs <- df %>%
     filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
@@ -722,84 +742,19 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
   # Eliminar columnas completamente NA
   df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
   #print(colnames(df_merged))
-  print("3")
-  print(head(df_merged[,1]))
+
   # Calcular correlaciones
   correlaciones <- cor(df_merged[,-1])["vrs", ]
   correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
   correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   
   
-  
-  #print(correlaciones_ordenadas)
-  #print("4")
   # Seleccionar las top_n variables más correlacionadas
   
-  #top_vars <- names(head(correlaciones_ordenadas, top_n))
   top_vars <- head(correlaciones_ordenadas, top_n)
   
   return(correlaciones_ordenadas)
   
-  #print(head(top_vars))
-  #print(top_vars)
-  #columnas_a_incluir <- c("idEstablecimiento", "vrs", top_vars)
-  
-  # Crear el DataFrame con las variables seleccionadas
-  #df_top <- df_merged[, columnas_a_incluir]
-  
-  #print("5")
-  # Eliminar filas con NA en las columnas seleccionadas
-  #df_clean <- df_top[complete.cases(df_top), ]
-  
-  #print(head(df_clean))
-  #dimensiones <- dim(df_clean)
-  #print(paste("Número de filas:", dimensiones[1]))
-  #print(paste("Número de columnas:", dimensiones[2]))
-  
-  # Crear la fórmula para el modelo Tobit
-  #independent_vars <- paste(top_vars, collapse = " + ")
-  #tobit_formula <- as.formula(paste("vrs ~", independent_vars))
-  #print(tobit_formula)
-  
-  #cor_matrix <- cor(df_clean[, top_vars], use = "complete.obs")
-  #print(cor_matrix)
-  
-  #print(anyNA(df_clean))
-  #print(setdiff(top_vars, colnames(df_clean)))
-  
-  
-  
-  
-  
-  
-  
-  
-  #print("5")
-  # Ajustar el modelo Tobit
-  #tobit_model <- censReg(tobit_formula, left = left_cens, right = right_cens, data = df_clean)
-  #print(tobit_model)
-  # Extraer y procesar los coeficientes
-  #coeficientes <- summary(tobit_model)$estimate
-  #coef_df <- data.frame(
-  #  Variable = rownames(coeficientes),
-  #  Coeficiente = coeficientes[, "Estimate"]
-  #)
-  #print(coef_df)
-  #print("6")
-  # Ordenar por el valor absoluto del coeficiente
-  #coef_df <- coef_df[order(abs(coef_df$Coeficiente), decreasing = TRUE), ]
-  
-  # Excluir el intercepto
-  #coef_df <- coef_df[coef_df$Variable != "(Intercept)", ]
-  
-  # Visualizar las top 10 variables con mayor coeficiente
-  #top_coef <- head(coef_df, 10)
-  #print("7")
-  #return(list(
-  #  top_coefficients = top_coef,
-  #  tobit_model = tobit_model,
-  #  cleaned_data = df_clean
-  #))
 }
 
 
@@ -813,26 +768,19 @@ analize_rf <- function(year, resultados_in, n_top){
   datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
   df <- datos_consolidados
   
-  #print(head(df))
   # Convertir columnas a enteros
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
   
   # Filtrar los resultados de VRS
   df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
     rename("idEstablecimiento" = "IdEstablecimiento")
-  print("2")
-  #print(head(df_vrs))
+
+
   df_w_vrs <- df %>%
     filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
   
   # Combinar los DataFrames
   df_merged_original <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
-
-  #df_merged_clean <- df_merged_original[,-1]
-  #print("VARIABLES QUE NO COINCIDEN")
-  #no_coinciden <- setdiff(names(df_merged_original), names(df_merged_clean))
-  #print(no_coinciden)
-  
   df_merged_clean <- df_merged_original[, colSums(is.na(df_merged_original)) == 0]
   
   

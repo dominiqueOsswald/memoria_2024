@@ -1,10 +1,43 @@
-library(ggplot2)
-library(sf)
-library(rnaturalearth)
 library(rnaturalearthdata)
-library(plotly)
+library(rnaturalearth)
 library(chilemapas)
 library(gridExtra)
+library(corrplot)
+library(reshape2)
+library(ggplot2)
+library(plotly)
+library(sf)
+
+
+
+procesar_y_graficar <- function(malmquist_indices) {
+  for (key in names(malmquist_indices)) {
+    index <- procesar_index(malmquist_indices[[key]][["index"]])
+    print(paste("Generando gráficos para:", key))
+    columnas <- colnames(index)[-1]
+    
+    for (col in columnas) {
+      datos <- na.omit(index[[col]])
+      mediana <- median(datos)
+      
+      # Crear el gráfico
+      grafico <- ggplot(data.frame(x = datos), aes(x = x)) +
+        geom_density(fill = "blue", alpha = 0.5, color = "blue") +
+        geom_vline(aes(xintercept = mediana), color = "green", linetype = "dashed", size = 1) +
+        ggtitle(paste("Densidad", key, col)) +
+        xlab("Valores") +
+        ylab("Densidad") +
+        theme_minimal() +
+        annotate("text", x = mediana, y = 0.15, 
+                 label = paste0("Mediana: ", round(mediana, 2)), color = "green", hjust = -0.1)
+      
+      # Renderizar el gráfico
+      print(grafico)
+    }
+  }
+}
+
+
 
 
 
@@ -137,14 +170,6 @@ colorear_region <- function(resumen){
 # Colorear regiones según porcentaje
 # -------------------------------------- #
 calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, anios, orientacion) {
-  # Instalar y cargar las librerías necesarias
-  if (!require(corrplot)) install.packages("corrplot")
-  library(corrplot)
-  if (!require(ggplot2)) install.packages("ggplot2")
-  if (!require(reshape2)) install.packages("reshape2")
-  library(ggplot2)
-  library(reshape2)
-  
   # Calcular las matrices de correlación para cada dataframe en la lista
   correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
     df_num <- df %>%
@@ -163,9 +188,6 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
   filas <- ceiling(sqrt(num_graficos))
   columnas <- ceiling(num_graficos / filas)
   
-  
-  
-  
   # Ajustar la ventana gráfica y definir una configuración para múltiples gráficos
   colores_personalizados <- colorRampPalette(c("red", "yellow", "green"))(200)  # De rojo (mínimo) a verde (máximo)
   par(mfrow = c(filas, columnas), mar = c(2, 2, 2, 2), oma = c(4, 4, 4, 4))  # Ajustar márgenes (oma es el margen externo)
@@ -179,7 +201,7 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
       title = paste("Año", anio),
       mar = c(0, 0, 2, 0),  # Márgenes más pequeños para cada gráfico
       addCoef.col = "black"
-      )
+    )
   }
   
   if (orientacion == "io"){
@@ -202,49 +224,7 @@ calcular_y_graficar_correlaciones <- function(lista_resultados_combinados_in, an
   
   # Restablecer la configuración gráfica por defecto
   par(mfrow = c(1, 1))
-  
-  
-  
-  
-  
-  
-  # Calcular la correlación entre todas las combinaciones de años y almacenar en una matriz 6x6
-  correlacion_matriz <- matrix(NA, nrow = length(anios), ncol = length(anios), dimnames = list(anios, anios))
-  
-  for (i in 1:length(anios)) {
-    for (j in 1:length(anios)) {
-      matriz_i <- as.vector(correlaciones_lista[[anios[i]]])
-      matriz_j <- as.vector(correlaciones_lista[[anios[j]]])
-      
-      correlacion_matriz[i, j] <- cor(matriz_i, matriz_j, use = "complete.obs")
-    }
-  }
-  
-  print(correlacion_matriz)
-  
-  # Convertir la matriz a formato largo para ggplot2
-  correlacion_df <- melt(correlacion_matriz, varnames = c("Año1", "Año2"), value.name = "Correlacion")
-  
-  print(correlacion_df)
-  grafico <- ggplot(correlacion_df, aes(x = Año1, y = Año2, fill = Correlacion)) +
-    geom_tile(color = "white") +
-    scale_fill_gradient2(low = "red", mid = "yellow", high = "green", midpoint = 0) +
-    geom_text(aes(label = round(Correlacion, 2)), color = "black", size = 3) + # Añadir valores redondeados en los recuadros
-    labs(
-      title = texto2,
-      x = "Año",
-      y = "Año"
-    ) +
-    scale_x_continuous(breaks = unique(correlacion_df$Año1)) + # Mostrar todos los años en el eje X
-    scale_y_continuous(breaks = unique(correlacion_df$Año2)) + # Mostrar todos los años en el eje Y
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.title = element_text(size = 16, face = "bold", hjust = 0.5) # Cambiar tamaño y estilo del título
-    )
-  
-  print(grafico)
-  
+ 
   
   # Retornar resultados de correlación entre matrices de distintos años
   return(list(correlaciones_lista = correlaciones_lista))

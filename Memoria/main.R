@@ -3,191 +3,124 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
-# -------------------------------------------- #
-#  CONSOLIDADO DE DATOS POR AÑO
-# -------------------------------------------- #
+
 # ==============================================
 
+#  CONSOLIDADO DE DATOS POR AÑO
 anios <- 2014:2020
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
-data_2022 <- consolidar_datos_por_anio(2022)
-
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
-
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
-# -------------------------------------------- #
-# SENSIBILIDAD
-# -------------------------------------------- #
+
 # ==============================================
-# -------------------------------------------- #
 #  CÁLCULO DEA - ELIMINACION EFICIENTES
-# -------------------------------------------- #
 
-#  INPUT
 
-resultados_in <- resultados_iteracion(datos, "io")
+resultados <- list(
+  io = resultados_iteracion(datos, "io"),
+  oo = resultados_iteracion(datos, "oo")
+)
 
-#  OUTPUT
+# Supongamos que tus dataframes son df1, df2, ..., df6
+dataframes <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
+                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
+                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
+                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
+                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
+                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
+                   "2020" = resultados$io[["original"]][["2020"]][["data"]])
 
-resultados_out <- resultados_iteracion(datos, "oo")
+
+
+# Combinar todos los dataframes por las columnas ID y VRS
+gran_dataframe <- reduce(dataframes, full_join, by = c("IdEstablecimiento", "vrs"))
+
 
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 
-input_output_original <- combinar_resultados_in_out(resultados_in[["original"]], resultados_out[["original"]])
+input_output_original <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios, "ambos")
 
-# -------------------------------------------- #
+
+
+
 #  CÁLCULO DEA - ELIMINACIÓN DE DATOS ATÍPICOS
-# -------------------------------------------- #
 
-# INPUT
 
-datos_cut_in_vrs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_vrs"]]))})
-datos_cut_in_crs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_in[["vector_outliers_crs"]]))})
-
-resultados_in_cut_vrs <- resultados_iteracion(datos_cut_in_vrs, "io")
-resultados_in_cut_crs <- resultados_iteracion(datos_cut_in_crs, "io")
-
-# OUTPUT
-
-datos_cut_out_vrs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_vrs"]]))})
-datos_cut_out_crs <- lapply(datos, function(df) {df %>% filter(!(IdEstablecimiento %in% resultados_out[["vector_outliers_crs"]]))})
-
-resultados_out_cut_vrs <- resultados_iteracion(datos_cut_out_vrs, "oo")
-resultados_out_cut_crs <- resultados_iteracion(datos_cut_out_crs, "oo")
+resultados_cortados <- list(
+  io = resultados_corte(resultados$io, "io"),
+  oo = resultados_corte(resultados$oo, "oo")
+)
 
 
 # -------------------------------------------- #
 #    COMPARACIÓN DE SENSIBILIDAD VS ELIMINACION ATIPICOS 
 # -------------------------------------------- #
-
+# PENDIENTE DE VER SI ES NECESARIO
 # Usar la función
-resultados <- procesar_datos(
-  resultados_in, resultados_out, 
-  resultados_in_cut_vrs, resultados_in_cut_crs, 
-  resultados_out_cut_vrs, resultados_out_cut_crs
-)
+#comparacion <- procesar_datos(
+#  resultados_in, resultados_out, 
+#  resultados_in_cut_vrs, resultados_in_cut_crs, 
+#  resultados_out_cut_vrs, resultados_out_cut_crs
+#)
 
 # Imprimir resultados
-print(resultados$correlaciones_in_vrs)
-print(resultados$correlaciones_in_crs)
-print(resultados$correlaciones_out_vrs)
-print(resultados$correlaciones_out_crs)
+#print(resultados$correlaciones_in_vrs)
+#print(resultados$correlaciones_in_crs)
+#print(resultados$correlaciones_out_vrs)
+#print(resultados$correlaciones_out_crs)
 
 # -------------------------------------------- #
 #    MALMQUIST 
 # -------------------------------------------- #
 # ==============================================
 
-malmquist_in_vrs <- calcular_malmquist(datos, "vrs", "in")
-malmquist_in_crs <- calcular_malmquist(datos, "crs", "in")
-malmquist_out_vrs <- calcular_malmquist(datos, "vrs", "out")
-malmquist_out_crs <- calcular_malmquist(datos, "crs", "out")
 
-
-malmquist_in_vrs[["index"]][, -1] <- lapply(malmquist_in_vrs[["index"]][, -1], as.numeric)
-
-
-index_valores_vrs <- malmquist_in_vrs[["index"]]
-columnas <- colnames(malmquist_in_vrs[["index"]])[-1] 
-nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
-nuevos_nombres <- c("2014_2015", nuevos_nombres)
-
-colnames(index_valores_vrs)[-1] <- nuevos_nombres
-tasa_promedio <- rowMeans(index_valores_vrs[, -c(1, ncol(index_valores_vrs))], na.rm = TRUE)
-index_valores_vrs$Tasa_Promedio_Pre_Pandemia <- tasa_promedio
-
-
-#summary(index_valores_vrs$Tasa_Promedio_Pre_Pandemia)
-
-
-columnas <- colnames(index_valores_vrs[,-1])
-
-for (col in columnas) {
-  datos <- na.omit(index_valores_vrs[[col]])
-  media <- mean(datos)
-  mediana <- median(datos)
-  
-  # Crear el gráfico
-  grafico <- ggplot(data = data.frame(x = datos), aes(x = x)) +
-    geom_density(fill = "blue", alpha = 0.5, color = "blue") +
-    geom_vline(aes(xintercept = mediana), color = "green", linetype = "dashed", size = 1) +
-    ggtitle(paste("Densidad", col)) +
-    xlab("Valores") +
-    ylab("Densidad") +
-    theme_minimal() +
-    # Añadir etiquetas con los valores numéricos
-    annotate("text", x = mediana, y = 0.15, label = paste0("Mediana: ", round(mediana, 2)), 
-             color = "green", hjust = -0.1)
-  
-  # Imprimir el gráfico
-  print(grafico)
-}
+malmquist_indices <- list(
+  in_vrs = malmquist("vrs", "in"),
+  in_crs = malmquist("crs", "in"),
+  out_vrs = malmquist("vrs", "out"),
+  out_crs = malmquist("crs", "out")
+)
 
 
 
+procesar_y_graficar(malmquist_indices)
 
-# -------------------------------------------- #
-#    GRAFICAS
-# -------------------------------------------- #
+
+
 # ==============================================
-# -------------------------------------------- #
+#    GRAFICAS
+
+#  TODOS - GRAFICA DEA INPUT VRS
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs")
+})
+
+
 #    MEJORES RESULTADOS 
-# -------------------------------------------- #
 
-mejores_25 <- list("in_vrs" =top_eficiencia(resultados_in, "vrs", 25, TRUE),
-                   "in_crs" = top_eficiencia(resultados_in, "crs", 25, TRUE),
-                   "out_vrs" = top_eficiencia(resultados_out, "vrs", 25, TRUE),
-                   "out_crs" = top_eficiencia(resultados_out, "crs", 25, TRUE)) 
-
-
-# VRS INPUT
-chile_map_plot(mejores_25[["in_vrs"]][["2014"]], 2014, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2015"]], 2015, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2016"]], 2016, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2017"]], 2017, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2018"]], 2018, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2019"]], 2019, "vrs")
-chile_map_plot(mejores_25[["in_vrs"]][["2020"]], 2020, "vrs")
+mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
+                   "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
+                   "out_vrs" = top_eficiencia(resultados$oo, "vrs", 25, TRUE),
+                   "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
 
 
+#    VRS INPUT
+lapply(anios, function(anio) {
+  chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
+})
 
-# REGION COLOREADA POR PORCENTAJE DENTRO DEK 25 MEJOR
+
+#    REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
 resumen <- resumen_eficiencia(mejores_25$in_vrs)
 colorear_region(resumen)
-
-
-# -------------------------------------------- #
-#  TODOS - GRAFICA DEA INPUT VRS
-# -------------------------------------------- #
-
-
-chile_map_plot(resultados_in[["original"]][["2014"]][["data"]], 2014, "vrs")
-chile_map_plot(resultados_in[["original"]], 2015, "vrs")
-chile_map_plot(resultados_in[["original"]], 2016, "vrs")
-chile_map_plot(resultados_in[["original"]], 2017, "vrs")
-chile_map_plot(resultados_in[["original"]], 2018, "vrs")
-chile_map_plot(resultados_in[["original"]], 2019, "vrs")
-chile_map_plot(resultados_in[["original"]], 2020, "vrs")
-      
-
-# -------------------------------------------- #
-#  TODOS - GRAFICA DEA OUTPUT VRS
-# -------------------------------------------- #
-chile_map_plot(resultados_out[["original"]], 2014, "vrs")
-chile_map_plot(resultados_out[["original"]], 2015, "vrs")
-chile_map_plot(resultados_out[["original"]], 2016, "vrs")
-chile_map_plot(resultados_out[["original"]], 2017, "vrs")
-chile_map_plot(resultados_out[["original"]], 2018, "vrs")
-chile_map_plot(resultados_out[["original"]], 2019, "vrs")
-chile_map_plot(resultados_out[["original"]], 2020, "vrs")
-
-
 
 
 
@@ -205,7 +138,6 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 #TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
 #TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
 #TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
-
 
 
 
