@@ -8,18 +8,12 @@ source("graphics.R")
 # -------------------------------------------- #
 # ==============================================
 
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019","2020")
+anios <- 2014:2020
+datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
+names(datos_iniciales) <- as.character(anios)
 
-datos_iniciales <- list(
-  "2014" = consolidar_datos_por_anio(2014),
-  "2015" = consolidar_datos_por_anio(2015),
-  "2016" = consolidar_datos_por_anio(2016),
-  "2017" = consolidar_datos_por_anio(2017),
-  "2018" = consolidar_datos_por_anio(2018),
-  "2019" = consolidar_datos_por_anio(2019),
-  "2020" = consolidar_datos_por_anio(2020)
-  
-)
+data_2022 <- consolidar_datos_por_anio(2022)
+
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
 
@@ -215,13 +209,13 @@ chile_map_plot(resultados_out[["original"]], 2020, "vrs")
 
 
 
-test_2014 <- analize_rf(2014,resultados_in = resultados_in, 200)
-test_2015 <- analize_rf(2015,resultados_in = resultados_in, 300)
-test_2016 <- analize_rf(2016,resultados_in = resultados_in)
-test_2017 <- analize_rf(2017,resultados_in = resultados_in)
-test_2018 <- analize_rf(2018,resultados_in = resultados_in)
-test_2019 <- analize_rf(2019,resultados_in = resultados_in)
-test_2020 <- analize_rf(2020,resultados_in = resultados_in)
+test_2014 <- analize_rf(2014,resultados_in = resultados_in_cut_vrs, 500)
+test_2015 <- analize_rf(2015,resultados_in = resultados_in, 500)
+test_2016 <- analize_rf(2016,resultados_in = resultados_in, 500)
+test_2017 <- analize_rf(2017,resultados_in = resultados_in, 500)
+test_2018 <- analize_rf(2018,resultados_in = resultados_in, 500)
+test_2019 <- analize_rf(2019,resultados_in = resultados_in, 500)
+test_2020 <- analize_rf(2020,resultados_in = resultados_in, 500)
 
 
 #top_50_2014 <- test_2014[order(test_2014[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
