@@ -3,7 +3,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
-
+# ==============================================
+#  PROCESAMIENTO DE DATOS
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
@@ -16,29 +17,16 @@ names(datos_iniciales) <- as.character(anios)
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
-
 # ==============================================
-#  CÁLCULO DEA - ELIMINACION EFICIENTES
+#  CÁLCULO DEA
+# ==============================================
+#  SENSIBILIDAD - ELIMINACION EFICIENTES
 
 
 resultados <- list(
   io = resultados_iteracion(datos, "io"),
   oo = resultados_iteracion(datos, "oo")
 )
-
-# Supongamos que tus dataframes son df1, df2, ..., df6
-dataframes <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
-                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
-                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
-                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
-                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
-                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
-                   "2020" = resultados$io[["original"]][["2020"]][["data"]])
-
-
-
-# Combinar todos los dataframes por las columnas ID y VRS
-gran_dataframe <- reduce(dataframes, full_join, by = c("IdEstablecimiento", "vrs"))
 
 
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
@@ -49,7 +37,7 @@ graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anio
 
 
 
-#  CÁLCULO DEA - ELIMINACIÓN DE DATOS ATÍPICOS
+#  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
 
 
 resultados_cortados <- list(
@@ -58,26 +46,8 @@ resultados_cortados <- list(
 )
 
 
-# -------------------------------------------- #
-#    COMPARACIÓN DE SENSIBILIDAD VS ELIMINACION ATIPICOS 
-# -------------------------------------------- #
-# PENDIENTE DE VER SI ES NECESARIO
-# Usar la función
-#comparacion <- procesar_datos(
-#  resultados_in, resultados_out, 
-#  resultados_in_cut_vrs, resultados_in_cut_crs, 
-#  resultados_out_cut_vrs, resultados_out_cut_crs
-#)
-
-# Imprimir resultados
-#print(resultados$correlaciones_in_vrs)
-#print(resultados$correlaciones_in_crs)
-#print(resultados$correlaciones_out_vrs)
-#print(resultados$correlaciones_out_crs)
-
-# -------------------------------------------- #
-#    MALMQUIST 
-# -------------------------------------------- #
+# ==============================================
+#  MALMQUIST 
 # ==============================================
 
 
@@ -89,14 +59,86 @@ malmquist_indices <- list(
 )
 
 
-
 procesar_y_graficar(malmquist_indices)
 
 
 
 # ==============================================
-#    GRAFICAS
+#  DETERMINANTES
+# ==============================================
+# -------------------------------------------- #
+#  CONFIGURACIÓN Y MODELO RANDOM FOREST
+# -------------------------------------------- #
 
+# Definir años de interés
+anios <- 2014:2020
+
+# Aplicar Random Forest para cada año
+random_forest <- lapply(anios, function(anio) {
+  analize_rf(anio, resultados_in = resultados$io, 500)
+})
+
+# Asignar nombres a la lista de modelos
+names(random_forest) <- paste0("random_forest_", anios)
+
+# -------------------------------------------- #
+#  EXTRACCIÓN DE VARIABLES POR AÑO
+# -------------------------------------------- #
+
+variables_random_forest <- lapply(random_forest, rownames)
+names(variables_random_forest) <- paste0("variables_random_forest_", anios)
+
+# -------------------------------------------- #
+#  COMBINACIÓN Y ANÁLISIS DE VARIABLES
+# -------------------------------------------- #
+
+# Combinar todas las variables en una sola lista
+todas_las_variables <- unlist(variables_random_forest)
+
+# Calcular las frecuencias de cada variable
+frecuencias <- table(todas_las_variables)
+frecuencias_filtradas <- head(sort(frecuencias, decreasing = TRUE)[frecuencias > 1], 100)
+
+
+# -------------------------------------------- #
+#  VISUALIZACIÓN DE FRECUENCIAS
+# -------------------------------------------- #
+
+library(ggplot2)
+
+# Convertir las frecuencias filtradas en un dataframe
+df_frecuencias <- as.data.frame(frecuencias_filtradas)
+colnames(df_frecuencias) <- c("Variable", "Frecuencia")
+
+# Graficar las frecuencias
+ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(
+    title = "Frecuencia de variables entre años", 
+    x = "Variable", 
+    y = "Frecuencia"
+  ) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#
+
+# ==============================================
+#  RESULTADOS
+# ==============================================
+dataframes <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
+                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
+                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
+                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
+                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
+                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
+                   "2020" = resultados$io[["original"]][["2020"]][["data"]])
+
+
+gran_dataframe <- reduce(dataframes, full_join, by = c("IdEstablecimiento", "vrs"))
+
+# ==============================================
+#    GRAFICAS
+# ==============================================
 #  TODOS - GRAFICA DEA INPUT VRS
 
 lapply(anios, function(anio) {
@@ -121,99 +163,6 @@ lapply(anios, function(anio) {
 #    REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
 resumen <- resumen_eficiencia(mejores_25$in_vrs)
 colorear_region(resumen)
-
-
-
-#-------------------------------------#
-# DETERMINANTES #
-#-------------------------------------#
-# ==============================================
-
-
-# ESTO NO FUNCIONA ;-;
-#TOBIT_2014 <- analyze_tobit_model(resultados_in = resultados_in,year = 2014,top_n = 50)
-#TOBIT_2015 <- analyze_tobit_model(resultados_in = resultados_in,year = 2015,top_n = 50)
-#TOBIT_2016 <- analyze_tobit_model(resultados_in = resultados_in,year = 2016,top_n = 50)
-#TOBIT_2017 <- analyze_tobit_model(resultados_in = resultados_in,year = 2017,top_n = 5)
-#TOBIT_2018 <- analyze_tobit_model(resultados_in = resultados_in,year = 2018,top_n = 5)
-#TOBIT_2019 <- analyze_tobit_model(resultados_in = resultados_in,year = 2019,top_n = 5)
-#TOBIT_2020 <- analyze_tobit_model(resultados_in = resultados_in,year = 2020,top_n = 5)
-
-
-
-test_2014 <- analize_rf(2014,resultados_in = resultados_in_cut_vrs, 500)
-test_2015 <- analize_rf(2015,resultados_in = resultados_in, 500)
-test_2016 <- analize_rf(2016,resultados_in = resultados_in, 500)
-test_2017 <- analize_rf(2017,resultados_in = resultados_in, 500)
-test_2018 <- analize_rf(2018,resultados_in = resultados_in, 500)
-test_2019 <- analize_rf(2019,resultados_in = resultados_in, 500)
-test_2020 <- analize_rf(2020,resultados_in = resultados_in, 500)
-
-
-#top_50_2014 <- test_2014[order(test_2014[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2015 <- test_2015[order(test_2015[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2016 <- test_2016[order(test_2016[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2017 <- test_2017[order(test_2017[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2018 <- test_2018[order(test_2018[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2019 <- test_2019[order(test_2019[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-#top_50_2020 <- test_2020[order(test_2020[, "%IncMSE"], decreasing = TRUE), ][1:50, ]
-
-
-
-
-
-# Extraer nombres de las variables
-variables_2014 <- rownames(test_2014)
-variables_2015 <- rownames(test_2015)
-variables_2016 <- rownames(test_2016)
-variables_2017 <- rownames(test_2017)
-variables_2018 <- rownames(test_2018)
-variables_2019 <- rownames(test_2019)
-variables_2020 <- rownames(test_2020)
-
-
-
-
-
-
-# Combinar todas las variables en una sola lista
-todas_las_variables <- c(variables_2014, variables_2015, variables_2016, 
-                         variables_2017, variables_2018, variables_2019, variables_2020)
-
-# Calcular las frecuencias de cada variable
-frecuencias <- table(todas_las_variables)
-
-# Ordenar por frecuencia en orden descendente
-frecuencias_ordenadas <- sort(frecuencias, decreasing = TRUE)
-
-# Mostrar las variables con sus frecuencias
-print(frecuencias_ordenadas)
-
-# Opcional: filtrar las variables que se repiten en al menos dos años
-frecuencias_filtradas <- frecuencias_ordenadas[frecuencias_ordenadas > 1]
-print("Variables que se repiten en al menos dos años:")
-print(frecuencias_filtradas)
-
-
-
-
-library(ggplot2)
-
-# Convertir las frecuencias en un dataframe
-df_frecuencias <- as.data.frame(frecuencias_filtradas)
-colnames(df_frecuencias) <- c("Variable", "Frecuencia")
-
-# Graficar las frecuencias
-ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(title = "Frecuencia de variables entre años", x = "Variable", y = "Frecuencia") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
-
-
-
-
 
 
 # -------------------------------------------- #
