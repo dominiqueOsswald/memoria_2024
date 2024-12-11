@@ -20,14 +20,13 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 # ==============================================
 #  CÁLCULO DEA
 # ==============================================
-#  SENSIBILIDAD - ELIMINACION EFICIENTES
 
+#  SENSIBILIDAD - ELIMINACION EFICIENTES
 
 resultados <- list(
   io = resultados_iteracion(datos, "io"),
   oo = resultados_iteracion(datos, "oo")
 )
-
 
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 
@@ -35,10 +34,7 @@ input_output_original <- combinar_resultados_in_out(resultados$io[["original"]],
 graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios, "ambos")
 
 
-
-
 #  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
-
 
 resultados_cortados <- list(
   io = resultados_corte(resultados$io, "io"),
@@ -50,7 +46,6 @@ resultados_cortados <- list(
 #  MALMQUIST 
 # ==============================================
 
-
 malmquist_indices <- list(
   in_vrs = malmquist("vrs", "in"),
   in_crs = malmquist("crs", "in"),
@@ -58,10 +53,7 @@ malmquist_indices <- list(
   out_crs = malmquist("crs", "out")
 )
 
-
 procesar_y_graficar(malmquist_indices)
-
-
 
 # ==============================================
 #  DETERMINANTES
@@ -171,3 +163,5 @@ colorear_region(resumen)
 #print(mapa_interactivo)
 
 # ------------------------------------------- #
+
+# ==============================================

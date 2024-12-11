@@ -8,6 +8,21 @@ library(ggplot2)
 library(plotly)
 library(sf)
 
+procesar_index <- function(index) {
+  # Asegurarse de que las columnas sean numéricas
+  index[, -1] <- lapply(index[, -1], as.numeric)
+  
+  # Renombrar las columnas de acuerdo a los años consecutivos
+  columnas <- colnames(index)[-1]
+  nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
+  colnames(index)[-1] <- c("2014_2015", nuevos_nombres)
+  
+  # Calcular la tasa promedio pre-pandemia
+  index$Tasa_Promedio_Pre_Pandemia <- rowMeans(index[, -c(1, ncol(index))], na.rm = TRUE)
+  
+  return(index)
+}
+
 
 
 procesar_y_graficar <- function(malmquist_indices) {
