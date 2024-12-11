@@ -1,14 +1,19 @@
+library(randomForest)
 library(Benchmarking)
 library(gridExtra)
 library(corrplot)
 library(censReg)
+library(Metrics)
 library(readxl)
 library(purrr)
 library(tidyr)
 library(dplyr)
+library(caret)
 library(deaR)
 
-
+# ===================================================
+# CÁLCULO DE CORTE
+# ===================================================
 calcular_corte <- function(datos, vector_outliers) {
   lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
 }
@@ -19,20 +24,30 @@ resultados_corte <- function(resultados, tipo) {
     crs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_crs")]]), tipo)
   )
 }
-
+# ===================================================
+# MALMQUIST
+# ===================================================
 malmquist <- function(tipo, orientacion) {
   calcular_malmquist(datos, tipo, orientacion)
 }
 
-
+# ===================================================
+# SENSIBILIDAD
+# ===================================================
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
   mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
          datos, resultados, SIMPLIFY = FALSE)
 }
-
+# ===================================================
+# NORMALIZAR DATA
+# ===================================================
 normalize_min_max <- function(x) {
   (x - min(x)) / (max(x) - min(x))
 }
+
+# ===================================================
+# TOP EFICIENCIA
+# ===================================================
 
 top_eficiencia <- function(datos, tipo, cantidad, best){
   # Creamos una lista vacía para almacenar los resultados
@@ -61,9 +76,9 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
   return (mejores_tipo)
 }
 
-# -------------------------------------------- #
-#  CONSOLIDACIÓN DE DATOS
-# -------------------------------------------- #
+# ===================================================
+# CONSOLIDACIÓN DE DATOS
+# ===================================================
 consolidar_datos_por_anio <- function(anio) {
   
   # Establecer directorio de trabajo
@@ -194,10 +209,11 @@ consolidar_datos_por_anio <- function(anio) {
   return(all_sin_duplicados)
 }
 
-# -------------------------------------------- #
+# ===================================================
 #  APLICACIÓN DE ANÁLISIS ENVOLVENTE DE DATOS
 #  PARA UN AÑO EN ESPECÍFICO
-# -------------------------------------------- #
+# ===================================================
+
 analisis_dea_general <- function(data, orientation) {
   # --- Preparar inputs y outputs
   model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
@@ -231,10 +247,11 @@ analisis_dea_general <- function(data, orientation) {
               dea_crs = resultado_dea_crs))
 }
 
-# -------------------------------------------- #
+# ===================================================
 #  ELIMINACIÓN DE DATOS SEGÚN VALOR ENTREGADO Y SEGUN 
 #  SU TIPO DE DEA (VRS O CRS)
-# -------------------------------------------- #
+# ===================================================
+
 sensibilidad_parametro_general <- function(data, data_original, mayor, valor, orientacion, tipo) {
   # Determinar la columna a trabajar (vrs o crs)
   columna <- ifelse(tipo == "vrs", "vrs", ifelse(tipo == "crs", "crs", "esc"))
@@ -312,9 +329,9 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
               eff = effch_df))
 }
 
-# -------------------------------------------- #
-#  
-# -------------------------------------------- #
+# ==============================================
+#  COMBINACIÓN DE RESULTADO DE ITERACIONES
+# ==============================================
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs) {
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
@@ -377,9 +394,9 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
   return(lista_resultados_combinados)
 }
 
-# -------------------------------------------- #
-#  
-# -------------------------------------------- #
+# ==============================================
+#  GENERACIÓN DE RESULTADOS DE ITERACION
+# ==============================================
 resultados_iteracion <- function(datos, orientacion){
   
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
@@ -482,10 +499,10 @@ resultados_iteracion <- function(datos, orientacion){
   )
 }
 
+# ==============================================
+#  CÁLCULO DE CORRELACION ENTRE VRS Y CRS PARA CADA AÑO
+# ==============================================
 
-# -------------------------------------------- #
-#  función para calcular la correlación entre VRS y CRS para cada año
-# -------------------------------------------- #
 calcular_correlaciones <- function(df1, df2, id_col = "ID") {
   # Encontrar IDs comunes
   ids_comunes <- intersect(df1[[id_col]], df2[[id_col]])
@@ -502,9 +519,9 @@ calcular_correlaciones <- function(df1, df2, id_col = "ID") {
   return(correlaciones)
 }
 
-# -------------------------------------------- #
-#  
-# -------------------------------------------- #
+# ==============================================
+#  COMBINAR RESULTADOS IN OUT
+# ==============================================
 combinar_resultados_in_out <- function(resultados_in, resultados_out) {
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
@@ -556,9 +573,9 @@ combinar_resultados_in_out <- function(resultados_in, resultados_out) {
   return(lista_resultados_combinados)
 }
 
-# -------------------------------------------- #
-#  
-# -------------------------------------------- #
+# ==============================================
+#  RESUMEN DE EFICIENCIA
+# ==============================================
 resumen_eficiencia <- function(datos) {
   # Lista para almacenar las posiciones por establecimiento
   posiciones <- list()
@@ -609,9 +626,9 @@ resumen_eficiencia <- function(datos) {
 }
 
 
-# -------------------------------------------- #
-#  sensibilidad vs atipicos
-# -------------------------------------------- #
+# ==============================================
+#  SENSIBILIDAD VS ATIPICOS
+# ==============================================
 # Función para procesar datos y calcular correlaciones
 procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs, resultados_in_cut_crs, 
                            resultados_out_cut_vrs, resultados_out_cut_crs) {
@@ -653,55 +670,14 @@ procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs,
 
 
 
-analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
-  data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
-  print(data_path)
-  # Leer los datos consolidados
-  datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
-  df <- datos_consolidados
-  
-  left_cens <- 0
-  right_cens <- 1
 
-  # Convertir columnas a enteros
-  df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
-  
-  # Filtrar los resultados de VRS
-  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
-    rename("idEstablecimiento" = "IdEstablecimiento")
-
-  #print(head(df_vrs))
-  df_w_vrs <- df %>%
-    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
-  
-  # Combinar los DataFrames
-  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
-  
-  # Eliminar columnas completamente NA
-  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
-  #print(colnames(df_merged))
-
-  # Calcular correlaciones
-  correlaciones <- cor(df_merged[,-1])["vrs", ]
-  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
-  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
-  
-  
-  # Seleccionar las top_n variables más correlacionadas
-  
-  top_vars <- head(correlaciones_ordenadas, top_n)
-  
-  return(correlaciones_ordenadas)
-  
-}
-
-
-
-
+# ==============================================
+#  RANDOM FOREST
+# ==============================================
 analize_rf <- function(year, resultados_in, n_top){
-  #year <- 2014
+
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
-  print(data_path)
+  
   # Leer los datos consolidados
   datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
   df <- datos_consolidados
@@ -739,48 +715,28 @@ analize_rf <- function(year, resultados_in, n_top){
   # PROBANDO RANDOM FOREST
   
   set.seed(123)  # Para reproducibilidad
-  library(caret)
   trainIndex <- createDataPartition(df_top$vrs, p = 0.7, list = FALSE)
   
   trainData <- df_top[trainIndex, ]
   testData <- df_top[-trainIndex, ]
   
   control <- trainControl(method = "cv", number = 10)  # 10-fold CV
-  
-  library(randomForest)
+
   
   # Ajustar el modelo de Random Forest
-  modelo_rf <- randomForest(vrs ~ ., 
-                            data = trainData, 
-                            importance = TRUE, 
-                            trControl = control, 
-                            ntree = 700,
-                            do.trace = 100 )
+  modelo_rf <- randomForest(vrs ~ ., data = trainData, importance = TRUE, trControl = control, ntree = 700, do.trace = 100 )
   
-  # Ver el modelo ajustado
-  #print(modelo_rf)
-  
-  
-  #plot(modelo_rf$err.rate[, 1], 
-  #     type = "l",
-  #     xlab = "Número de árboles",
-  #     ylab = "Error OOB")
-  
-  
+
   # Predicciones en el conjunto de prueba
   predicciones <- predict(modelo_rf, newdata = testData)
   
   # Evaluar el rendimiento
-  library(Metrics)
   r2 <- R2(predicciones, testData$vrs)
   rmse <- rmse(predicciones, testData$vrs)
   cat("R²:", r2, "\nRMSE:", rmse)
   
-  
-  
   # Importancia de las variables
   importancia <- importance(modelo_rf)
-  #print(importancia)
   
   # Graficar la importancia
   varImpPlot(modelo_rf)

@@ -4,7 +4,7 @@ source("functions.R")
 source("graphics.R")
 
 # ==============================================
-#  PROCESAMIENTO DE DATOS
+#  PRE PROCESAMIENTO DE DATOS
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
@@ -117,16 +117,62 @@ ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) 
 # ==============================================
 #  RESULTADOS
 # ==============================================
-dataframes <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
-                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
-                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
-                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
-                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
-                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
-                   "2020" = resultados$io[["original"]][["2020"]][["data"]])
+
+dataframes <- lapply(names(dataframes), function(year) {
+  dataframes[[year]] %>%
+    select(IdEstablecimiento, vrs) %>%
+    rename(!!paste0("vrs_", year) := vrs)
+})
 
 
-gran_dataframe <- reduce(dataframes, full_join, by = c("IdEstablecimiento", "vrs"))
+gran_dataframe <- reduce(dataframes, full_join, by = "IdEstablecimiento")
+
+gran_dataframe <- gran_dataframe %>%
+  rowwise() %>%
+  mutate(promedio_vrs = mean(c_across(starts_with("vrs_")), na.rm = TRUE))
+
+
+
+
+library(openxlsx)
+
+# Crear un workbook
+wb <- createWorkbook()
+
+# Agregar hojas al workbook
+addWorksheet(wb, "Eficiencias")
+addWorksheet(wb, "Indice Malmquist")
+addWorksheet(wb, "Determinantes")
+
+# Escribir dataframes en las hojas
+writeData(wb, "Eficiencias", gran_dataframe)
+writeData(wb, "Indice Malmquist", malmquist_indices[["in_vrs"]][["index"]])  # Reemplaza con tu segundo dataframe
+writeData(wb, "Determinantes", frecuencias_filtradas)  # Reemplaza con tu segundo dataframe
+
+# Guardar el archivo Excel
+saveWorkbook(wb, "Resultados.xlsx", overwrite = TRUE)
+
+
+
+
+
+# GRAFICA DE PROMEDIO DE EFICIENCIAS
+datos <- na.omit(gran_dataframe$promedio_vrs)
+mediana <- median(datos)
+
+# Crear el gráfico
+grafico <- ggplot(data.frame(x = datos), aes(x = x)) +
+  geom_density(fill = "blue", alpha = 0.5, color = "blue") +
+  geom_vline(aes(xintercept = mediana), color = "green", linetype = "dashed", size = 1) +
+  ggtitle("Densidad") +
+  xlab("Valores") +
+  ylab("Densidad") +
+  theme_minimal() +
+  annotate("text", x = mediana, y = 0.15, 
+           label = paste0("Mediana: ", round(mediana, 2)), color = "green", hjust = -0.1)
+
+# Renderizar el gráfico
+print(grafico)
 
 # ==============================================
 #    GRAFICAS
