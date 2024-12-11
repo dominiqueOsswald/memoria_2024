@@ -8,8 +8,7 @@ library(tidyr)
 library(dplyr)
 library(deaR)
 
-# ******************************* #
-# Eliminación de datos atípicos y recalculo DEA
+
 calcular_corte <- function(datos, vector_outliers) {
   lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
 }
@@ -24,9 +23,6 @@ resultados_corte <- function(resultados, tipo) {
 malmquist <- function(tipo, orientacion) {
   calcular_malmquist(datos, tipo, orientacion)
 }
-
-
-# ******************************* #
 
 
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
@@ -228,21 +224,11 @@ analisis_dea_general <- function(data, orientation) {
     region_id = data$region_id
   )
   
-  # Ordenar dataframes según diferentes columnas
-  #eficiencia_vrs_data <- eficiencia_df[order(-eficiencia_df$vrs), ]
-  #eficiencia_crs_data <- eficiencia_df[order(-eficiencia_df$crs), ]
-  #eficiencia_escala_data <- eficiencia_df[order(eficiencia_df$escala), ]
-  
-  # Retornar los dataframes ordenados como una lista
+
   
   return(list(data = eficiencia_df, 
               dea_vrs = resultado_dea_vrs,
               dea_crs = resultado_dea_crs))
-  
-  #return(list(data = eficiencia_df)) 
-  #            vrs = eficiencia_vrs_data, 
-  #            crs = eficiencia_crs_data, 
-  #            esc = eficiencia_escala_data))
 }
 
 # -------------------------------------------- #
@@ -262,113 +248,65 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   
   # Filtrar el dataset por IdEstablecimiento
   data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
-  # head(data_set)
+
   # Aplicar el análisis DEA
   resultados_in  <- analisis_dea_general(data_set, orientacion)
   
   return (resultados = resultados_in)
 }
 
-# -------------------------------------------- #
+# ==============================================
 #  CÁLCULO DE INDICE MALMQUIST
-# -------------------------------------------- #
+# ==============================================
 calcular_malmquist <- function(datos, tipo, orientacion) {
+  # Extraer inputs, outputs, ID y TIME
+  input_data <- do.call(rbind, lapply(names(datos), function(year) as.matrix(datos[[year]][, 8:10])))
+  output_data <- do.call(rbind, lapply(names(datos), function(year) as.matrix(datos[[year]][, 5:7])))
+  ID <- unlist(lapply(datos, function(data) data$IdEstablecimiento))
+  TIME <- unlist(lapply(names(datos), function(year) rep(year, nrow(datos[[year]]))))
   
-  # Inicializar listas y vectores para almacenar inputs, outputs, ID y TIME
-  input_data <- list()
-  output_data <- list()
-  ID <- vector()
-  TIME <- vector()
-  print(1)
-  # Iterar sobre cada año
-  for (year in names(datos)) {
-    # Acceder a la lista 'data' dentro de cada año
-    data_year <- datos[[year]]
-    
-    # Extraer los inputs y outputs usando posiciones de columnas
-    inputs <- as.matrix(data_year[, 8:10])  # Columnas 8 a 10 como inputs
-    outputs <- as.matrix(data_year[, 5:7])  # Columnas 5 a 7 como outputs
-    
-    # Agregar los datos de este año a las listas
-    input_data[[year]] <- inputs
-    output_data[[year]] <- outputs
-    
-    # Crear vectores de ID y tiempo
-    ID <- c(ID, data_year$IdEstablecimiento)  # Suponiendo que IdEstablecimiento es el ID de cada DMU
-    TIME <- c(TIME, rep(year, nrow(data_year)))
-  }
-  print(2)
-  # Verificar si hay combinaciones duplicadas de ID y TIME
-  temp_df <- data.frame(ID = ID, TIME = TIME)
-  duplicated_rows <- temp_df[duplicated(temp_df), ]
+  # Eliminar duplicados
+  unique_indices <- !duplicated(data.frame(ID = ID, TIME = TIME))
+  input_data <- input_data[unique_indices, ]
+  output_data <- output_data[unique_indices, ]
+  ID <- ID[unique_indices]
+  TIME <- TIME[unique_indices]
   
-  if (nrow(duplicated_rows) > 0) {
-    # Eliminar duplicados en ID y TIME
-    temp_df <- temp_df[!duplicated(temp_df), ]
-    input_data <- input_data[!duplicated(temp_df), ]
-    output_data <- output_data[!duplicated(temp_df), ]
-  } 
+  # Calcular el índice Malmquist
+  malmquist_index <- Benchmarking::malmquist(X = input_data, Y = output_data, ID = ID, TIME = TIME, 
+                                             RTS = tipo, ORIENTATION = orientacion)
   
-  print(3)
-  
-  # Convertir listas a matrices para el análisis sin duplicados
-  input_matrix <- do.call(rbind, input_data)
-  output_matrix <- do.call(rbind, output_data)
-  
-  print("--------------")
-  print(head(ID))
-  print("--------------")
-  print(head(TIME))
-  print("--------------")
-  # Realizar el análisis Malmquist
-  malmquist_index <- Benchmarking::malmquist(X = input_matrix, Y = output_matrix, ID = ID, TIME = TIME, 
-                               RTS = tipo, ORIENTATION = orientacion)
-  
-  
-  # Se generan dataframe que entreguen la info de indice, cambio de eficiencia y tecnologico
+  # Crear dataframe de resultados
   resultados_df <- data.frame(
     ID = malmquist_index$id,
-    Año = malmquist_index$time,             # Periodo o año
-    MalmquistIndex = malmquist_index$m,     # Índice Malmquist total
-    Effch = malmquist_index$ec,          # Cambio en eficiencia
-    Techch = malmquist_index$tc        # Cambio tecnológico
+    Año = malmquist_index$time,
+    MalmquistIndex = malmquist_index$m,
+    Effch = malmquist_index$ec,
+    Techch = malmquist_index$tc
   )
-  print(4)
-  # Se construye cada uno de los dataframe
-  malmquist_df <- resultados_df %>%
-    select(ID, Año, MalmquistIndex) %>%
-    pivot_wider(names_from = Año, values_from = MalmquistIndex)
   
-  effch_df <- resultados_df %>%
-    select(ID, Año, Effch) %>%
-    pivot_wider(names_from = Año, values_from = Effch)
+  # Crear dataframes pivotados
+  pivotar_resultados <- function(data, column) {
+    data %>%
+      select(ID, Año, !!sym(column)) %>%
+      pivot_wider(names_from = Año, values_from = !!sym(column)) %>%
+      Filter(function(x) !all(is.na(x)), .)
+  }
   
-  # Tercer dataframe solo con Techch
-  techch_df <- resultados_df %>%
-    select(ID, Año, Techch) %>%
-    pivot_wider(names_from = Año, values_from = Techch)
+  malmquist_df <- pivotar_resultados(resultados_df, "MalmquistIndex")
+  effch_df <- pivotar_resultados(resultados_df, "Effch")
+  techch_df <- pivotar_resultados(resultados_df, "Techch")
   
-  # Crear el dataframe de resultados
+  # Crear eficiencia en formato wide
   efficiency_df <- data.frame(
     ID = malmquist_index$id,
     TIME = malmquist_index$time,
     Efficiency = malmquist_index$e11
-  )
+  ) %>%
+    arrange(ID, TIME) %>%
+    pivot_wider(names_from = TIME, values_from = Efficiency)
   
-  print(5)
-  
-  # Se elimina la columna que no tienen ningun valor
-  malmquist_df <- Filter(function(x) !all(is.na(x)),malmquist_df)
-  effch_df <- Filter(function(x) !all(is.na(x)),effch_df)
-  techch_df <- Filter(function(x) !all(is.na(x)), techch_df)
-  
-  # Ordenar el dataframe por ID y TIME
-  efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
-  
-  # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
-  efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
-  
-  return(list(eficiencia = efficiency_wide, 
+  return(list(eficiencia = efficiency_df, 
               index = malmquist_df,
               tech = techch_df,
               eff = effch_df))
