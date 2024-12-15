@@ -12,6 +12,8 @@ anios <- 2014:2020
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
+#anio_2020 <- consolidar_datos_por_anio(2020)
+anio_2022 <- consolidar_datos_por_anio(2022)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))

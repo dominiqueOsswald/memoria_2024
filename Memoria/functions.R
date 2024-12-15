@@ -89,19 +89,20 @@ consolidar_datos_por_anio <- function(anio) {
   path_predicciones_grd <- paste0("data/", anio, "/", anio, "_prediciones_grd.txt")
   path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
   path_financiero <- paste0("data/", anio, "/", anio, "_financial_data.csv")
-  path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
-  
+  path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2023.xlsx"
+  print("1")
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
   datos_consolidados <- read.table(path_datos_consolidados, sep=";", header=TRUE)
+  
   financiero <- read.csv(path_financiero) %>% 
     select(hospital_id, X21_value, X22_value) %>% rename("IdEstablecimiento" = "hospital_id")
   financiero$X21_value <- as.numeric(financiero$X21_value)
   financiero$X22_value <- as.numeric(financiero$X22_value)
   
   financiero <- financiero[rowSums(is.na(financiero)) < 2, ]
-  
+  print("2")
   
   estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 1)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
@@ -109,17 +110,17 @@ consolidar_datos_por_anio <- function(anio) {
     select(-"Cód. Nivel Cuidado", -"Cód. SS/SEREMI", -"Nombre Nivel Cuidado") %>%  
     semi_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(1:5)
-
+  print("3")
   # Procesar estadísticas
   dias_cama_disponibles <- estadisticas %>% 
     filter(Glosa == "Dias Cama Disponibles") %>%  
     select(1:5) %>% rename("dias_cama_disponible" = "Acum") %>% select(-Glosa)
-  
+  print("4")
   egresos <- estadisticas %>% 
     filter(Glosa == "Numero de Egresos") %>%  
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
 
-
+  print("5")
   consultas <- list("idEstablecimiento", "X07020130", "X07020230", "X07020330", "X07020400", 
                     "X07020500", "X07020600", "X07020700", "X07020800", "X07020900", "X07024970", 
                     "X07021000", "X07021100", "X07021230", "X07021300", "X07021400", "X07024980", 
@@ -145,28 +146,31 @@ consolidar_datos_por_anio <- function(anio) {
                     "X07034600", "X07034700", "X07034800", "X07034900", "X07035000", "X07035100", 
                     "X07035200", "X07035300")
   
-  
+  print("6")
 
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
-
-  consultas_data <- subset(datos_consolidados, select = columnas_validas)
-
+  print("6a")
+  print(names(columnas_validas))
+  #consultas_data <- subset(datos_consolidados, select = columnas_validas)
+  consultas_data <- datos_consolidados %>% select(all_of(columnas_validas))
+  
+  print("6b")
   # Identificar columnas tipo character
   cols_char <- sapply(consultas_data, is.character)
-  
+  print("6c")
   # Convertir columnas character a numeric
   consultas_data[, cols_char] <- lapply(consultas_data[, cols_char], function(x) as.numeric(x))
-
+  print("6d")
   # Crear suma total de consultas
   consultas_data$sumaTotal <- rowSums(consultas_data[, -which(names(consultas_data) == "idEstablecimiento")], na.rm = TRUE)
-  
+  print("6e")
   consultas <- data.frame(idEstablecimiento = consultas_data$idEstablecimiento, 
                           Consultas = consultas_data$sumaTotal) %>%
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Consultas)
-
+  print("7")
   # Definir quirofano
   quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
                     "X21400500","X21400600","X21800810")
@@ -175,7 +179,7 @@ consolidar_datos_por_anio <- function(anio) {
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
     mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
-
+  print("8")
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
   
@@ -184,13 +188,13 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Quirofano)
-
+  print("9")
   # Procesar egresos y predicciones GRD
   intermediate_df <- egresos %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     mutate(Egresos.GRD = Prediction * egresos) %>%
     select("Region", IdEstablecimiento, "Nombre Establecimiento", Egresos.GRD)
-  
+  print("10")
   # Combinar datos financieros y días cama disponibles
   input <- left_join(financiero, dias_cama_disponibles %>% 
                        select(IdEstablecimiento, dias_cama_disponible), by = "IdEstablecimiento")
@@ -199,7 +203,7 @@ consolidar_datos_por_anio <- function(anio) {
   output <- intermediate_df %>%
     left_join(consultas, by = "IdEstablecimiento") %>%
     left_join(quirofano, by = "IdEstablecimiento")
-  
+  print("11")
   # Consolidar todos los datos
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
     left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud), by = "IdEstablecimiento") %>%
