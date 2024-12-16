@@ -678,7 +678,7 @@ procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs,
 # ==============================================
 #  RANDOM FOREST
 # ==============================================
-analize_rf <- function(year, resultados_in, n_top){
+analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
 
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   
@@ -690,7 +690,7 @@ analize_rf <- function(year, resultados_in, n_top){
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
   
   # Filtrar los resultados de VRS
-  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", tipo)] %>% 
     rename("idEstablecimiento" = "IdEstablecimiento")
 
 
@@ -702,15 +702,15 @@ analize_rf <- function(year, resultados_in, n_top){
   df_merged_clean <- df_merged_original[, colSums(is.na(df_merged_original)) == 0]
   
   
-  correlaciones <- cor(df_merged_clean[,-1])["vrs", ]
-  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+  correlaciones <- cor(df_merged_clean[,-1])[tipo, ]
+  correlaciones <- correlaciones[!names(correlaciones) %in% tipo]
   correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   
   top_correlacion <- head(correlaciones_ordenadas, n=n_top)
   top_variables <- names(top_correlacion)
   
   
-  columnas_a_incluir <- c("vrs", top_variables)
+  columnas_a_incluir <- c(tipo, top_variables)
   
   # Crear el DataFrame con las variables seleccionadas
   df_top <- df_merged_clean[, columnas_a_incluir]
@@ -719,34 +719,48 @@ analize_rf <- function(year, resultados_in, n_top){
   # PROBANDO RANDOM FOREST
   
   set.seed(123)  # Para reproducibilidad
-  trainIndex <- createDataPartition(df_top$vrs, p = 0.7, list = FALSE)
+  trainIndex <- createDataPartition(df_top[[tipo]], p = 0.7, list = FALSE)
   
   trainData <- df_top[trainIndex, ]
   testData <- df_top[-trainIndex, ]
   
   control <- trainControl(method = "cv", number = 10)  # 10-fold CV
-
   
+  formula_rf <- as.formula(paste(tipo, "~ ."))
+  
+  cat(paste0("\n", year, "-", orientacion, " ", tipo))
   # Ajustar el modelo de Random Forest
-  modelo_rf <- randomForest(vrs ~ ., data = trainData, importance = TRUE, trControl = control, ntree = 700, do.trace = 100 )
+  modelo_rf <- randomForest(formula = formula_rf, data = trainData, importance = TRUE, trControl = control, ntree = trees, do.trace = 100 )
   
 
   # Predicciones en el conjunto de prueba
   predicciones <- predict(modelo_rf, newdata = testData)
   
   # Evaluar el rendimiento
-  r2 <- R2(predicciones, testData$vrs)
-  rmse <- rmse(predicciones, testData$vrs)
+  r2 <- R2(predicciones, testData[[tipo]])
+  rmse <- rmse(predicciones, testData[[tipo]])
   cat("R²:", r2, "\nRMSE:", rmse)
   
   # Importancia de las variables
   importancia <- importance(modelo_rf)
   
+  importancia_df <- as.data.frame(importancia) 
+  
+  
+  # Si quieres ordenar por %IncMSE 
+  importancia_ordenada <- importancia_df[order(importancia_df$`%IncMSE`, decreasing = TRUE), ] 
+  
+  # O si prefieres ordenar por IncNodePurity 
+  #importancia_ordenada <- importancia_df[order(importancia_df$IncNodePurity, decreasing = TRUE), ] 
+  
+  # Para mostrar los resultados con nombres de variables 
+  importancia_ordenada$Variables <- rownames(importancia_ordenada) 
+  
   # Graficar la importancia
-  varImpPlot(modelo_rf)
+  # varImpPlot(modelo_rf)
+  # title(main = paste0("Importancia de las Variables - Modelo Random Forest - Año ", year, " ", tipo ))
   
-  
-  return(importancia)
+  return(head(importancia_ordenada,50)) 
   
 }
 

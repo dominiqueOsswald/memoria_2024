@@ -8,12 +8,12 @@ source("graphics.R")
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
-anios <- 2014:2020
+anios <- c(2014:2020, 2022)
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
 #anio_2020 <- consolidar_datos_por_anio(2020)
-anio_2022 <- consolidar_datos_por_anio(2022)
+#anio_2022 <- consolidar_datos_por_anio(2022)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
@@ -65,56 +65,105 @@ procesar_y_graficar(malmquist_indices)
 # -------------------------------------------- #
 
 # Definir años de interés
-anios <- 2014:2020
-
-# Aplicar Random Forest para cada año
-random_forest <- lapply(anios, function(anio) {
-  analize_rf(anio, resultados_in = resultados$io, 500)
-})
-
-# Asignar nombres a la lista de modelos
-names(random_forest) <- paste0("random_forest_", anios)
+#year, resultados_in, n_top, trees, tipo, orientacion
+random_forest_results <- list(
+  input_vrs = setNames(
+    lapply(anios, function(anio) {analize_rf(anio, resultados$io, 50, 300, "vrs", "Input")}),anios
+  ),
+  input_crs = setNames(
+    lapply(anios, function(anio) {analize_rf(anio, resultados$io, 50, 300, "crs", "Input")}),anios
+  ),
+  output_vrs = setNames(
+    lapply(anios, function(anio) {analize_rf(anio, resultados$oo, 50, 300, "vrs", "Output")}),anios
+  ),
+  output_crs = setNames(
+    lapply(anios, function(anio) {analize_rf(anio, resultados$oo, 50, 300, "crs", "Output")}),anios
+  )
+)
 
 # -------------------------------------------- #
 #  EXTRACCIÓN DE VARIABLES POR AÑO
 # -------------------------------------------- #
 
-variables_random_forest <- lapply(random_forest, rownames)
-names(variables_random_forest) <- paste0("variables_random_forest_", anios)
+# Extraer variables de cada modelo dentro de random_forest_results
+variables_random_forest <- lapply(random_forest_results, function(modelos_por_anio) {
+  lapply(modelos_por_anio, rownames)
+})
+
+# Asignar nombres dinámicos
+names(variables_random_forest) <- paste0("variables_random_forest_", names(random_forest_results))
+
 
 # -------------------------------------------- #
 #  COMBINACIÓN Y ANÁLISIS DE VARIABLES
 # -------------------------------------------- #
 
-# Combinar todas las variables en una sola lista
-todas_las_variables <- unlist(variables_random_forest)
+# Crear una lista para almacenar las tablas de frecuencias por método
+frecuencias_por_metodo <- lapply(variables_random_forest, function(variables_por_anio) {
+  # Combinar todas las variables para un método específico
+  todas_las_variables <- unlist(variables_por_anio)
+  
+  # Calcular las frecuencias de las variables
+  frecuencias <- table(todas_las_variables)
+  
+  # Filtrar y ordenar las variables más frecuentes
+  frecuencias_filtradas <- head(sort(frecuencias[frecuencias > 1], decreasing = TRUE), 100)
+  
+  # Retornar las frecuencias filtradas
+  return(frecuencias_filtradas)
+})
 
-# Calcular las frecuencias de cada variable
-frecuencias <- table(todas_las_variables)
-frecuencias_filtradas <- head(sort(frecuencias, decreasing = TRUE)[frecuencias > 1], 100)
+# Asignar nombres a las tablas de frecuencias
+names(frecuencias_por_metodo) <- paste0("frecuencias_", names(variables_random_forest))
+
+# Verificar los resultados
+print(frecuencias_por_metodo)
 
 
 # -------------------------------------------- #
 #  VISUALIZACIÓN DE FRECUENCIAS
 # -------------------------------------------- #
 
-library(ggplot2)
 
-# Convertir las frecuencias filtradas en un dataframe
-df_frecuencias <- as.data.frame(frecuencias_filtradas)
-colnames(df_frecuencias) <- c("Variable", "Frecuencia")
+# Crear un dataframe para combinar las frecuencias por método
+df_frecuencias <- bind_rows(
+  lapply(names(frecuencias_por_metodo), function(metodo) {
+    # Convertir la tabla de frecuencias a dataframe
+    df <- as.data.frame(frecuencias_por_metodo[[metodo]])
+    colnames(df) <- c("Variable", "Frecuencia")
+    # Agregar el nombre del método como columna
+    df$Metodo <- metodo
+    return(df)
+  })
+)
 
-# Graficar las frecuencias
-ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(
-    title = "Frecuencia de variables entre años", 
-    x = "Variable", 
-    y = "Frecuencia"
-  ) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-#
+# Crear gráficos separados para cada método
+for (metodo in names(frecuencias_por_metodo)) {
+  # Convertir la tabla de frecuencias en un dataframe
+  df_frecuencias <- as.data.frame(frecuencias_por_metodo[[metodo]])
+  colnames(df_frecuencias) <- c("Variable", "Frecuencia")
+  
+  # Crear el gráfico
+  plot <- ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
+    geom_bar(stat = "identity", fill = "blue") +
+    labs(
+      title = paste("Frecuencia de Variables -", metodo),
+      x = "Variable",
+      y = "Frecuencia"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 90, hjust = 1),
+      plot.title = element_text(hjust = 0.5)
+    )
+  
+  # Mostrar el gráfico
+  print(plot)
+  
+  # Opcional: Guardar el gráfico en un archivo
+  ggsave(filename = paste0(metodo, "_frecuencia_variables.png"), plot = plot, width = 10, height = 6)
+}
+
 
 # ==============================================
 #  RESULTADOS
