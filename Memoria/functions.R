@@ -78,7 +78,7 @@ consolidar_datos_por_anio <- function(anio) {
   path_predicciones_grd <- paste0("data/", anio, "/", anio, "_prediciones_grd.txt")
   path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
   path_financiero <- paste0("data/", anio, "/", anio, "_financial_data.csv")
-  path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2021.xlsx"
+  path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2023.xlsx"
   
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")

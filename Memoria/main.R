@@ -8,7 +8,7 @@ source("graphics.R")
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
-anios <- 2014:2020
+anios <- 2014:2023
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
