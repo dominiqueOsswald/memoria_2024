@@ -35,8 +35,14 @@ malmquist <- function(tipo, orientacion) {
 # SENSIBILIDAD
 # ===================================================
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
-  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
-         datos, resultados, SIMPLIFY = FALSE)
+  mapply(function(data, resultado, anio) {
+    # Mostrar el nombre del año en pantalla
+    print(paste("Aplicando sensibilidad para el año:", anio))
+    
+    # Ejecutar la función principal
+    sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
+  },
+  datos, resultados, names(datos), SIMPLIFY = FALSE) # Pasar los nombres de los datos como argumento
 }
 # ===================================================
 # NORMALIZAR DATA
