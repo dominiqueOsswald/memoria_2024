@@ -8,12 +8,9 @@ source("graphics.R")
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
-anios <- c(2014:2020)
+anios <- c(2014:2023)
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
-
-#anio_2020 <- consolidar_datos_por_anio(2020)
-#anio_2022 <- consolidar_datos_por_anio(2022)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
@@ -26,9 +23,35 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
 
 resultados <- list(
-  io = resultados_iteracion(datos, "io"),
-  oo = resultados_iteracion(datos, "oo")
+  io = resultados_iteracion(datos, "io")
+  #oo = resultados_iteracion(datos, "oo")
 )
+
+resultados2 <- list(
+  oo = resultados_iteracion(datos[1:2], "oo")
+  #oo = resultados_iteracion(datos, "oo")
+)
+
+resultados3 <- list(
+  oo = resultados_iteracion(datos[2:3], "oo")
+  #oo = resultados_iteracion(datos, "oo")
+)
+
+resultados4 <- list(
+  oo = resultados_iteracion(datos[4:5], "oo")
+  #oo = resultados_iteracion(datos, "oo")
+)
+
+resultados5 <- list(
+  oo = resultados_iteracion(datos[6:7], "oo")
+  #oo = resultados_iteracion(datos, "oo")
+)
+
+resultados6 <- list(
+  oo = resultados_iteracion(datos[8:10], "oo")
+  #oo = resultados_iteracion(datos, "oo")
+)
+
 
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 

@@ -80,7 +80,7 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
 # CONSOLIDACIÓN DE DATOS
 # ===================================================
 consolidar_datos_por_anio <- function(anio) {
-  
+  #anio <- 2023
   # Establecer directorio de trabajo
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   print("AÑO")
@@ -94,7 +94,7 @@ consolidar_datos_por_anio <- function(anio) {
   path_consultas <- paste0("data/", anio, "/variables/", anio, "_consultas.txt")
   path_quirofano <- paste0("data/", anio, "/variables/", anio, "_quirofano.txt")
   
-  print("1")
+  #print("1")
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
@@ -106,7 +106,7 @@ consolidar_datos_por_anio <- function(anio) {
   financiero$X22_value <- as.numeric(financiero$X22_value)
   
   financiero <- financiero[rowSums(is.na(financiero)) < 2, ]
-  print("2")
+  #print("2")
   
   estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 1)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
@@ -114,52 +114,57 @@ consolidar_datos_por_anio <- function(anio) {
     select(-"Cód. Nivel Cuidado", -"Cód. SS/SEREMI", -"Nombre Nivel Cuidado") %>%  
     semi_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(1:5)
-  print("3")
+  #print("3")
   # Procesar estadísticas
   dias_cama_disponibles <- estadisticas %>% 
     filter(Glosa == "Dias Cama Disponibles") %>%  
     select(1:5) %>% rename("dias_cama_disponible" = "Acum") %>% select(-Glosa)
-  print("4")
+  #print("4")
   egresos <- estadisticas %>% 
     filter(Glosa == "Numero de Egresos") %>%  
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
 
-  print("5")
+  #print("5")
   consultas <- unlist(strsplit(readLines(path_consultas), ","))
   
-  print("6")
+  
+  #print(consultas)
+  #print("6")
 
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
-  print("6a")
-  print(names(columnas_validas))
+  #print("6a")
+  #print(names(columnas_validas))
   #consultas_data <- subset(datos_consolidados, select = columnas_validas)
   consultas_data <- datos_consolidados %>% select(all_of(columnas_validas))
   
-  print("6b")
+  #print("6b")
   # Identificar columnas tipo character
   cols_char <- sapply(consultas_data, is.character)
-  print("6c")
+  #print("6c")
   # Convertir columnas character a numeric
   consultas_data[, cols_char] <- lapply(consultas_data[, cols_char], function(x) as.numeric(x))
-  print("6d")
+  #print("6d")
   # Crear suma total de consultas
   consultas_data$sumaTotal <- rowSums(consultas_data[, -which(names(consultas_data) == "idEstablecimiento")], na.rm = TRUE)
-  print("6e")
+  #print(consultas_data$sumaTotal)
+  #print("6e")
   consultas <- data.frame(idEstablecimiento = consultas_data$idEstablecimiento, 
                           Consultas = consultas_data$sumaTotal) %>%
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Consultas)
-  print("7")
+  #print("7")
   # Definir quirofano
   quirofano <- unlist(strsplit(readLines(path_quirofano), ","))
-  quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
+  columnas_validas_q <- intersect(unlist(quirofano), colnames(datos_consolidados))
+  #print(quirofano)
+  quirofano_data <- subset(datos_consolidados, select = unlist(columnas_validas_q))
   
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
     mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
-  print("8")
+  #print("8")
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
   
@@ -168,13 +173,13 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Quirofano)
-  print("9")
+  #print("9")
   # Procesar egresos y predicciones GRD
   intermediate_df <- egresos %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     mutate(Egresos.GRD = Prediction * egresos) %>%
     select("Region", IdEstablecimiento, "Nombre Establecimiento", Egresos.GRD)
-  print("10")
+  #print("10")
   # Combinar datos financieros y días cama disponibles
   input <- left_join(financiero, dias_cama_disponibles %>% 
                        select(IdEstablecimiento, dias_cama_disponible), by = "IdEstablecimiento")
@@ -183,7 +188,7 @@ consolidar_datos_por_anio <- function(anio) {
   output <- intermediate_df %>%
     left_join(consultas, by = "IdEstablecimiento") %>%
     left_join(quirofano, by = "IdEstablecimiento")
-  print("11")
+  #print("11")
   # Consolidar todos los datos
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
     left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud), by = "IdEstablecimiento") %>%
@@ -382,88 +387,102 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 #  GENERACIÓN DE RESULTADOS DE ITERACION
 # ==============================================
 resultados_iteracion <- function(datos, orientacion){
-  
+  print("AÑO")
+  print(names(datos))
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
+  
+
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
+      print("INPUT")
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
       iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
       iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
       iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-      
     
   }else{
-    
+    print("OUTPUT")
     
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    print("AAA")
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    print("AAA")
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    print("AAA")
+    print("Antes de ejecutar iteracion_2_crs")
+    browser()
     iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", TRUE)
 
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
     
         
     # Normalizando los datos
-    for (year in names(original)) {
+    #for (year in names(original)) {
+    #  print(year)
       # Normalizar VRS
-      original[[year]][["data"]]$vrs <- normalize_min_max(original[[year]][["data"]]$vrs)
-      iteracion_1_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_1_vrs[[year]][["data"]]$vrs)
-      iteracion_2_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_2_vrs[[year]][["data"]]$vrs)
+    #  original[[year]][["data"]]$vrs <- normalize_min_max(original[[year]][["data"]]$vrs)
+    #  iteracion_1_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_1_vrs[[year]][["data"]]$vrs)
+    #  iteracion_2_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_2_vrs[[year]][["data"]]$vrs)
       
       
       
       # Normalizar CRS
-      original[[year]][["data"]]$crs <- normalize_min_max(original[[year]][["data"]]$crs)
-      iteracion_1_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_1_crs[[year]][["data"]]$crs)
-      iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
+    #  original[[year]][["data"]]$crs <- normalize_min_max(original[[year]][["data"]]$crs)
+    #  iteracion_1_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_1_crs[[year]][["data"]]$crs)
+    #  iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
       
-    }
+    #}
+    print("NORMALIZADOS")
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
+  print("A")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
+  print("B")
   resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios, orientacion)
   
-  
+  print("C")
   # Crear una lista vacía para almacenar los valores atípicos por año
   lista_outliers_vrs <- list()
+  print("D")
   # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
   vector_outliers_vrs <- c()
-  
+  print("E")
   lista_outliers_crs <- list()
   # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
+  print("F")
   vector_outliers_crs <- c()
   
-  
+  print("G")
   # Especificar los años que quieres iterar
-  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
-
-  for (anio in anios) {
-    
+  # anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
+  print("H")
+  for (anio in names(original)) {
+    print(anio)
     # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
-    
+    print("J")
     # Filtrar el dataframe para obtener los IDs de los valores atípicos
     ids_outliers_vrs <- original[[anio]][["data"]] %>%
       filter(vrs %in% outliers_vrs) %>%
       select(IdEstablecimiento, vrs)
-    
+    print("K")
     # Añadir los valores atípicos del año actual a la lista, con el nombre del año
     lista_outliers_vrs[[anio]] <- ids_outliers_vrs
-    
+    print("L")
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
-    
+    print("M")
     # Generar y almacenar los valores atípicos de CRS
     outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
-    
+    print("N")
     # Filtrar el dataframe para obtener los IDs de los valores atípicos
     ids_outliers_crs <- original[[anio]][["data"]] %>%
       filter(crs %in% outliers_crs) %>%
       select(IdEstablecimiento, crs)
-    
+    print("O")
     # Añadir los valores atípicos del año actual a la lista, con el nombre del año
     lista_outliers_crs[[anio]] <- ids_outliers_crs
-    
+    print("P")
     # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
