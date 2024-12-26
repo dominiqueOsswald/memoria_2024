@@ -30,12 +30,22 @@ malmquist <- function(tipo, orientacion) {
 
 
 aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
-  mapply(function(data, resultado) sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno),
-         datos, resultados, SIMPLIFY = FALSE)
+  mapply(function(data, resultado, anio) {
+    # Mostrar el nombre del año en pantalla
+    print(paste("Aplicando sensibilidad para el año:", anio))
+    
+    # Ejecutar la función principal
+    sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
+  },
+  datos, resultados, names(datos), SIMPLIFY = FALSE) # Pasar los nombres de los datos como argumento
 }
 
 normalize_min_max <- function(x) {
   (x - min(x)) / (max(x) - min(x))
+}
+
+normalize_max_min <- function(x) {
+  (max(x) - x) / (max(x) - min(x))
 }
 
 top_eficiencia <- function(datos, tipo, cantidad, best){
@@ -136,7 +146,7 @@ consolidar_datos_por_anio <- function(anio) {
   #quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
   #                  "X21400500","X21400600","X21800810")
   
-  quirofano <- list(
+  quirofano <- list( "idEstablecimiento",
     "X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
     "X21300100", "X21400400", "X21400500", "X21400600", "X21400700", "X21300600", "X21300700",
     "X21800810", "X21800820", "X21400800", "X21400900", "X21500100", "X21500200", "X21800830",
@@ -160,7 +170,7 @@ consolidar_datos_por_anio <- function(anio) {
   
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
-    mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
+    mutate(across(-idEstablecimiento, ~ as.integer(floor(as.numeric(gsub(",", ".", .))))))
 
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
@@ -210,6 +220,11 @@ analisis_dea_general <- function(data, orientation) {
   #--- Calcular eficiencias
   eficiencia_vrs <- deaR::efficiencies(resultado_dea_vrs)
   eficiencia_crs <- deaR::efficiencies(resultado_dea_crs)
+  
+  if (orientation == "oo"){
+    eficiencia_vrs <- normalize_max_min(eficiencia_vrs)
+    eficiencia_crs <- normalize_max_min(eficiencia_crs)
+  }
   
   
   # Crear dataframe con eficiencias y retorno a escala
@@ -440,7 +455,7 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 #  
 # -------------------------------------------- #
 resultados_iteracion <- function(datos, orientacion){
-  
+  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
@@ -452,30 +467,14 @@ resultados_iteracion <- function(datos, orientacion){
     
   }else{
     
-    
-    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", TRUE)
-    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", TRUE)
-    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", TRUE)
-    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
+    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
 
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
     
         
-    # Normalizando los datos
-    for (year in names(original)) {
-      # Normalizar VRS
-      original[[year]][["data"]]$vrs <- normalize_min_max(original[[year]][["data"]]$vrs)
-      iteracion_1_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_1_vrs[[year]][["data"]]$vrs)
-      iteracion_2_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_2_vrs[[year]][["data"]]$vrs)
-      
-      
-      
-      # Normalizar CRS
-      original[[year]][["data"]]$crs <- normalize_min_max(original[[year]][["data"]]$crs)
-      iteracion_1_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_1_crs[[year]][["data"]]$crs)
-      iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
-      
-    }
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
@@ -493,7 +492,7 @@ resultados_iteracion <- function(datos, orientacion){
   
   
   # Especificar los años que quieres iterar
-  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
+  
 
   for (anio in anios) {
     

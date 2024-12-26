@@ -17,11 +17,15 @@ names(datos_iniciales) <- as.character(anios)
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
 datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
+
+
 # ==============================================
 #  CÁLCULO DEA
 # ==============================================
 
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
+
+
 
 resultados <- list(
   io = resultados_iteracion(datos, "io"),
