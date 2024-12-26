@@ -23,35 +23,9 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
 
 resultados <- list(
-  io = resultados_iteracion(datos, "io")
-  #oo = resultados_iteracion(datos, "oo")
+  io = resultados_iteracion(datos, "io"),
+  oo = resultados_iteracion(datos, "oo")
 )
-
-resultados2 <- list(
-  oo = resultados_iteracion(datos[1:2], "oo")
-  #oo = resultados_iteracion(datos, "oo")
-)
-
-resultados3 <- list(
-  oo = resultados_iteracion(datos[2:3], "oo")
-  #oo = resultados_iteracion(datos, "oo")
-)
-
-resultados4 <- list(
-  oo = resultados_iteracion(datos[4:5], "oo")
-  #oo = resultados_iteracion(datos, "oo")
-)
-
-resultados5 <- list(
-  oo = resultados_iteracion(datos[6:7], "oo")
-  #oo = resultados_iteracion(datos, "oo")
-)
-
-resultados6 <- list(
-  oo = resultados_iteracion(datos[8:10], "oo")
-  #oo = resultados_iteracion(datos, "oo")
-)
-
 
 #  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
 

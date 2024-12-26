@@ -51,6 +51,11 @@ normalize_min_max <- function(x) {
   (x - min(x)) / (max(x) - min(x))
 }
 
+normalize_max_min <- function(x) {
+  (max(x) - x) / (max(x) - min(x))
+}
+
+
 # ===================================================
 # TOP EFICIENCIA
 # ===================================================
@@ -86,11 +91,10 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
 # CONSOLIDACIÓN DE DATOS
 # ===================================================
 consolidar_datos_por_anio <- function(anio) {
-  #anio <- 2023
+  
   # Establecer directorio de trabajo
   setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-  print("AÑO")
-  print(anio)
+  
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
   path_predicciones_grd <- paste0("data/", anio, "/", anio, "_prediciones_grd.txt")
@@ -100,19 +104,17 @@ consolidar_datos_por_anio <- function(anio) {
   path_consultas <- paste0("data/", anio, "/variables/", anio, "_consultas.txt")
   path_quirofano <- paste0("data/", anio, "/variables/", anio, "_quirofano.txt")
   
-  #print("1")
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
   datos_consolidados <- read.table(path_datos_consolidados, sep=";", header=TRUE)
-  
   financiero <- read.csv(path_financiero) %>% 
     select(hospital_id, X21_value, X22_value) %>% rename("IdEstablecimiento" = "hospital_id")
   financiero$X21_value <- as.numeric(financiero$X21_value)
   financiero$X22_value <- as.numeric(financiero$X22_value)
   
   financiero <- financiero[rowSums(is.na(financiero)) < 2, ]
-  #print("2")
+  
   
   estadisticas <- read_excel(path_estadisticas, sheet = (anio - 2014) + 1, skip = 1)  %>% 
     rename("IdEstablecimiento" = "Cód. Estab.", "Region" = "Nombre SS/SEREMI") %>%
@@ -120,57 +122,68 @@ consolidar_datos_por_anio <- function(anio) {
     select(-"Cód. Nivel Cuidado", -"Cód. SS/SEREMI", -"Nombre Nivel Cuidado") %>%  
     semi_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(1:5)
-  #print("3")
+  
   # Procesar estadísticas
   dias_cama_disponibles <- estadisticas %>% 
     filter(Glosa == "Dias Cama Disponibles") %>%  
     select(1:5) %>% rename("dias_cama_disponible" = "Acum") %>% select(-Glosa)
-  #print("4")
+  
   egresos <- estadisticas %>% 
     filter(Glosa == "Numero de Egresos") %>%  
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
-
-  #print("5")
+  
+  
   consultas <- unlist(strsplit(readLines(path_consultas), ","))
-  
-  
-  #print(consultas)
-  #print("6")
-
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
-  #print("6a")
-  #print(names(columnas_validas))
-  #consultas_data <- subset(datos_consolidados, select = columnas_validas)
-  consultas_data <- datos_consolidados %>% select(all_of(columnas_validas))
   
-  #print("6b")
+  consultas_data <- subset(datos_consolidados, select = columnas_validas)
+  
   # Identificar columnas tipo character
   cols_char <- sapply(consultas_data, is.character)
-  #print("6c")
+  
   # Convertir columnas character a numeric
   consultas_data[, cols_char] <- lapply(consultas_data[, cols_char], function(x) as.numeric(x))
-  #print("6d")
+  
   # Crear suma total de consultas
   consultas_data$sumaTotal <- rowSums(consultas_data[, -which(names(consultas_data) == "idEstablecimiento")], na.rm = TRUE)
-  #print(consultas_data$sumaTotal)
-  #print("6e")
+  
   consultas <- data.frame(idEstablecimiento = consultas_data$idEstablecimiento, 
                           Consultas = consultas_data$sumaTotal) %>%
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Consultas)
-  #print("7")
+  
   # Definir quirofano
-  quirofano <- unlist(strsplit(readLines(path_quirofano), ","))
+  #quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
+  #                  "X21400500","X21400600","X21800810")
+  
+  quirofano <- list(
+    "idEstablecimiento","X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
+    "X21300100", "X21400400", "X21400500", "X21400600", "X21400700", "X21300600", "X21300700",
+    "X21800810", "X21800820", "X21400800", "X21400900", "X21500100", "X21500200", "X21800830",
+    "X21800840", "X21500300", "X21800850", "X21800860", "X21800870", "X21800880", "X21500600",
+    "X21600600", "X21600700", "X21600800", "X21600900", "X21700100", "X21500700", "X21500800",
+    "X21700300", "X21700400", "X21700500", "X21700600", "X21500900", "X21700700", "X21600100",
+    "X21700800", "X21700900", "X21800100", "X21800200", "X21800300", "X21600200", "X21600300",
+    "X21800500", "X21800600", "X21800700", "X21800800", "X21600400", "X21600500", "X21700701",
+    "X21700702", "X21700703", "X21700704", "X21700705", "X21700706", "X21700707", "X21700708",
+    "X21800890", "X21900100", "X21900110", "X21900120", "X21900130", "X21900140", "X21900150",
+    "X21900160", "X21900170", "X21900180", "X21900190", "X21900200", "X21900210", "X21900220",
+    "X21100010", "X21100020", "X21100030", "X21100040", "X21100050", "X21100060", "X21100070",
+    "X21100080", "X21100090", "X29101381", "X29101382", "X29101383"
+  )
+  
   columnas_validas_q <- intersect(unlist(quirofano), colnames(datos_consolidados))
   #print(quirofano)
   quirofano_data <- subset(datos_consolidados, select = unlist(columnas_validas_q))
   
+  #quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
+  
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
     mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
-  #print("8")
+  
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
   
@@ -179,22 +192,22 @@ consolidar_datos_por_anio <- function(anio) {
     rename("IdEstablecimiento" = "idEstablecimiento") %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Quirofano)
-  #print("9")
+  
   # Procesar egresos y predicciones GRD
   intermediate_df <- egresos %>%
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     mutate(Egresos.GRD = Prediction * egresos) %>%
     select("Region", IdEstablecimiento, "Nombre Establecimiento", Egresos.GRD)
-  #print("10")
+  
   # Combinar datos financieros y días cama disponibles
   input <- left_join(financiero, dias_cama_disponibles %>% 
                        select(IdEstablecimiento, dias_cama_disponible), by = "IdEstablecimiento")
-
+  
   # Combinar todas las salidas
   output <- intermediate_df %>%
     left_join(consultas, by = "IdEstablecimiento") %>%
     left_join(quirofano, by = "IdEstablecimiento")
-  #print("11")
+  
   # Consolidar todos los datos
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
     left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud), by = "IdEstablecimiento") %>%
@@ -212,7 +225,7 @@ consolidar_datos_por_anio <- function(anio) {
 analisis_dea_general <- function(data, orientation) {
   # --- Preparar inputs y outputs
   model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
-  
+  #browser()
   # ---Aplicar DEA con la orientación y RTS (VRS y CRS)
   resultado_dea_vrs <- model_basic(model, orientation=orientation, rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
   resultado_dea_crs <- model_basic(model, orientation=orientation, rts="crs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
@@ -220,6 +233,11 @@ analisis_dea_general <- function(data, orientation) {
   #--- Calcular eficiencias
   eficiencia_vrs <- deaR::efficiencies(resultado_dea_vrs)
   eficiencia_crs <- deaR::efficiencies(resultado_dea_crs)
+  
+  if (orientation == "oo"){
+    eficiencia_vrs <- normalize_max_min(eficiencia_vrs)
+    eficiencia_crs <- normalize_max_min(eficiencia_crs)
+  }
   
   
   # Crear dataframe con eficiencias y retorno a escala
@@ -409,15 +427,15 @@ resultados_iteracion <- function(datos, orientacion){
   }else{
     print("OUTPUT")
     
-    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("AAA")
-    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", TRUE)
+    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("AAA")
-    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
     print("AAA")
     print("Antes de ejecutar iteracion_2_crs")
-    browser()
-    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", TRUE)
+    #browser()
+    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
 
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
     
