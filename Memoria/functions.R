@@ -79,6 +79,8 @@ consolidar_datos_por_anio <- function(anio) {
   path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
   path_financiero <- paste0("data/", anio, "/", anio, "_financial_data.csv")
   path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2023.xlsx"
+  path_consultas <- paste0("data/", anio, "/variables/", anio, "_consultas.txt")
+  path_quirofano <- paste0("data/", anio, "/variables/", anio, "_quirofano.txt")
   
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
@@ -109,33 +111,7 @@ consolidar_datos_por_anio <- function(anio) {
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
 
 
-  consultas <- list("idEstablecimiento", "X07020130", "X07020230", "X07020330", "X07020400", 
-                    "X07020500", "X07020600", "X07020700", "X07020800", "X07020900", "X07024970", 
-                    "X07021000", "X07021100", "X07021230", "X07021300", "X07021400", "X07024980", 
-                    "X07021531", "X07021600", "X07021700", "X07021800", "X07021900", "X07022000", 
-                    "X07022130", "X07022131", "X07022200", "X07022330", "X07024990", "X07022400", 
-                    "X07022500", "X07022631", "X07022700", "X07022800", "X07022900", "X07023000", 
-                    "X07023100", "X07023200", "X07023400", "X070251000", "X07030100", "X07023600", 
-                    "X070251100", "X07023700", "X07023800", "X07023900", "X07024000", "X07024200", 
-                    "X07024900", "X07024915", "X07024925", "X07024935", "X07024920", "X07024816", 
-                    "X07024607", "X07024817", "X07024809", "X07024705", "X07024506", "X07024930", 
-                    "X07024940", "X070251200", "X070251300", "X070251400", "X07030100A", "X07030200", 
-                    "X07030300", "X07030400", "X07024950", "X07024960", "X07024814", "X07024815", 
-                    "X07030500", "X07030600", "X070251500", "X070251600", "X070251700", "X070251800", 
-                    "X070251900", "X070252000", "X070252100", "X070252200", "X070252300", "X070252400", 
-                    "X070252500", "X070252600", "X07030700", "X07030800", "X07030900", "X07031000", 
-                    "X07025300", "X07025310", "X07025320", "X07025330", "X07025340", "X07031100", 
-                    "X07031200", "X07025350", "X07031200A", "X07031300", "X07031400", "X07031500", 
-                    "X07031600", "X07031700", "X07031800", "X07031900", "X07032000", "X07032100", 
-                    "X07032200", "X07032300", "X07032400", "X07032500", "X07032600", "X07032700", 
-                    "X07032800", "X07032900", "X07033000", "X07033100", "X07033200", "X07033300", 
-                    "X07033400", "X07033500", "X07033600", "X07033700", "X07033800", "X07033900", 
-                    "X07034000", "X07034100", "X07034200", "X07034300", "X07034400", "X07034500", 
-                    "X07034600", "X07034700", "X07034800", "X07034900", "X07035000", "X07035100", 
-                    "X07035200", "X07035300")
-  
-  
-
+  consultas <- unlist(strsplit(readLines(path_consultas), ","))
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
 
@@ -157,9 +133,30 @@ consolidar_datos_por_anio <- function(anio) {
     select(IdEstablecimiento, Consultas)
 
   # Definir quirofano
-  quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
-                    "X21400500","X21400600","X21800810")
-  quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
+  #quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
+  #                  "X21400500","X21400600","X21800810")
+  
+  quirofano <- list(
+    "X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
+    "X21300100", "X21400400", "X21400500", "X21400600", "X21400700", "X21300600", "X21300700",
+    "X21800810", "X21800820", "X21400800", "X21400900", "X21500100", "X21500200", "X21800830",
+    "X21800840", "X21500300", "X21800850", "X21800860", "X21800870", "X21800880", "X21500600",
+    "X21600600", "X21600700", "X21600800", "X21600900", "X21700100", "X21500700", "X21500800",
+    "X21700300", "X21700400", "X21700500", "X21700600", "X21500900", "X21700700", "X21600100",
+    "X21700800", "X21700900", "X21800100", "X21800200", "X21800300", "X21600200", "X21600300",
+    "X21800500", "X21800600", "X21800700", "X21800800", "X21600400", "X21600500", "X21700701",
+    "X21700702", "X21700703", "X21700704", "X21700705", "X21700706", "X21700707", "X21700708",
+    "X21800890", "X21900100", "X21900110", "X21900120", "X21900130", "X21900140", "X21900150",
+    "X21900160", "X21900170", "X21900180", "X21900190", "X21900200", "X21900210", "X21900220",
+    "X21100010", "X21100020", "X21100030", "X21100040", "X21100050", "X21100060", "X21100070",
+    "X21100080", "X21100090", "X29101381", "X29101382", "X29101383"
+  )
+  
+  columnas_validas_q <- intersect(unlist(quirofano), colnames(datos_consolidados))
+  #print(quirofano)
+  quirofano_data <- subset(datos_consolidados, select = unlist(columnas_validas_q))
+  
+  #quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
   
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
