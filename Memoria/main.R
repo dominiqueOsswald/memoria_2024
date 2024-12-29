@@ -25,17 +25,10 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
 
-
-
 resultados <- list(
   io = resultados_iteracion(datos, "io"),
   oo = resultados_iteracion(datos, "oo")
 )
-
-#  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
-
-input_output_original <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios, "ambos")
 
 
 #  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
@@ -44,6 +37,29 @@ resultados_cortados <- list(
   io = resultados_corte(resultados$io, "io"),
   oo = resultados_corte(resultados$oo, "oo")
 )
+
+
+
+
+graficas_sensibilidad <- list(
+  # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+  eficiencia_io = graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes"),
+  eficiencia_oo = graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes"),
+  
+  # GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
+  atipicos_io = graficar_correlaciones(resultados_cortados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos"),
+  atipicos_oo = graficar_correlaciones(resultados_cortados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
+
+)
+
+#print(graficas_sensibilidad$eficiencia_io)
+
+# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
+input_output_original <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
+
+correlacion_todos_metodos <- calcular_correlaciones_all(input_output_original)
+
+grafica_correlacion_metodos <- graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
 # ==============================================
@@ -57,7 +73,7 @@ malmquist_indices <- list(
   out_crs = malmquist("crs", "out")
 )
 
-procesar_y_graficar(malmquist_indices)
+malmquist_graficas <- procesar_y_graficar(malmquist_indices)
 
 # ==============================================
 #  DETERMINANTES
@@ -65,9 +81,6 @@ procesar_y_graficar(malmquist_indices)
 # -------------------------------------------- #
 #  CONFIGURACIÓN Y MODELO RANDOM FOREST
 # -------------------------------------------- #
-
-# Definir años de interés
-anios <- 2014:2020
 
 # Aplicar Random Forest para cada año
 random_forest <- lapply(anios, function(anio) {

@@ -15,10 +15,7 @@ calcular_corte <- function(datos, vector_outliers) {
 }
 
 resultados_corte <- function(resultados, tipo) {
-  list(
-    vrs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo),
-    crs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_crs")]]), tipo)
-  )
+  resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo)
 }
 
 malmquist <- function(tipo, orientacion) {
@@ -380,6 +377,8 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
   # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
   efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
   
+  malmquist_df <- procesar_index(malmquist_df)
+  
   return(list(eficiencia = efficiency_wide, 
               index = malmquist_df,
               tech = techch_df,
@@ -455,7 +454,7 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 #  
 # -------------------------------------------- #
 resultados_iteracion <- function(datos, orientacion){
-  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
+  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
@@ -478,7 +477,7 @@ resultados_iteracion <- function(datos, orientacion){
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
-  resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios, orientacion)
+  resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
   
   
   # Crear una lista vacía para almacenar los valores atípicos por año
@@ -540,6 +539,23 @@ resultados_iteracion <- function(datos, orientacion){
   )
 }
 
+calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
+  # Calcular las matrices de correlación para cada dataframe en la lista
+  correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
+    df_num <- df %>%
+      select(-IdEstablecimiento) %>%
+      mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
+      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
+    
+    cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
+  })
+  
+  # Nombrar la lista con los años para identificación
+  names(correlaciones_lista) <- names(lista_resultados_combinados_in)
+  
+  # Retornar resultados de correlación entre matrices de distintos años
+  return(list(correlaciones_lista = correlaciones_lista))
+}
 
 # -------------------------------------------- #
 #  función para calcular la correlación entre VRS y CRS para cada año
