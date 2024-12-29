@@ -213,7 +213,67 @@ procesar_y_graficar <- function(malmquist_indices) {
 }
 
 
-
+# Función para graficar el top 10 de frecuencias
+graficar_top_10 <- function(data, titulo) {
+  # Seleccionar el top 10 según la frecuencia
+  top_10 <- data[order(-data$Frecuencia), ][1:10, ]
+  
+  # Crear el gráfico
+  grafico <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +  # Para que sea horizontal
+    theme_minimal() +
+    labs(
+      title = paste0(titulo, " 2014 - 2023"),
+      x = "Variables",
+      y = "Frecuencia"
+    ) +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Mostrar gráfico
+  print(grafico)
+  
+  
+  # Crear el gráfico
+  grafico_pre <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia_Pre_Pandemia), y = Frecuencia_Pre_Pandemia)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +  # Para que sea horizontal
+    theme_minimal() +
+    labs(
+      title = paste0(titulo, " Pre Pandemia"),
+      x = "Variables",
+      y = "Frecuencia"
+    ) +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Mostrar gráfico
+  print(grafico_pre)
+  
+  
+  # Crear el gráfico
+  grafico_pandemia <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia_Pandemia), y = Frecuencia_Pandemia)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +  # Para que sea horizontal
+    theme_minimal() +
+    labs(
+      title = paste0(titulo, " Pandemia") ,
+      x = "Variables",
+      y = "Frecuencia"
+    ) +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Mostrar gráfico
+  print(grafico_pandemia)
+}
 
 
 # Cargar los datos de Chile

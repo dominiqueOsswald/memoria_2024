@@ -167,6 +167,10 @@ for (metodo in names(random_forest)) {
   pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
   pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
   
+  # Calcular frecuencias separadas
+  pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
+  pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
+  
   # Ordenar y seleccionar las 50 más importantes
   pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
   resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
@@ -183,14 +187,22 @@ for (metodo in names(random_forest)) {
   pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
   pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
   
+  # Calcular frecuencias separadas
+  pivot_IncMSE$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
+  pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
+  
   # Ordenar y seleccionar las 50 más importantes
   pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
   resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
 }
 
+
 # Mostrar resultados
-head(resultados_IncNodePurity[["io_vrs"]])  # Ver resultados para IncNodePurity
-head(resultados_IncMSE[["io_vrs"]])        # Ver resultados para %IncMSE
+#head(resultados_IncNodePurity[["io_vrs"]])  # Ver resultados para IncNodePurity
+#head(resultados_IncMSE[["io_vrs"]])        # Ver resultados para %IncMSE
+
+write.csv(resultados_IncNodePurity[["oo_vrs"]], "top_IncNodePurity_io_vrs.csv")
+write.csv(resultados_IncMSE[["oo_vrs"]], "top_IncMSE_io_vrs.csv")
 
 
 
@@ -199,37 +211,84 @@ head(resultados_IncMSE[["io_vrs"]])        # Ver resultados para %IncMSE
 #  VISUALIZACIÓN DE FRECUENCIAS
 # -------------------------------------------- #
 
-library(ggplot2)
 
-# Convertir las frecuencias filtradas en un dataframe
-df_frecuencias <- as.data.frame(frecuencias_filtradas)
-colnames(df_frecuencias) <- c("Variable", "Frecuencia")
+# Graficar para IncNodePurity
+graficar_top_10(resultados_IncNodePurity[["io_vrs"]], "Top 10 - IncNodePurity (io_vrs)")
+graficar_top_10(resultados_IncNodePurity[["io_crs"]], "Top 10 - IncNodePurity (io_crs)")
+graficar_top_10(resultados_IncNodePurity[["oo_vrs"]], "Top 10 - IncNodePurity (oo_vrs)")
+graficar_top_10(resultados_IncNodePurity[["oo_crs"]], "Top 10 - IncNodePurity (oo_crs)")
 
-# Graficar las frecuencias
-ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
-  geom_bar(stat = "identity", fill = "blue") +
-  labs(
-    title = "Frecuencia de variables entre años", 
-    x = "Variable", 
-    y = "Frecuencia"
-  ) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# Graficar para %IncMSE
+graficar_top_10(resultados_IncMSE[["io_vrs"]], "Top 10 - %IncMSE (io_vrs)")
+graficar_top_10(resultados_IncMSE[["io_crs"]], "Top 10 - %IncMSE (io_crs)")
+graficar_top_10(resultados_IncMSE[["oo_vrs"]], "Top 10 - %IncMSE (oo_vrs)")
+graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 - %IncMSE (oo_crs)")
 
-#
+
 
 # ==============================================
 #  RESULTADOS
 # ==============================================
-dataframes <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
-                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
-                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
-                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
-                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
-                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
-                   "2020" = resultados$io[["original"]][["2020"]][["data"]])
+dataframes <- list("2014" = resultados$oo[["original"]][["2014"]][["data"]], 
+                   "2015" = resultados$oo[["original"]][["2015"]][["data"]], 
+                   "2016" = resultados$oo[["original"]][["2016"]][["data"]], 
+                   "2017" = resultados$oo[["original"]][["2017"]][["data"]], 
+                   "2018" = resultados$oo[["original"]][["2018"]][["data"]], 
+                   "2019" = resultados$oo[["original"]][["2019"]][["data"]],
+                   "2020" = resultados$oo[["original"]][["2020"]][["data"]],
+                   "2021" = resultados$oo[["original"]][["2021"]][["data"]],
+                   "2022" = resultados$oo[["original"]][["2022"]][["data"]],
+                   "2023" = resultados$oo[["original"]][["2023"]][["data"]])
 
 
-gran_dataframe <- reduce(dataframes, full_join, by = c("IdEstablecimiento", "vrs"))
+
+
+# Instalar y cargar el paquete necesario
+if (!require(openxlsx)) install.packages("openxlsx")
+library(openxlsx)
+
+# Función para reemplazar valores vacíos, NULL o NA por "-"
+reemplazar_nulos <- function(df) {
+  df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+  return(df)
+}
+
+# Crear un archivo Excel
+archivo_salida <- "resultados_combinados.xlsx"
+
+# Crear un workbook
+wb <- createWorkbook()
+
+### GUARDAR IMPORTANCIA ###
+# IncNodePurity
+
+### GUARDAR DATAFRAMES ###
+for (anio in names(dataframes)) {
+  addWorksheet(wb, paste0("Eficiencia_", anio)) # Crear hoja por año
+  writeData(wb, paste0("Eficiencia_", anio), reemplazar_nulos(dataframes[[anio]])) # Reemplazar y guardar datos
+}
+
+addWorksheet(wb, "Determinantes_IncNodePurity_vrs")
+writeData(wb, "Determinantes_IncNodePurity_vrs", reemplazar_nulos(resultados_IncNodePurity[["oo_vrs"]]))
+
+addWorksheet(wb, "Determinantes_IncNodePurity_crs")
+writeData(wb, "Determinantes_IncNodePurity_crs", reemplazar_nulos(resultados_IncNodePurity[["oo_crs"]]))
+
+# %IncMSE
+addWorksheet(wb, "Determinantes_IncMSE_vrs")
+writeData(wb, "Determinantes_IncMSE_vrs", reemplazar_nulos(resultados_IncMSE[["oo_vrs"]]))
+
+addWorksheet(wb, "Determinantes_IncMSE_crs")
+writeData(wb, "Determinantes_IncMSE_crs", reemplazar_nulos(resultados_IncMSE[["oo_crs"]]))
+
+# Guardar el archivo
+saveWorkbook(wb, archivo_salida, overwrite = TRUE)
+
+cat("Archivo guardado como:", archivo_salida)
+
+
+
+
 
 # ==============================================
 #    GRAFICAS
