@@ -8,6 +8,29 @@ library(tidyr)
 library(dplyr)
 library(deaR)
 
+
+
+### GUARDAR DATAFRAMES ###
+guardar_dataframes <- function(dataframes, hoja_nombre, columna) {
+  # Extraer el valor especificado (vrs o crs) de cada dataframe por año
+  resultados <- lapply(names(dataframes), function(anio) {
+    df <- dataframes[[anio]]
+    # Seleccionar columna especificada junto con IdEstablecimiento
+    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
+    # Renombrar la columna con el año correspondiente
+    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
+    return(df_seleccionado)
+  })
+  
+  # Unir los resultados por columna (IdEstablecimiento como fila)
+  df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
+  
+  # Añadir la hoja
+  addWorksheet(wb, hoja_nombre)
+  writeData(wb, hoja_nombre, df_final)
+}
+
+
 # ******************************* #
 # Eliminación de datos atípicos y recalculo DEA
 calcular_corte <- function(datos, vector_outliers) {

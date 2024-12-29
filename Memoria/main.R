@@ -229,7 +229,7 @@ graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 - %IncMSE (oo_crs)")
 # ==============================================
 #  RESULTADOS
 # ==============================================
-dataframes <- list("2014" = resultados$oo[["original"]][["2014"]][["data"]], 
+dataframes_output <- list("2014" = resultados$oo[["original"]][["2014"]][["data"]], 
                    "2015" = resultados$oo[["original"]][["2015"]][["data"]], 
                    "2016" = resultados$oo[["original"]][["2016"]][["data"]], 
                    "2017" = resultados$oo[["original"]][["2017"]][["data"]], 
@@ -240,52 +240,37 @@ dataframes <- list("2014" = resultados$oo[["original"]][["2014"]][["data"]],
                    "2022" = resultados$oo[["original"]][["2022"]][["data"]],
                    "2023" = resultados$oo[["original"]][["2023"]][["data"]])
 
+dataframes_input <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
+                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
+                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
+                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
+                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
+                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
+                   "2020" = resultados$io[["original"]][["2020"]][["data"]],
+                   "2021" = resultados$io[["original"]][["2021"]][["data"]],
+                   "2022" = resultados$io[["original"]][["2022"]][["data"]],
+                   "2023" = resultados$io[["original"]][["2023"]][["data"]])
 
 
 
-# Instalar y cargar el paquete necesario
-if (!require(openxlsx)) install.packages("openxlsx")
-library(openxlsx)
 
-# Función para reemplazar valores vacíos, NULL o NA por "-"
-reemplazar_nulos <- function(df) {
-  df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
-  return(df)
-}
 
-# Crear un archivo Excel
-archivo_salida <- "resultados_combinados.xlsx"
+guardar_resultados(
+  dataframes = dataframes_output,
+  resultados_IncNodePurity = resultados_IncNodePurity,
+  resultados_IncMSE = resultados_IncMSE,
+  archivo_salida = "RESULTADOS OUTPUT.xlsx",
+  prefijo = "oo"
+)
 
-# Crear un workbook
-wb <- createWorkbook()
 
-### GUARDAR IMPORTANCIA ###
-# IncNodePurity
-
-### GUARDAR DATAFRAMES ###
-for (anio in names(dataframes)) {
-  addWorksheet(wb, paste0("Eficiencia_", anio)) # Crear hoja por año
-  writeData(wb, paste0("Eficiencia_", anio), reemplazar_nulos(dataframes[[anio]])) # Reemplazar y guardar datos
-}
-
-addWorksheet(wb, "Determinantes_IncNodePurity_vrs")
-writeData(wb, "Determinantes_IncNodePurity_vrs", reemplazar_nulos(resultados_IncNodePurity[["oo_vrs"]]))
-
-addWorksheet(wb, "Determinantes_IncNodePurity_crs")
-writeData(wb, "Determinantes_IncNodePurity_crs", reemplazar_nulos(resultados_IncNodePurity[["oo_crs"]]))
-
-# %IncMSE
-addWorksheet(wb, "Determinantes_IncMSE_vrs")
-writeData(wb, "Determinantes_IncMSE_vrs", reemplazar_nulos(resultados_IncMSE[["oo_vrs"]]))
-
-addWorksheet(wb, "Determinantes_IncMSE_crs")
-writeData(wb, "Determinantes_IncMSE_crs", reemplazar_nulos(resultados_IncMSE[["oo_crs"]]))
-
-# Guardar el archivo
-saveWorkbook(wb, archivo_salida, overwrite = TRUE)
-
-cat("Archivo guardado como:", archivo_salida)
-
+guardar_resultados(
+  dataframes = dataframes_input,
+  resultados_IncNodePurity = resultados_IncNodePurity,
+  resultados_IncMSE = resultados_IncMSE,
+  archivo_salida = "RESULTADOS INPUT.xlsx",
+  prefijo = "io"
+)
 
 
 
