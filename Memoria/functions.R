@@ -772,7 +772,7 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
 
 
 
-analize_rf <- function(year, resultados_in, n_top){
+analize_rf <- function(year, resultados_in, n_top,tipo ){
   #year <- 2014
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   print(data_path)
@@ -784,7 +784,7 @@ analize_rf <- function(year, resultados_in, n_top){
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
   
   # Filtrar los resultados de VRS
-  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", "vrs")] %>% 
+  df_vrs <- resultados_in[["original"]][[as.character(year)]][["data"]][, c("IdEstablecimiento", tipo)] %>% 
     rename("idEstablecimiento" = "IdEstablecimiento")
 
 
@@ -796,15 +796,15 @@ analize_rf <- function(year, resultados_in, n_top){
   df_merged_clean <- df_merged_original[, colSums(is.na(df_merged_original)) == 0]
   
   
-  correlaciones <- cor(df_merged_clean[,-1])["vrs", ]
-  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+  correlaciones <- cor(df_merged_clean[,-1])[tipo, ]
+  correlaciones <- correlaciones[!names(correlaciones) %in% tipo]
   correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   
   top_correlacion <- head(correlaciones_ordenadas, n=n_top)
   top_variables <- names(top_correlacion)
   
   
-  columnas_a_incluir <- c("vrs", top_variables)
+  columnas_a_incluir <- c(tipo, top_variables)
   
   # Crear el DataFrame con las variables seleccionadas
   df_top <- df_merged_clean[, columnas_a_incluir]
@@ -814,7 +814,7 @@ analize_rf <- function(year, resultados_in, n_top){
   
   set.seed(123)  # Para reproducibilidad
   library(caret)
-  trainIndex <- createDataPartition(df_top$vrs, p = 0.7, list = FALSE)
+  trainIndex <- createDataPartition(df_top[[tipo]], p = 0.7, list = FALSE)
   
   trainData <- df_top[trainIndex, ]
   testData <- df_top[-trainIndex, ]
@@ -822,9 +822,10 @@ analize_rf <- function(year, resultados_in, n_top){
   control <- trainControl(method = "cv", number = 10)  # 10-fold CV
   
   library(randomForest)
+  formula <- as.formula(paste(tipo, "~ ."))
   
   # Ajustar el modelo de Random Forest
-  modelo_rf <- randomForest(vrs ~ ., 
+  modelo_rf <- randomForest(formula, 
                             data = trainData, 
                             importance = TRUE, 
                             trControl = control, 
@@ -846,21 +847,30 @@ analize_rf <- function(year, resultados_in, n_top){
   
   # Evaluar el rendimiento
   library(Metrics)
-  r2 <- R2(predicciones, testData$vrs)
-  rmse <- rmse(predicciones, testData$vrs)
+  r2 <- R2(predicciones, testData[[tipo]])
+  rmse <- rmse(predicciones, testData[[tipo]])
   cat("R²:", r2, "\nRMSE:", rmse)
   
   
   
   # Importancia de las variables
   importancia <- importance(modelo_rf)
+  
+  importancia_IncNodePurity <- importancia[order(-importancia[, "IncNodePurity"]), ] # Ordenar en orden descendente
+  top_IncNodePurity <- head(importancia_IncNodePurity[, "IncNodePurity"], 50)
+  
+  importancia_IncMSE <- importancia[order(-importancia[, "%IncMSE"]), ] # Ordenar en orden descendente
+  top_IncMSE <- head(importancia_IncMSE[, "%IncMSE"], 50)
   #print(importancia)
   
   # Graficar la importancia
-  varImpPlot(modelo_rf)
+  #varImpPlot(modelo_rf)
   
   
-  return(importancia)
+  return(list(importancia = importancia,
+              top_IncMSE = top_IncMSE,
+              top_IncNodePurity = top_IncNodePurity,
+              modelo = modelo_rf))
   
 }
 

@@ -83,18 +83,25 @@ malmquist_graficas <- procesar_y_graficar(malmquist_indices)
 # -------------------------------------------- #
 
 # Aplicar Random Forest para cada año
-random_forest <- lapply(anios, function(anio) {
-  analize_rf(anio, resultados_in = resultados$io, 500)
-})
+random_forest <- list(
+  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "vrs")}),
+  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "crs")}),
+  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "vrs")}),
+  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "crs")})
+)
 
 # Asignar nombres a la lista de modelos
-names(random_forest) <- paste0("random_forest_", anios)
+names(random_forest$io_vrs) <- paste0(anios)
+names(random_forest$io_crs) <- paste0(anios)
+names(random_forest$oo_vrs) <- paste0(anios)
+names(random_forest$oo_crs) <- paste0(anios)
 
 # -------------------------------------------- #
 #  EXTRACCIÓN DE VARIABLES POR AÑO
 # -------------------------------------------- #
+rownames(random_forest$io_vrs$"2014"$importancia)
 
-variables_random_forest <- lapply(random_forest, rownames)
+variables_random_forest <- lapply(random_forest$io_vrs, rownames)
 names(variables_random_forest) <- paste0("variables_random_forest_", anios)
 
 # -------------------------------------------- #
