@@ -99,21 +99,100 @@ names(random_forest$oo_crs) <- paste0(anios)
 # -------------------------------------------- #
 #  EXTRACCIÓN DE VARIABLES POR AÑO
 # -------------------------------------------- #
-rownames(random_forest$io_vrs$"2014"$importancia)
 
-variables_random_forest <- lapply(random_forest$io_vrs, rownames)
-names(variables_random_forest) <- paste0("variables_random_forest_", anios)
+
+variables_random_forest <- list()
+
+# Iterar sobre cada método/posición
+for (metodo in names(random_forest)) {
+  variables_random_forest[[metodo]] <- lapply(random_forest[[metodo]], function(modelo) {
+    names(modelo$top_IncMSE)  # Extraer los nombres de filas de 'importancia'
+  })
+}
+
+
+
 
 # -------------------------------------------- #
 #  COMBINACIÓN Y ANÁLISIS DE VARIABLES
 # -------------------------------------------- #
 
-# Combinar todas las variables en una sola lista
-todas_las_variables <- unlist(variables_random_forest)
 
-# Calcular las frecuencias de cada variable
-frecuencias <- table(todas_las_variables)
-frecuencias_filtradas <- head(sort(frecuencias, decreasing = TRUE)[frecuencias > 1], 100)
+# Crear listas para almacenar resultados
+resultados_IncNodePurity <- list()
+resultados_IncMSE <- list()
+
+# Definir períodos
+anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
+anios_pandemia <- c("2020", "2021", "2022", "2023")
+
+# Iterar sobre cada método
+for (metodo in names(random_forest)) {
+  
+  # Crear dataframes vacíos para almacenar resultados
+  df_IncNodePurity <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+  df_IncMSE <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+  
+  # Recopilar datos por año
+  for (anio in names(random_forest[[metodo]])) {
+    # Obtener importancia
+    importancia <- random_forest[[metodo]][[anio]]$importancia
+    
+    # --- IncNodePurity ---
+    temp_IncNodePurity <- data.frame(
+      Variable = rownames(importancia),
+      Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
+      Año = anio
+    )
+    df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
+    
+    # --- %IncMSE ---
+    temp_IncMSE <- data.frame(
+      Variable = rownames(importancia),
+      Valor = importancia[, "%IncMSE"],  # Seleccionar columna
+      Año = anio
+    )
+    df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
+  }
+  
+  # --- Procesar IncNodePurity ---
+  pivot_IncNodePurity <- reshape(df_IncNodePurity, 
+                                 idvar = "Variable", 
+                                 timevar = "Año", 
+                                 direction = "wide")
+  colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
+  
+  # Calcular frecuencia y promedios
+  pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
+  pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
+  pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
+  
+  # Ordenar y seleccionar las 50 más importantes
+  pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
+  resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
+  
+  # --- Procesar %IncMSE ---
+  pivot_IncMSE <- reshape(df_IncMSE, 
+                          idvar = "Variable", 
+                          timevar = "Año", 
+                          direction = "wide")
+  colnames(pivot_IncMSE) <- gsub("Valor\\.", "", colnames(pivot_IncMSE))
+  
+  # Calcular frecuencia y promedios
+  pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
+  pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
+  pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
+  
+  # Ordenar y seleccionar las 50 más importantes
+  pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
+  resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
+}
+
+# Mostrar resultados
+head(resultados_IncNodePurity[["io_vrs"]])  # Ver resultados para IncNodePurity
+head(resultados_IncMSE[["io_vrs"]])        # Ver resultados para %IncMSE
+
+
 
 
 # -------------------------------------------- #

@@ -60,7 +60,7 @@ procesar_y_graficar <- function(malmquist_indices) {
     # Crear el gráfico combinado
     grafico_pre_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Densidad para", key_name)) +
+      ggtitle(paste("Índice Malmquist para", key_name),  subtitle = "Periodo pre pandemia por COVID-19") +
       xlab("Valores") +
       ylab("Densidad") +
       theme_minimal() +
@@ -99,7 +99,6 @@ procesar_y_graficar <- function(malmquist_indices) {
     print(grafico_pre_pandemia)
     
     
-    
     # Seleccionar columnas excepto la primera
     columnas <- colnames(index)[-c(1, 2, 3, 4, 5, 6, 11, 12)]
     
@@ -116,7 +115,7 @@ procesar_y_graficar <- function(malmquist_indices) {
     # Crear el gráfico combinado
     grafico_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Densidad para", key_name)) +
+      ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Periodo de pandemia por COVID-19") +
       xlab("Valores") +
       ylab("Densidad") +
       theme_minimal() +
@@ -172,7 +171,7 @@ procesar_y_graficar <- function(malmquist_indices) {
     
     grafico_tasas <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Densidad para", key_name)) +
+      ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Promedio por periodo") +
       xlab("Valores") +
       ylab("Densidad") +
       theme_minimal() +

@@ -774,8 +774,13 @@ analyze_tobit_model <- function(resultados_in, year, top_n = 50) {
 
 analize_rf <- function(year, resultados_in, n_top,tipo ){
   #year <- 2014
+  print("---------------------------")
+  print("---------------------------")
+  print(paste0("AÑO: ", year, "- RETORNO: ", tipo))
+  
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
-  print(data_path)
+  
+  #print(data_path)
   # Leer los datos consolidados
   datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
   df <- datos_consolidados
@@ -832,6 +837,7 @@ analize_rf <- function(year, resultados_in, n_top,tipo ){
                             ntree = 700,
                             do.trace = 100 )
   
+  cat("\n")
   # Ver el modelo ajustado
   #print(modelo_rf)
   
@@ -866,6 +872,8 @@ analize_rf <- function(year, resultados_in, n_top,tipo ){
   # Graficar la importancia
   #varImpPlot(modelo_rf)
   
+  print("---------------------------")
+  print("---------------------------")
   
   return(list(importancia = importancia,
               top_IncMSE = top_IncMSE,
