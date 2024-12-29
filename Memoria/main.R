@@ -229,50 +229,25 @@ graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 - %IncMSE (oo_crs)")
 # ==============================================
 #  RESULTADOS
 # ==============================================
-dataframes_output <- list("2014" = resultados$oo[["original"]][["2014"]][["data"]], 
-                   "2015" = resultados$oo[["original"]][["2015"]][["data"]], 
-                   "2016" = resultados$oo[["original"]][["2016"]][["data"]], 
-                   "2017" = resultados$oo[["original"]][["2017"]][["data"]], 
-                   "2018" = resultados$oo[["original"]][["2018"]][["data"]], 
-                   "2019" = resultados$oo[["original"]][["2019"]][["data"]],
-                   "2020" = resultados$oo[["original"]][["2020"]][["data"]],
-                   "2021" = resultados$oo[["original"]][["2021"]][["data"]],
-                   "2022" = resultados$oo[["original"]][["2022"]][["data"]],
-                   "2023" = resultados$oo[["original"]][["2023"]][["data"]])
-
-dataframes_input <- list("2014" = resultados$io[["original"]][["2014"]][["data"]], 
-                   "2015" = resultados$io[["original"]][["2015"]][["data"]], 
-                   "2016" = resultados$io[["original"]][["2016"]][["data"]], 
-                   "2017" = resultados$io[["original"]][["2017"]][["data"]], 
-                   "2018" = resultados$io[["original"]][["2018"]][["data"]], 
-                   "2019" = resultados$io[["original"]][["2019"]][["data"]],
-                   "2020" = resultados$io[["original"]][["2020"]][["data"]],
-                   "2021" = resultados$io[["original"]][["2021"]][["data"]],
-                   "2022" = resultados$io[["original"]][["2022"]][["data"]],
-                   "2023" = resultados$io[["original"]][["2023"]][["data"]])
 
 
-
-
-
-guardar_resultados(
-  dataframes = dataframes_output,
+# Procesar OUTPUT
+procesar_y_guardar_resultados(
+  dataframes = crear_dataframes(resultados, "oo"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS OUTPUT.xlsx",
   prefijo = "oo"
 )
 
-
-guardar_resultados(
-  dataframes = dataframes_input,
+# Procesar INPUT
+procesar_y_guardar_resultados(
+  dataframes = crear_dataframes(resultados, "io"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS INPUT.xlsx",
   prefijo = "io"
 )
-
-
 
 
 # ==============================================

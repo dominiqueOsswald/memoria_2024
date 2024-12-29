@@ -8,6 +8,86 @@ library(tidyr)
 library(dplyr)
 library(deaR)
 
+# Función para generar resultados
+procesar_y_guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+  guardar_resultados(
+    dataframes = dataframes,
+    resultados_IncNodePurity = resultados_IncNodePurity,
+    resultados_IncMSE = resultados_IncMSE,
+    archivo_salida = archivo_salida,
+    prefijo = prefijo
+  )
+}
+
+# Crear listas para dataframes
+crear_dataframes <- function(resultados, orientacion) {
+  anios <- 2014:2023
+  dataframes <- lapply(anios, function(anio) resultados[[orientacion]][["original"]][[as.character(anio)]][["data"]])
+  names(dataframes) <- as.character(anios)
+  return(dataframes)
+}
+
+guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+  # Instalar y cargar el paquete necesario
+  if (!require(openxlsx)) install.packages("openxlsx")
+  library(openxlsx)
+  
+  # Función para reemplazar valores vacíos, NULL o NA por "-"
+  reemplazar_nulos <- function(df) {
+    df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+    return(df)
+  }
+  
+  # Crear un workbook
+  wb <- createWorkbook()
+  
+  ### GUARDAR DATAFRAMES ###
+  guardar_dataframes <- function(dataframes, hoja_nombre, columna) {
+    # Extraer el valor especificado (vrs o crs) de cada dataframe por año
+    resultados <- lapply(names(dataframes), function(anio) {
+      df <- dataframes[[anio]]
+      # Seleccionar columna especificada junto con IdEstablecimiento
+      df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
+      # Renombrar columna con el año correspondiente
+      colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
+      return(df_seleccionado)
+    })
+    
+    # Unir los resultados por columna (IdEstablecimiento como fila)
+    df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
+    
+    # Añadir la hoja
+    addWorksheet(wb, hoja_nombre)
+    writeData(wb, hoja_nombre, df_final)
+  }
+  
+  # Guardar resultados VRS y CRS
+  guardar_dataframes(dataframes, "VRS", "vrs")
+  guardar_dataframes(dataframes, "CRS", "crs")
+  
+  ### GUARDAR IMPORTANCIA ###
+  # IncNodePurity
+  addWorksheet(wb, paste0("Determinantes IncNodePurity VRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity VRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncNodePurity CRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity CRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_crs")]]))
+  
+  # %IncMSE
+  addWorksheet(wb, paste0("Determinantes IncMSE VRS"))
+  writeData(wb, paste0("Determinantes IncMSE VRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncMSE CRS"))
+  writeData(wb, paste0("Determinantes IncMSE CRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_crs")]]))
+  
+  # Guardar el archivo
+  saveWorkbook(wb, archivo_salida, overwrite = TRUE)
+  cat("Archivo guardado como:", archivo_salida, "\n")
+}
 
 
 ### GUARDAR DATAFRAMES ###
