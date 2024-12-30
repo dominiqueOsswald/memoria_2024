@@ -9,6 +9,9 @@ source("graphics.R")
 
 #  CONSOLIDADO DE DATOS POR AÑO
 anios <- 2014:2023
+anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
+anios_pandemia <- c("2020", "2021", "2022", "2023")
+
 datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
@@ -37,6 +40,7 @@ resultados_cortados <- list(
   io = resultados_corte(resultados$io, "io"),
   oo = resultados_corte(resultados$oo, "oo")
 )
+
 
 
 
@@ -100,110 +104,12 @@ names(random_forest$oo_crs) <- paste0(anios)
 #  EXTRACCIÓN DE VARIABLES POR AÑO
 # -------------------------------------------- #
 
+# Llamar a la función
+resultados_importancia <- procesar_importancia(random_forest, anios_pre_pandemia, anios_pandemia)
 
-variables_random_forest <- list()
-
-# Iterar sobre cada método/posición
-for (metodo in names(random_forest)) {
-  variables_random_forest[[metodo]] <- lapply(random_forest[[metodo]], function(modelo) {
-    names(modelo$top_IncMSE)  # Extraer los nombres de filas de 'importancia'
-  })
-}
-
-
-
-
-# -------------------------------------------- #
-#  COMBINACIÓN Y ANÁLISIS DE VARIABLES
-# -------------------------------------------- #
-
-
-# Crear listas para almacenar resultados
-resultados_IncNodePurity <- list()
-resultados_IncMSE <- list()
-
-# Definir períodos
-anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
-anios_pandemia <- c("2020", "2021", "2022", "2023")
-
-# Iterar sobre cada método
-for (metodo in names(random_forest)) {
-  
-  # Crear dataframes vacíos para almacenar resultados
-  df_IncNodePurity <- data.frame(Variable = character(), stringsAsFactors = FALSE)
-  df_IncMSE <- data.frame(Variable = character(), stringsAsFactors = FALSE)
-  
-  # Recopilar datos por año
-  for (anio in names(random_forest[[metodo]])) {
-    # Obtener importancia
-    importancia <- random_forest[[metodo]][[anio]]$importancia
-    
-    # --- IncNodePurity ---
-    temp_IncNodePurity <- data.frame(
-      Variable = rownames(importancia),
-      Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
-      Año = anio
-    )
-    df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
-    
-    # --- %IncMSE ---
-    temp_IncMSE <- data.frame(
-      Variable = rownames(importancia),
-      Valor = importancia[, "%IncMSE"],  # Seleccionar columna
-      Año = anio
-    )
-    df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
-  }
-  
-  # --- Procesar IncNodePurity ---
-  pivot_IncNodePurity <- reshape(df_IncNodePurity, 
-                                 idvar = "Variable", 
-                                 timevar = "Año", 
-                                 direction = "wide")
-  colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
-  
-  # Calcular frecuencia y promedios
-  pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
-  pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
-  pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
-  
-  # Calcular frecuencias separadas
-  pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
-  pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
-  
-  # Ordenar y seleccionar las 50 más importantes
-  pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
-  resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
-  
-  # --- Procesar %IncMSE ---
-  pivot_IncMSE <- reshape(df_IncMSE, 
-                          idvar = "Variable", 
-                          timevar = "Año", 
-                          direction = "wide")
-  colnames(pivot_IncMSE) <- gsub("Valor\\.", "", colnames(pivot_IncMSE))
-  
-  # Calcular frecuencia y promedios
-  pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
-  pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
-  pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
-  
-  # Calcular frecuencias separadas
-  pivot_IncMSE$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
-  pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
-  
-  # Ordenar y seleccionar las 50 más importantes
-  pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
-  resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
-}
-
-
-# Mostrar resultados
-#head(resultados_IncNodePurity[["io_vrs"]])  # Ver resultados para IncNodePurity
-#head(resultados_IncMSE[["io_vrs"]])        # Ver resultados para %IncMSE
-
-write.csv(resultados_IncNodePurity[["oo_vrs"]], "top_IncNodePurity_io_vrs.csv")
-write.csv(resultados_IncMSE[["oo_vrs"]], "top_IncMSE_io_vrs.csv")
-
+# Acceder a los resultados
+resultados_IncNodePurity <- resultados_importancia$IncNodePurity
+resultados_IncMSE <- resultados_importancia$IncMSE
 
 
 
@@ -213,16 +119,22 @@ write.csv(resultados_IncMSE[["oo_vrs"]], "top_IncMSE_io_vrs.csv")
 
 
 # Graficar para IncNodePurity
-graficar_top_10(resultados_IncNodePurity[["io_vrs"]], "Top 10 - IncNodePurity (io_vrs)")
-graficar_top_10(resultados_IncNodePurity[["io_crs"]], "Top 10 - IncNodePurity (io_crs)")
-graficar_top_10(resultados_IncNodePurity[["oo_vrs"]], "Top 10 - IncNodePurity (oo_vrs)")
-graficar_top_10(resultados_IncNodePurity[["oo_crs"]], "Top 10 - IncNodePurity (oo_crs)")
+graficar_top_10(resultados_IncNodePurity[["io_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - VRS -")
+graficar_top_10(resultados_IncNodePurity[["io_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - CRS -")
+graficar_top_10(resultados_IncNodePurity[["oo_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - VRS -")
+graficar_top_10(resultados_IncNodePurity[["oo_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - CRS -")
 
 # Graficar para %IncMSE
-graficar_top_10(resultados_IncMSE[["io_vrs"]], "Top 10 - %IncMSE (io_vrs)")
-graficar_top_10(resultados_IncMSE[["io_crs"]], "Top 10 - %IncMSE (io_crs)")
-graficar_top_10(resultados_IncMSE[["oo_vrs"]], "Top 10 - %IncMSE (oo_vrs)")
-graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 - %IncMSE (oo_crs)")
+graficar_top_10(resultados_IncMSE[["io_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - VRS -")
+graficar_top_10(resultados_IncMSE[["io_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - CRS -")
+graficar_top_10(resultados_IncMSE[["oo_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - VRS -")
+graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - CRS -")
+
+
+
+
+
+
 
 
 
@@ -230,6 +142,7 @@ graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 - %IncMSE (oo_crs)")
 #  RESULTADOS
 # ==============================================
 
+# Generación de excel con valores de eficiencias y determinantes
 
 # Procesar OUTPUT
 procesar_y_guardar_resultados(
@@ -249,18 +162,29 @@ procesar_y_guardar_resultados(
   prefijo = "io"
 )
 
-
 # ==============================================
 #    GRAFICAS
 # ==============================================
 #  TODOS - GRAFICA DEA INPUT VRS
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs")
+  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
+})
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
+})
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
+})
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
 })
 
 
-#    MEJORES RESULTADOS 
+# MEJORES RESULTADOS 
 
 mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
                    "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
@@ -268,13 +192,13 @@ mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
                    "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
 
 
-#    VRS INPUT
+# VRS INPUT
 lapply(anios, function(anio) {
   chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
 })
 
 
-#    REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
+# REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
 resumen <- resumen_eficiencia(mejores_25$in_vrs)
 colorear_region(resumen)
 

@@ -41,29 +41,16 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   # Crear un workbook
   wb <- createWorkbook()
   
-  ### GUARDAR DATAFRAMES ###
-  guardar_dataframes <- function(dataframes, hoja_nombre, columna) {
-    # Extraer el valor especificado (vrs o crs) de cada dataframe por año
-    resultados <- lapply(names(dataframes), function(anio) {
-      df <- dataframes[[anio]]
-      # Seleccionar columna especificada junto con IdEstablecimiento
-      df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
-      # Renombrar columna con el año correspondiente
-      colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
-      return(df_seleccionado)
-    })
-    
-    # Unir los resultados por columna (IdEstablecimiento como fila)
-    df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
-    
-    # Añadir la hoja
-    addWorksheet(wb, hoja_nombre)
-    writeData(wb, hoja_nombre, df_final)
-  }
-  
   # Guardar resultados VRS y CRS
-  guardar_dataframes(dataframes, "VRS", "vrs")
-  guardar_dataframes(dataframes, "CRS", "crs")
+  vrs <- guardar_dataframes(dataframes, "vrs")
+  crs <- guardar_dataframes(dataframes, "crs")
+  
+  # Añadir la hoja
+  addWorksheet(wb, "VRS")
+  writeData(wb, "VRS", vrs)
+  
+  addWorksheet(wb, "CRS")
+  writeData(wb, "CRS", crs)
   
   ### GUARDAR IMPORTANCIA ###
   # IncNodePurity
@@ -90,11 +77,17 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
 }
 
 
-### GUARDAR DATAFRAMES ###
-guardar_dataframes <- function(dataframes, hoja_nombre, columna) {
+guardar_dataframes <- function(dataframes, columna) {
   # Extraer el valor especificado (vrs o crs) de cada dataframe por año
   resultados <- lapply(names(dataframes), function(anio) {
     df <- dataframes[[anio]]
+    
+    # Verificar si el dataframe contiene las columnas requeridas
+    if (!("IdEstablecimiento" %in% colnames(df)) || !(columna %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene las columnas necesarias"))
+      return(NULL)  # Retornar NULL si falta alguna columna
+    }
+    
     # Seleccionar columna especificada junto con IdEstablecimiento
     df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
     # Renombrar la columna con el año correspondiente
@@ -102,13 +95,24 @@ guardar_dataframes <- function(dataframes, hoja_nombre, columna) {
     return(df_seleccionado)
   })
   
+  # Eliminar entradas nulas
+  resultados <- Filter(Negate(is.null), resultados)
+  
+  # Verificar que existan resultados antes de combinar
+  if (length(resultados) == 0) {
+    warning(paste("No hay datos válidos para la hoja"))
+    return(NULL)  # Salir de la función si no hay resultados válidos
+  }
+  
   # Unir los resultados por columna (IdEstablecimiento como fila)
   df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
   
-  # Añadir la hoja
-  addWorksheet(wb, hoja_nombre)
-  writeData(wb, hoja_nombre, df_final)
+  # Añadir columna de promedio
+  df_final$Promedio <- rowMeans(df_final[, -1], na.rm = TRUE)
+  
+  return (df_final)
 }
+
 
 
 # ******************************* #
@@ -987,6 +991,87 @@ analize_rf <- function(year, resultados_in, n_top,tipo ){
 
 
 
+procesar_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
+  # Crear listas para almacenar resultados
+  resultados_IncNodePurity <- list()
+  resultados_IncMSE <- list()
+  
+  # Iterar sobre cada método
+  for (metodo in names(random_forest)) {
+    
+    # Crear dataframes vacíos para almacenar resultados
+    df_IncNodePurity <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+    df_IncMSE <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+    
+    # Recopilar datos por año
+    for (anio in names(random_forest[[metodo]])) {
+      # Obtener importancia
+      importancia <- random_forest[[metodo]][[anio]]$importancia
+      
+      # --- IncNodePurity ---
+      temp_IncNodePurity <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
+        Año = anio
+      )
+      df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
+      
+      # --- %IncMSE ---
+      temp_IncMSE <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, "%IncMSE"],  # Seleccionar columna
+        Año = anio
+      )
+      df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
+    }
+    
+    # --- Procesar IncNodePurity ---
+    pivot_IncNodePurity <- reshape(df_IncNodePurity, 
+                                   idvar = "Variable", 
+                                   timevar = "Año", 
+                                   direction = "wide")
+    colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
+    
+    # Calcular frecuencia y promedios
+    pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
+    pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
+    pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
+    
+    # Calcular frecuencias separadas
+    pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
+    pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
+    
+    # Ordenar y seleccionar las 50 más importantes
+    pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
+    resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
+    
+    # --- Procesar %IncMSE ---
+    pivot_IncMSE <- reshape(df_IncMSE, 
+                            idvar = "Variable", 
+                            timevar = "Año", 
+                            direction = "wide")
+    colnames(pivot_IncMSE) <- gsub("Valor\\.", "", colnames(pivot_IncMSE))
+    
+    # Calcular frecuencia y promedios
+    pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
+    pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
+    pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
+    
+    # Calcular frecuencias separadas
+    pivot_IncMSE$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
+    pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
+    
+    # Ordenar y seleccionar las 50 más importantes
+    pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
+    resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
+  }
+  
+  # Retornar las dos listas
+  return(list(IncNodePurity = resultados_IncNodePurity, IncMSE = resultados_IncMSE))
+}
 
 
-
+reemplazar_nulos <- function(df) {
+  df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+  return(df)
+}
