@@ -81,55 +81,40 @@ malmquist_indices <- list(
 malmquist_graficas <- procesar_y_graficar(malmquist_indices)
 
 
-ggplot(resultados[["io"]][["original"]][["2014"]][["data"]], aes(x = vrs)) +
-  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
-  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
+# Crear un dataframe largo combinando datos de varios años
+df_pre <- do.call(rbind, lapply(2014:2019, function(year) {
+  data <- resultados[["io"]][["original"]][[as.character(year)]][["data"]]
+  data$year <- as.factor(year)  # Añade columna del año como factor
+  return(data)
+}))
+
+
+# Crear un dataframe largo combinando datos de varios años
+df_post <- do.call(rbind, lapply(2020:2023, function(year) {
+  data <- resultados[["io"]][["original"]][[as.character(year)]][["data"]]
+  data$year <- as.factor(year)  # Añade columna del año como factor
+  return(data)
+}))
+
+
+# Graficar densidades agrupadas por año
+ggplot(df_pre, aes(x = vrs, fill = year)) +
+  geom_density(alpha = 0.4) +  # Transparencia para superposición
+  labs(title = "Densidad de Eficiencia Técnica (VRS) por Año",
+       x = "Eficiencia VRS",
+       y = "Densidad") +
   theme_minimal()
 
-ggplot(resultados[["io"]][["original"]][["2015"]][["data"]], aes(x = vrs)) +
-  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
-  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
+# Graficar densidades agrupadas por año
+ggplot(df_post, aes(x = vrs, fill = year)) +
+  geom_density(alpha = 0.4) +  # Transparencia para superposición
+  labs(title = "Densidad de Eficiencia Técnica (VRS) por Año",
+       x = "Eficiencia VRS",
+       y = "Densidad") +
   theme_minimal()
 
-ggplot(resultados[["io"]][["original"]][["2016"]][["data"]], aes(x = vrs)) +
-  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
-  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
-  theme_minimal()
 
 
-
-
-ggplot(resultados[["io"]][["original"]][["2014"]][["data"]], aes(x = Valores, fill = Columna, color = Columna)) +
-  geom_density(alpha = 0.3) +  # Añadir transparencia
-  ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Promedio por periodo") +
-  xlab("Índice Malmquist") +
-  ylab("Densidad") +
-  theme_minimal() +
-  theme(
-    legend.position = "right",
-    plot.margin = unit(c(3, 3, 3, 3), "cm"),
-    plot.title = element_text(size = 16, face = "bold"),
-    plot.subtitle = element_text(size = 14)# Márgenes
-  ) +
-  scale_x_continuous(
-    breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
-    limits = rango_x  # Limitar los valores al rango simétrico
-  ) +
-  # Leyenda para colores
-  scale_color_manual(
-    values = c("red", "blue"),                    # Colores personalizados
-    labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
-  ) +
-  # Leyenda para rellenos
-  scale_fill_manual(
-    values = c("pink", "lightblue"),              # Colores de relleno
-    labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
-  ) +
-  # Cambiar nombres de las leyendas
-  labs(
-    color = "Periodo",    # Cambia el nombre para colores
-    fill = "Periodo"      # Cambia el nombre para rellenos
-  )
 
 # ==============================================
 #  DETERMINANTES
