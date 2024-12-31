@@ -9,6 +9,12 @@ library(plotly)
 library(sf)
 library(RColorBrewer)
 
+# Cargar los datos de Chile
+world <- ne_countries(scale = "medium", returnclass = "sf")
+chile <- world[world$name == "Chile", ]
+comunas_sf <- chilemapas::mapa_comunas
+
+
 procesar_index <- function(index) {
   # Asegurarse de que las columnas sean numéricas
   index[, -1] <- lapply(index[, -1], as.numeric)
@@ -24,7 +30,6 @@ procesar_index <- function(index) {
   
   return(index)
 }
-
 
 
 procesar_y_graficar <- function(malmquist_indices) {
@@ -62,7 +67,7 @@ procesar_y_graficar <- function(malmquist_indices) {
     grafico_pre_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
       ggtitle(paste("Índice Malmquist para", key_name),  subtitle = "Periodo pre pandemia por COVID-19") +
-      xlab("Indice Malmquist") +
+      xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
       ylim(0, 6) + 
@@ -70,7 +75,9 @@ procesar_y_graficar <- function(malmquist_indices) {
             legend.box = "vertical",                # Orden vertical fijo
             #legend.key.height = unit(1, "cm"),      # Altura fija para las leyendas
             #legend.key.width = unit(5, "cm"),
-            plot.margin = unit(c(3, 3, 3, 3), "cm")) + 
+            plot.margin = unit(c(3, 3, 3, 3), "cm"),
+            plot.title = element_text(size = 16, face = "bold"),
+            plot.subtitle = element_text(size = 14)) + 
       
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
@@ -117,7 +124,7 @@ procesar_y_graficar <- function(malmquist_indices) {
     grafico_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
       ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Periodo de pandemia por COVID-19") +
-      xlab("Indice Malmquist") +
+      xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
       ylim(0, 6) + 
@@ -125,7 +132,9 @@ procesar_y_graficar <- function(malmquist_indices) {
             legend.box = "vertical",                # Orden vertical fijo
             #legend.key.height = unit(1, "cm"),      # Altura fija para las leyendas
             #legend.key.width = unit(5, "cm"),
-            plot.margin = unit(c(3, 3, 3, 3), "cm")) + 
+            plot.margin = unit(c(3, 3, 3, 3), "cm"),
+            plot.title = element_text(size = 16, face = "bold"),
+            plot.subtitle = element_text(size = 14)) + 
       
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
@@ -173,12 +182,14 @@ procesar_y_graficar <- function(malmquist_indices) {
     grafico_tasas <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
       ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Promedio por periodo") +
-      xlab("Indice Malmquist") +
+      xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
       theme(
         legend.position = "right",
-        plot.margin = unit(c(3, 3, 3, 3), "cm") # Márgenes
+        plot.margin = unit(c(3, 3, 3, 3), "cm"),
+        plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14)# Márgenes
       ) +
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
@@ -301,14 +312,6 @@ graficar_top_10 <- function(data, titulo, subtitulo) {
   print(grafico_pandemia)
 }
 
-
-# Cargar los datos de Chile
-world <- ne_countries(scale = "medium", returnclass = "sf")
-chile <- world[world$name == "Chile", ]
-comunas_sf <- chilemapas::mapa_comunas
-
-
-
 # -------------------------------------- #
 # Graficar region de Chile según el criterio de orientacion y variacion
 # -------------------------------------- #
@@ -354,8 +357,6 @@ region_vrs <- function(hospitales_df, region, anio, tipo) {
   
   return(mapa_rm)
 }
-
-
 
 # -------------------------------------- #
 # Graficar Chile según el criterio de orientacion y variacion
@@ -428,8 +429,6 @@ colorear_region <- function(resumen){
   
 }
 
-
-
 # -------------------------------------- #
 # Colorear regiones según porcentaje
 # -------------------------------------- #
@@ -437,7 +436,8 @@ graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas =
   # Definir colores personalizados
   #colores_personalizados <- colorRampPalette(c("red", "yellow", "green"))(200)  # De rojo (mínimo) a verde (máximo)
   #colores_personalizados <- colorRampPalette(brewer.pal(11, "YIGn"))(200)
-  colores_personalizados <- colorRampPalette(brewer.pal(9, "YlGn"))(200)
+  #colores_personalizados <- colorRampPalette(brewer.pal(9, "YlGn"))(200)
+  colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlBu"))(200)
   
   # Determinar la cantidad de gráficos
   num_graficos <- length(correlaciones_lista)
@@ -471,7 +471,8 @@ graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas =
         col = colores_personalizados, 
         method = "color", 
         title = paste("Año", anio),
-        mar = c(0, 0, 2, 0),  # Márgenes más pequeños para cada gráfico
+        #mar = c(0, 0, 2, 0),  # Márgenes más pequeños para cada gráfico
+        mar = c(0.3, 0.3, 4, 0.3),
         addCoef.col = "black",
         cl.ratio = 0.4,        # Ajustar tamaño de la barra de leyenda
         cl.align = "r" 

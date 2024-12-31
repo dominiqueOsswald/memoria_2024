@@ -66,6 +66,7 @@ correlacion_todos_metodos <- calcular_correlaciones_all(input_output_original)
 grafica_correlacion_metodos <- graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
+
 # ==============================================
 #  MALMQUIST 
 # ==============================================
@@ -78,6 +79,57 @@ malmquist_indices <- list(
 )
 
 malmquist_graficas <- procesar_y_graficar(malmquist_indices)
+
+
+ggplot(resultados[["io"]][["original"]][["2014"]][["data"]], aes(x = vrs)) +
+  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
+  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
+  theme_minimal()
+
+ggplot(resultados[["io"]][["original"]][["2015"]][["data"]], aes(x = vrs)) +
+  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
+  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
+  theme_minimal()
+
+ggplot(resultados[["io"]][["original"]][["2016"]][["data"]], aes(x = vrs)) +
+  geom_density(fill = "blue", alpha = 0.4) +  # Gráfico suavizado
+  labs(title = "Gráfico de Densidad", x = "Valores", y = "Densidad") +
+  theme_minimal()
+
+
+
+
+ggplot(resultados[["io"]][["original"]][["2014"]][["data"]], aes(x = Valores, fill = Columna, color = Columna)) +
+  geom_density(alpha = 0.3) +  # Añadir transparencia
+  ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Promedio por periodo") +
+  xlab("Índice Malmquist") +
+  ylab("Densidad") +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.margin = unit(c(3, 3, 3, 3), "cm"),
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 14)# Márgenes
+  ) +
+  scale_x_continuous(
+    breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
+    limits = rango_x  # Limitar los valores al rango simétrico
+  ) +
+  # Leyenda para colores
+  scale_color_manual(
+    values = c("red", "blue"),                    # Colores personalizados
+    labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
+  ) +
+  # Leyenda para rellenos
+  scale_fill_manual(
+    values = c("pink", "lightblue"),              # Colores de relleno
+    labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
+  ) +
+  # Cambiar nombres de las leyendas
+  labs(
+    color = "Periodo",    # Cambia el nombre para colores
+    fill = "Periodo"      # Cambia el nombre para rellenos
+  )
 
 # ==============================================
 #  DETERMINANTES
