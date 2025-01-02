@@ -14,6 +14,29 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 chile <- world[world$name == "Chile", ]
 comunas_sf <- chilemapas::mapa_comunas
 
+# Función genérica para graficar boxplots
+graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
+  ggplot(df, aes_string(x = "year", y = eficiencia, fill = "year")) +
+    geom_boxplot(outlier.colour = "red", outlier.size = 2, alpha = 0.6) + 
+    labs(
+      title = titulo,
+      subtitle = subtitulo,
+      x = "Año",
+      y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
+    ) +
+    theme_minimal() +
+    scale_fill_brewer(palette = "Set3") + 
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    ) + 
+    labs(
+      color = "Años",    # Cambia el nombre para colores
+      fill = "Años"      # Cambia el nombre para rellenos
+    )
+  
+}
+
 
 procesar_index <- function(index) {
   # Asegurarse de que las columnas sean numéricas

@@ -8,6 +8,29 @@ library(tidyr)
 library(dplyr)
 library(deaR)
 
+
+# Función para crear dataframes por período
+crear_dataframe <- function(resultados, tipo, periodo) {
+  # Seleccionar rango de años según el período
+  rango <- switch(
+    periodo,
+    "todos" = 2014:2023,
+    "pre"   = 2014:2019,
+    "post"  = 2020:2023,
+    stop("Período no válido. Usa 'todos', 'pre' o 'post'.")
+  )
+  
+  # Combinar datos de los años especificados
+  df <- do.call(rbind, lapply(rango, function(year) {
+    data <- resultados[[tipo]][["original"]][[as.character(year)]][["data"]]
+    data$year <- as.factor(year)  # Añade columna del año como factor
+    return(data)
+  }))
+  return(df)
+}
+
+
+
 # Función para generar resultados
 procesar_y_guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
   guardar_resultados(
