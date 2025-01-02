@@ -11,18 +11,144 @@ library(dplyr)
 library(caret)
 library(deaR)
 
-# ===================================================
-# CÁLCULO DE CORTE
-# ===================================================
+
+# Función para crear dataframes por período
+crear_dataframe <- function(resultados, tipo, periodo) {
+  # Seleccionar rango de años según el período
+  rango <- switch(
+    periodo,
+    "todos" = 2014:2023,
+    "pre"   = 2014:2019,
+    "post"  = 2020:2023,
+    stop("Período no válido. Usa 'todos', 'pre' o 'post'.")
+  )
+  
+  # Combinar datos de los años especificados
+  df <- do.call(rbind, lapply(rango, function(year) {
+    data <- resultados[[tipo]][["original"]][[as.character(year)]][["data"]]
+    data$year <- as.factor(year)  # Añade columna del año como factor
+    return(data)
+  }))
+  return(df)
+}
+
+
+
+# Función para generar resultados
+procesar_y_guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+  guardar_resultados(
+    dataframes = dataframes,
+    resultados_IncNodePurity = resultados_IncNodePurity,
+    resultados_IncMSE = resultados_IncMSE,
+    archivo_salida = archivo_salida,
+    prefijo = prefijo
+  )
+}
+
+# Crear listas para dataframes
+crear_dataframes <- function(resultados, orientacion) {
+  anios <- 2014:2023
+  dataframes <- lapply(anios, function(anio) resultados[[orientacion]][["original"]][[as.character(anio)]][["data"]])
+  names(dataframes) <- as.character(anios)
+  return(dataframes)
+}
+
+guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+  # Instalar y cargar el paquete necesario
+  if (!require(openxlsx)) install.packages("openxlsx")
+  library(openxlsx)
+  
+  # Función para reemplazar valores vacíos, NULL o NA por "-"
+  reemplazar_nulos <- function(df) {
+    df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+    return(df)
+  }
+  
+  # Crear un workbook
+  wb <- createWorkbook()
+  
+  # Guardar resultados VRS y CRS
+  vrs <- guardar_dataframes(dataframes, "vrs")
+  crs <- guardar_dataframes(dataframes, "crs")
+  
+  # Añadir la hoja
+  addWorksheet(wb, "VRS")
+  writeData(wb, "VRS", vrs)
+  
+  addWorksheet(wb, "CRS")
+  writeData(wb, "CRS", crs)
+  
+  ### GUARDAR IMPORTANCIA ###
+  # IncNodePurity
+  addWorksheet(wb, paste0("Determinantes IncNodePurity VRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity VRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncNodePurity CRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity CRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_crs")]]))
+  
+  # %IncMSE
+  addWorksheet(wb, paste0("Determinantes IncMSE VRS"))
+  writeData(wb, paste0("Determinantes IncMSE VRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncMSE CRS"))
+  writeData(wb, paste0("Determinantes IncMSE CRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_crs")]]))
+  
+  # Guardar el archivo
+  saveWorkbook(wb, archivo_salida, overwrite = TRUE)
+  cat("Archivo guardado como:", archivo_salida, "\n")
+}
+
+
+guardar_dataframes <- function(dataframes, columna) {
+  # Extraer el valor especificado (vrs o crs) de cada dataframe por año
+  resultados <- lapply(names(dataframes), function(anio) {
+    df <- dataframes[[anio]]
+    
+    # Verificar si el dataframe contiene las columnas requeridas
+    if (!("IdEstablecimiento" %in% colnames(df)) || !(columna %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene las columnas necesarias"))
+      return(NULL)  # Retornar NULL si falta alguna columna
+    }
+    
+    # Seleccionar columna especificada junto con IdEstablecimiento
+    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
+    # Renombrar la columna con el año correspondiente
+    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
+    return(df_seleccionado)
+  })
+  
+  # Eliminar entradas nulas
+  resultados <- Filter(Negate(is.null), resultados)
+  
+  # Verificar que existan resultados antes de combinar
+  if (length(resultados) == 0) {
+    warning(paste("No hay datos válidos para la hoja"))
+    return(NULL)  # Salir de la función si no hay resultados válidos
+  }
+  
+  # Unir los resultados por columna (IdEstablecimiento como fila)
+  df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
+  
+  # Añadir columna de promedio
+  df_final$Promedio <- rowMeans(df_final[, -1], na.rm = TRUE)
+  
+  return (df_final)
+}
+
+
+
+# ******************************* #
+# Eliminación de datos atípicos y recalculo DEA
 calcular_corte <- function(datos, vector_outliers) {
   lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
 }
 
 resultados_corte <- function(resultados, tipo) {
-  list(
-    vrs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo),
-    crs = resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_crs")]]), tipo)
-  )
+  resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo)
 }
 # ===================================================
 # MALMQUIST
@@ -54,11 +180,6 @@ normalize_min_max <- function(x) {
 normalize_max_min <- function(x) {
   (max(x) - x) / (max(x) - min(x))
 }
-
-
-# ===================================================
-# TOP EFICIENCIA
-# ===================================================
 
 top_eficiencia <- function(datos, tipo, cantidad, best){
   # Creamos una lista vacía para almacenar los resultados
@@ -131,8 +252,8 @@ consolidar_datos_por_anio <- function(anio) {
   egresos <- estadisticas %>% 
     filter(Glosa == "Numero de Egresos") %>%  
     select(1:5) %>% rename("egresos" = "Acum") %>% select(-Glosa)
-  
-  
+
+
   consultas <- unlist(strsplit(readLines(path_consultas), ","))
   # Seleccionar y convertir columnas válidas
   columnas_validas <- intersect(unlist(consultas), colnames(datos_consolidados))
@@ -158,8 +279,8 @@ consolidar_datos_por_anio <- function(anio) {
   #quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
   #                  "X21400500","X21400600","X21800810")
   
-  quirofano <- list(
-    "idEstablecimiento","X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
+  quirofano <- list( "idEstablecimiento",
+    "X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
     "X21300100", "X21400400", "X21400500", "X21400600", "X21400700", "X21300600", "X21300700",
     "X21800810", "X21800820", "X21400800", "X21400900", "X21500100", "X21500200", "X21800830",
     "X21800840", "X21500300", "X21800850", "X21800860", "X21800870", "X21800880", "X21500600",
@@ -182,8 +303,8 @@ consolidar_datos_por_anio <- function(anio) {
   
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
-    mutate(across(-idEstablecimiento, ~ as.numeric(gsub(",", ".", .))))
-  
+    mutate(across(-idEstablecimiento, ~ as.integer(floor(as.numeric(gsub(",", ".", .))))))
+
   # Crear suma total de quirofano
   quirofano_data$sumaTotal <- rowSums(select(quirofano_data, -idEstablecimiento), na.rm = TRUE)
   
@@ -336,7 +457,22 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
     arrange(ID, TIME) %>%
     pivot_wider(names_from = TIME, values_from = Efficiency)
   
-  return(list(eficiencia = efficiency_df, 
+  print(5)
+  
+  # Se elimina la columna que no tienen ningun valor
+  malmquist_df <- Filter(function(x) !all(is.na(x)),malmquist_df)
+  effch_df <- Filter(function(x) !all(is.na(x)),effch_df)
+  techch_df <- Filter(function(x) !all(is.na(x)), techch_df)
+  
+  # Ordenar el dataframe por ID y TIME
+  efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
+  
+  # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
+  efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
+  
+  malmquist_df <- procesar_index(malmquist_df)
+  
+  return(list(eficiencia = efficiency_wide, 
               index = malmquist_df,
               tech = techch_df,
               eff = effch_df))
@@ -411,8 +547,7 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 #  GENERACIÓN DE RESULTADOS DE ITERACION
 # ==============================================
 resultados_iteracion <- function(datos, orientacion){
-  print("AÑO")
-  print(names(datos))
+  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
   
 
@@ -428,41 +563,18 @@ resultados_iteracion <- function(datos, orientacion){
     print("OUTPUT")
     
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    print("AAA")
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    print("AAA")
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
-    print("AAA")
-    print("Antes de ejecutar iteracion_2_crs")
-    #browser()
     iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
 
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
     
         
-    # Normalizando los datos
-    #for (year in names(original)) {
-    #  print(year)
-      # Normalizar VRS
-    #  original[[year]][["data"]]$vrs <- normalize_min_max(original[[year]][["data"]]$vrs)
-    #  iteracion_1_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_1_vrs[[year]][["data"]]$vrs)
-    #  iteracion_2_vrs[[year]][["data"]]$vrs <- normalize_min_max(iteracion_2_vrs[[year]][["data"]]$vrs)
-      
-      
-      
-      # Normalizar CRS
-    #  original[[year]][["data"]]$crs <- normalize_min_max(original[[year]][["data"]]$crs)
-    #  iteracion_1_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_1_crs[[year]][["data"]]$crs)
-    #  iteracion_2_crs[[year]][["data"]]$crs <- normalize_min_max(iteracion_2_crs[[year]][["data"]]$crs)
-      
-    #}
-    print("NORMALIZADOS")
     #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
   print("A")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
-  print("B")
-  resultados_correlacion <- calcular_y_graficar_correlaciones(resultados_combinados, anios, orientacion)
+  resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
   
   print("C")
   # Crear una lista vacía para almacenar los valores atípicos por año
@@ -478,10 +590,10 @@ resultados_iteracion <- function(datos, orientacion){
   
   print("G")
   # Especificar los años que quieres iterar
-  # anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020")
-  print("H")
-  for (anio in names(original)) {
-    print(anio)
+  
+
+  for (anio in anios) {
+    
     # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
     print("J")
@@ -526,9 +638,23 @@ resultados_iteracion <- function(datos, orientacion){
   )
 }
 
-# ==============================================
-#  CÁLCULO DE CORRELACION ENTRE VRS Y CRS PARA CADA AÑO
-# ==============================================
+calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
+  # Calcular las matrices de correlación para cada dataframe en la lista
+  correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
+    df_num <- df %>%
+      select(-IdEstablecimiento) %>%
+      mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
+      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
+    
+    cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
+  })
+  
+  # Nombrar la lista con los años para identificación
+  names(correlaciones_lista) <- names(lista_resultados_combinados_in)
+  
+  # Retornar resultados de correlación entre matrices de distintos años
+  return(list(correlaciones_lista = correlaciones_lista))
+}
 
 calcular_correlaciones <- function(df1, df2, id_col = "ID") {
   # Encontrar IDs comunes
@@ -703,8 +829,43 @@ procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs,
 # ==============================================
 analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
 
+  #print(head(df_vrs))
+  df_w_vrs <- df %>%
+    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+  
+  # Combinar los DataFrames
+  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+  
+  # Eliminar columnas completamente NA
+  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
+  #print(colnames(df_merged))
+
+  # Calcular correlaciones
+  correlaciones <- cor(df_merged[,-1])["vrs", ]
+  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+  
+  
+  # Seleccionar las top_n variables más correlacionadas
+  
+  top_vars <- head(correlaciones_ordenadas, top_n)
+  
+  return(correlaciones_ordenadas)
+  
+}
+
+
+
+
+analize_rf <- function(year, resultados_in, n_top,tipo ){
+  #year <- 2014
+  print("---------------------------")
+  print("---------------------------")
+  print(paste0("AÑO: ", year, "- RETORNO: ", tipo))
+  
   data_path <- paste0("data/", year, "/", year, "_consolidated_data.csv")
   
+  #print(data_path)
   # Leer los datos consolidados
   datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
   df <- datos_consolidados
@@ -742,6 +903,7 @@ analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
   # PROBANDO RANDOM FOREST
   
   set.seed(123)  # Para reproducibilidad
+  library(caret)
   trainIndex <- createDataPartition(df_top[[tipo]], p = 0.7, list = FALSE)
   
   trainData <- df_top[trainIndex, ]
@@ -749,17 +911,34 @@ analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
   
   control <- trainControl(method = "cv", number = 10)  # 10-fold CV
   
-  formula_rf <- as.formula(paste(tipo, "~ ."))
+  library(randomForest)
+  formula <- as.formula(paste(tipo, "~ ."))
   
   cat(paste0("\n", year, "-", orientacion, " ", tipo))
   # Ajustar el modelo de Random Forest
-  modelo_rf <- randomForest(formula = formula_rf, data = trainData, importance = TRUE, trControl = control, ntree = trees, do.trace = 100 )
+  modelo_rf <- randomForest(formula, 
+                            data = trainData, 
+                            importance = TRUE, 
+                            trControl = control, 
+                            ntree = 700,
+                            do.trace = 100 )
   
-
+  cat("\n")
+  # Ver el modelo ajustado
+  #print(modelo_rf)
+  
+  
+  #plot(modelo_rf$err.rate[, 1], 
+  #     type = "l",
+  #     xlab = "Número de árboles",
+  #     ylab = "Error OOB")
+  
+  
   # Predicciones en el conjunto de prueba
   predicciones <- predict(modelo_rf, newdata = testData)
   
   # Evaluar el rendimiento
+  library(Metrics)
   r2 <- R2(predicciones, testData[[tipo]])
   rmse <- rmse(predicciones, testData[[tipo]])
   cat("R²:", r2, "\nRMSE:", rmse)
@@ -767,11 +946,23 @@ analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
   # Importancia de las variables
   importancia <- importance(modelo_rf)
   
-  importancia_df <- as.data.frame(importancia) 
+  importancia_IncNodePurity <- importancia[order(-importancia[, "IncNodePurity"]), ] # Ordenar en orden descendente
+  top_IncNodePurity <- head(importancia_IncNodePurity[, "IncNodePurity"], 50)
   
+  importancia_IncMSE <- importancia[order(-importancia[, "%IncMSE"]), ] # Ordenar en orden descendente
+  top_IncMSE <- head(importancia_IncMSE[, "%IncMSE"], 50)
+  #print(importancia)
   
-  # Si quieres ordenar por %IncMSE 
-  importancia_ordenada <- importancia_df[order(importancia_df$`%IncMSE`, decreasing = TRUE), ] 
+  # Graficar la importancia
+  #varImpPlot(modelo_rf)
+  
+  print("---------------------------")
+  print("---------------------------")
+  
+  return(list(importancia = importancia,
+              top_IncMSE = top_IncMSE,
+              top_IncNodePurity = top_IncNodePurity,
+              modelo = modelo_rf))
   
   # O si prefieres ordenar por IncNodePurity 
   #importancia_ordenada <- importancia_df[order(importancia_df$IncNodePurity, decreasing = TRUE), ] 
@@ -789,6 +980,87 @@ analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
 
 
 
+procesar_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
+  # Crear listas para almacenar resultados
+  resultados_IncNodePurity <- list()
+  resultados_IncMSE <- list()
+  
+  # Iterar sobre cada método
+  for (metodo in names(random_forest)) {
+    
+    # Crear dataframes vacíos para almacenar resultados
+    df_IncNodePurity <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+    df_IncMSE <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+    
+    # Recopilar datos por año
+    for (anio in names(random_forest[[metodo]])) {
+      # Obtener importancia
+      importancia <- random_forest[[metodo]][[anio]]$importancia
+      
+      # --- IncNodePurity ---
+      temp_IncNodePurity <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
+        Año = anio
+      )
+      df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
+      
+      # --- %IncMSE ---
+      temp_IncMSE <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, "%IncMSE"],  # Seleccionar columna
+        Año = anio
+      )
+      df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
+    }
+    
+    # --- Procesar IncNodePurity ---
+    pivot_IncNodePurity <- reshape(df_IncNodePurity, 
+                                   idvar = "Variable", 
+                                   timevar = "Año", 
+                                   direction = "wide")
+    colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
+    
+    # Calcular frecuencia y promedios
+    pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
+    pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
+    pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
+    
+    # Calcular frecuencias separadas
+    pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
+    pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
+    
+    # Ordenar y seleccionar las 50 más importantes
+    pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
+    resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
+    
+    # --- Procesar %IncMSE ---
+    pivot_IncMSE <- reshape(df_IncMSE, 
+                            idvar = "Variable", 
+                            timevar = "Año", 
+                            direction = "wide")
+    colnames(pivot_IncMSE) <- gsub("Valor\\.", "", colnames(pivot_IncMSE))
+    
+    # Calcular frecuencia y promedios
+    pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
+    pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
+    pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
+    
+    # Calcular frecuencias separadas
+    pivot_IncMSE$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
+    pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
+    
+    # Ordenar y seleccionar las 50 más importantes
+    pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
+    resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
+  }
+  
+  # Retornar las dos listas
+  return(list(IncNodePurity = resultados_IncNodePurity, IncMSE = resultados_IncMSE))
+}
 
 
-
+reemplazar_nulos <- function(df) {
+  df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+  return(df)
+}

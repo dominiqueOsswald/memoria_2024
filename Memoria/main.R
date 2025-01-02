@@ -8,13 +8,18 @@ source("graphics.R")
 # ==============================================
 
 #  CONSOLIDADO DE DATOS POR AÑO
-anios <- c(2014:2023)
-datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
+anios <- 2014:2023
+anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
+anios_pandemia <- c("2020", "2021", "2022", "2023")
+
+datos <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
-dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
-datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+dmus_comunes <- Reduce(intersect, lapply(datos, `[[`, "IdEstablecimiento"))
+datos <- lapply(datos, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+
+
 
 # ==============================================
 #  CÁLCULO DEA
@@ -27,18 +32,35 @@ resultados <- list(
   oo = resultados_iteracion(datos, "oo")
 )
 
-#  COMPARACION DE VALORES ORIGINALES INPUT - OUTPUT - VRS - CRS 
-
-input_output_original <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-graficas_in_out <- calcular_y_graficar_correlaciones(input_output_original, anios, "ambos")
-
 
 #  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
 
-resultados_cortados <- list(
+resultados_sin_atipicos <- list(
   io = resultados_corte(resultados$io, "io"),
   oo = resultados_corte(resultados$oo, "oo")
 )
+
+
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes")
+graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
+
+# GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
+graficar_correlaciones(resultados_sin_atipicos[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos")
+graficar_correlaciones(resultados_sin_atipicos[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
+
+
+# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
+resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
+
+correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
+
+graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+
+
+# GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
+
+grafica_eficiencias(resultados)
 
 
 # ==============================================
@@ -61,60 +83,31 @@ procesar_y_graficar(malmquist_indices)
 #  CONFIGURACIÓN Y MODELO RANDOM FOREST
 # -------------------------------------------- #
 
-# Definir años de interés
-#year, resultados_in, n_top, trees, tipo, orientacion
-random_forest_results <- list(
-  input_vrs = setNames(
-    lapply(anios, function(anio) {analize_rf(anio, resultados$io, 50, 300, "vrs", "Input")}),anios
-  ),
-  input_crs = setNames(
-    lapply(anios, function(anio) {analize_rf(anio, resultados$io, 50, 300, "crs", "Input")}),anios
-  ),
-  output_vrs = setNames(
-    lapply(anios, function(anio) {analize_rf(anio, resultados$oo, 50, 300, "vrs", "Output")}),anios
-  ),
-  output_crs = setNames(
-    lapply(anios, function(anio) {analize_rf(anio, resultados$oo, 50, 300, "crs", "Output")}),anios
-  )
+# Aplicar Random Forest para cada año
+random_forest <- list(
+  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "vrs")}),
+  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "crs")}),
+  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "vrs")}),
+  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "crs")})
 )
+
+# Asignar nombres a la lista de modelos
+names(random_forest$io_vrs) <- paste0(anios)
+names(random_forest$io_crs) <- paste0(anios)
+names(random_forest$oo_vrs) <- paste0(anios)
+names(random_forest$oo_crs) <- paste0(anios)
 
 # -------------------------------------------- #
 #  EXTRACCIÓN DE VARIABLES POR AÑO
 # -------------------------------------------- #
 
-# Extraer variables de cada modelo dentro de random_forest_results
-variables_random_forest <- lapply(random_forest_results, function(modelos_por_anio) {
-  lapply(modelos_por_anio, rownames)
-})
+# Llamar a la función
+resultados_importancia <- procesar_importancia(random_forest, anios_pre_pandemia, anios_pandemia)
 
-# Asignar nombres dinámicos
-names(variables_random_forest) <- paste0("variables_random_forest_", names(random_forest_results))
+# Acceder a los resultados
+resultados_IncNodePurity <- resultados_importancia$IncNodePurity
+resultados_IncMSE <- resultados_importancia$IncMSE
 
-
-# -------------------------------------------- #
-#  COMBINACIÓN Y ANÁLISIS DE VARIABLES
-# -------------------------------------------- #
-
-# Crear una lista para almacenar las tablas de frecuencias por método
-frecuencias_por_metodo <- lapply(variables_random_forest, function(variables_por_anio) {
-  # Combinar todas las variables para un método específico
-  todas_las_variables <- unlist(variables_por_anio)
-  
-  # Calcular las frecuencias de las variables
-  frecuencias <- table(todas_las_variables)
-  
-  # Filtrar y ordenar las variables más frecuentes
-  frecuencias_filtradas <- head(sort(frecuencias[frecuencias > 1], decreasing = TRUE), 100)
-  
-  # Retornar las frecuencias filtradas
-  return(frecuencias_filtradas)
-})
-
-# Asignar nombres a las tablas de frecuencias
-names(frecuencias_por_metodo) <- paste0("frecuencias_", names(variables_random_forest))
-
-# Verificar los resultados
-print(frecuencias_por_metodo)
 
 
 # -------------------------------------------- #
@@ -122,105 +115,49 @@ print(frecuencias_por_metodo)
 # -------------------------------------------- #
 
 
-# Crear un dataframe para combinar las frecuencias por método
-df_frecuencias <- bind_rows(
-  lapply(names(frecuencias_por_metodo), function(metodo) {
-    # Convertir la tabla de frecuencias a dataframe
-    df <- as.data.frame(frecuencias_por_metodo[[metodo]])
-    colnames(df) <- c("Variable", "Frecuencia")
-    # Agregar el nombre del método como columna
-    df$Metodo <- metodo
-    return(df)
-  })
-)
+# Graficar para IncNodePurity
+graficar_top_10(resultados_IncNodePurity[["io_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - VRS -")
+graficar_top_10(resultados_IncNodePurity[["io_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - CRS -")
+graficar_top_10(resultados_IncNodePurity[["oo_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - VRS -")
+graficar_top_10(resultados_IncNodePurity[["oo_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - CRS -")
+
+# Graficar para %IncMSE
+graficar_top_10(resultados_IncMSE[["io_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - VRS -")
+graficar_top_10(resultados_IncMSE[["io_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - CRS -")
+graficar_top_10(resultados_IncMSE[["oo_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - VRS -")
+graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - CRS -")
 
 
-# Crear gráficos separados para cada método
-for (metodo in names(frecuencias_por_metodo)) {
-  # Convertir la tabla de frecuencias en un dataframe
-  df_frecuencias <- as.data.frame(frecuencias_por_metodo[[metodo]])
-  colnames(df_frecuencias) <- c("Variable", "Frecuencia")
-  
-  # Crear el gráfico
-  plot <- ggplot(df_frecuencias, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia)) +
-    geom_bar(stat = "identity", fill = "blue") +
-    labs(
-      title = paste("Frecuencia de Variables -", metodo),
-      x = "Variable",
-      y = "Frecuencia"
-    ) +
-    theme(
-      axis.text.x = element_text(angle = 90, hjust = 1),
-      plot.title = element_text(hjust = 0.5)
-    )
-  
-  # Mostrar el gráfico
-  print(plot)
-  
-  # Opcional: Guardar el gráfico en un archivo
-  ggsave(filename = paste0(metodo, "_frecuencia_variables.png"), plot = plot, width = 10, height = 6)
-}
+
+
+
+
+
 
 
 # ==============================================
 #  RESULTADOS
 # ==============================================
 
-dataframes <- lapply(names(dataframes), function(year) {
-  dataframes[[year]] %>%
-    select(IdEstablecimiento, vrs) %>%
-    rename(!!paste0("vrs_", year) := vrs)
-})
+# Generación de excel con valores de eficiencias y determinantes
 
+# Procesar OUTPUT
+procesar_y_guardar_resultados(
+  dataframes = crear_dataframes(resultados, "oo"),
+  resultados_IncNodePurity = resultados_IncNodePurity,
+  resultados_IncMSE = resultados_IncMSE,
+  archivo_salida = "RESULTADOS OUTPUT.xlsx",
+  prefijo = "oo"
+)
 
-gran_dataframe <- reduce(dataframes, full_join, by = "IdEstablecimiento")
-
-gran_dataframe <- gran_dataframe %>%
-  rowwise() %>%
-  mutate(promedio_vrs = mean(c_across(starts_with("vrs_")), na.rm = TRUE))
-
-
-
-
-library(openxlsx)
-
-# Crear un workbook
-wb <- createWorkbook()
-
-# Agregar hojas al workbook
-addWorksheet(wb, "Eficiencias")
-addWorksheet(wb, "Indice Malmquist")
-addWorksheet(wb, "Determinantes")
-
-# Escribir dataframes en las hojas
-writeData(wb, "Eficiencias", gran_dataframe)
-writeData(wb, "Indice Malmquist", malmquist_indices[["in_vrs"]][["index"]])  # Reemplaza con tu segundo dataframe
-writeData(wb, "Determinantes", frecuencias_filtradas)  # Reemplaza con tu segundo dataframe
-
-# Guardar el archivo Excel
-saveWorkbook(wb, "Resultados.xlsx", overwrite = TRUE)
-
-
-
-
-
-# GRAFICA DE PROMEDIO DE EFICIENCIAS
-datos <- na.omit(gran_dataframe$promedio_vrs)
-mediana <- median(datos)
-
-# Crear el gráfico
-grafico <- ggplot(data.frame(x = datos), aes(x = x)) +
-  geom_density(fill = "blue", alpha = 0.5, color = "blue") +
-  geom_vline(aes(xintercept = mediana), color = "green", linetype = "dashed", size = 1) +
-  ggtitle("Densidad") +
-  xlab("Valores") +
-  ylab("Densidad") +
-  theme_minimal() +
-  annotate("text", x = mediana, y = 0.15, 
-           label = paste0("Mediana: ", round(mediana, 2)), color = "green", hjust = -0.1)
-
-# Renderizar el gráfico
-print(grafico)
+# Procesar INPUT
+procesar_y_guardar_resultados(
+  dataframes = crear_dataframes(resultados, "io"),
+  resultados_IncNodePurity = resultados_IncNodePurity,
+  resultados_IncMSE = resultados_IncMSE,
+  archivo_salida = "RESULTADOS INPUT.xlsx",
+  prefijo = "io"
+)
 
 # ==============================================
 #    GRAFICAS
@@ -228,27 +165,39 @@ print(grafico)
 #  TODOS - GRAFICA DEA INPUT VRS
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs")
+  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
 })
 
-
-#    MEJORES RESULTADOS 
-
-mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
-                   "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
-                   "out_vrs" = top_eficiencia(resultados$oo, "vrs", 25, TRUE),
-                   "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
-
-
-#    VRS INPUT
 lapply(anios, function(anio) {
-  chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
+  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
+})
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
+})
+
+lapply(anios, function(anio) {
+  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
 })
 
 
-#    REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
-resumen <- resumen_eficiencia(mejores_25$in_vrs)
-colorear_region(resumen)
+# MEJORES RESULTADOS 
+
+#mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
+#                   "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
+#                   "out_vrs" = top_eficiencia(resultados$oo, "vrs", 25, TRUE),
+#                   "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
+
+
+# VRS INPUT
+#lapply(anios, function(anio) {
+#  chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
+#})
+
+
+# REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
+#resumen <- resumen_eficiencia(mejores_25$in_vrs)
+#colorear_region(resumen)
 
 
 # -------------------------------------------- #
