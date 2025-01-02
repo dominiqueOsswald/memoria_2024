@@ -12,13 +12,13 @@ anios <- 2014:2023
 anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
 anios_pandemia <- c("2020", "2021", "2022", "2023")
 
-datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
+datos <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
-dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
-datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+dmus_comunes <- Reduce(intersect, lapply(datos, `[[`, "IdEstablecimiento"))
+datos <- lapply(datos, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
 
 
@@ -36,69 +36,32 @@ resultados <- list(
 
 #  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
 
-resultados_cortados <- list(
+resultados_sin_atipicos <- list(
   io = resultados_corte(resultados$io, "io"),
   oo = resultados_corte(resultados$oo, "oo")
 )
 
 
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes")
+graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
-
-
-graficas_sensibilidad <- list(
-  # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-  eficiencia_io = graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes"),
-  eficiencia_oo = graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes"),
-  
-  # GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
-  atipicos_io = graficar_correlaciones(resultados_cortados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos"),
-  atipicos_oo = graficar_correlaciones(resultados_cortados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
-
-)
-
+# GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
+graficar_correlaciones(resultados_sin_atipicos[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos")
+graficar_correlaciones(resultados_sin_atipicos[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
 
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
-input_output_original <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
+resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 
-correlacion_todos_metodos <- calcular_correlaciones_all(input_output_original)
+correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
-grafica_correlacion_metodos <- graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
-# Parámetros para iterar
-tipos <- c("io", "oo")
-periodos <- list(
-  "todos" = "2014 - 2023",
-  "pre" = "2014 - 2019",
-  "post" = "2020 - 2023"
-)
-
-# Generar gráficos para cada tipo y período
-for (tipo in tipos) {
-  for (periodo in names(periodos)) {
-    # Crear dataframe
-    df <- crear_dataframe(resultados, tipo, periodo)
-    
-    # Graficar VRS
-    print(graficar_boxplots(
-      df,
-      "vrs",
-      paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
-      paste("Período", periodos[[periodo]])
-    ))
-    
-    # Graficar CRS
-    print(graficar_boxplots(
-      df,
-      "crs",
-      paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
-      paste("Período", periodos[[periodo]])
-    ))
-  }
-}
+grafica_eficiencias(resultados)
 
 
 # ==============================================
@@ -112,7 +75,7 @@ malmquist_indices <- list(
   out_crs = malmquist("crs", "out")
 )
 
-malmquist_graficas <- procesar_y_graficar(malmquist_indices)
+procesar_y_graficar(malmquist_indices)
 
 # ==============================================
 #  DETERMINANTES
@@ -221,21 +184,21 @@ lapply(anios, function(anio) {
 
 # MEJORES RESULTADOS 
 
-mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
-                   "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
-                   "out_vrs" = top_eficiencia(resultados$oo, "vrs", 25, TRUE),
-                   "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
+#mejores_25 <- list("in_vrs" =top_eficiencia(resultados$io, "vrs", 25, TRUE),
+#                   "in_crs" = top_eficiencia(resultados$io, "crs", 25, TRUE),
+#                   "out_vrs" = top_eficiencia(resultados$oo, "vrs", 25, TRUE),
+#                   "out_crs" = top_eficiencia(resultados$oo, "crs", 25, TRUE)) 
 
 
 # VRS INPUT
-lapply(anios, function(anio) {
-  chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
-})
+#lapply(anios, function(anio) {
+#  chile_map_plot(mejores_25[["in_vrs"]][[as.character(anio)]], anio, "vrs")
+#})
 
 
 # REGION COLOREADA POR PORCENTAJE DENTRO DE 25 MEJOR
-resumen <- resumen_eficiencia(mejores_25$in_vrs)
-colorear_region(resumen)
+#resumen <- resumen_eficiencia(mejores_25$in_vrs)
+#colorear_region(resumen)
 
 
 # -------------------------------------------- #

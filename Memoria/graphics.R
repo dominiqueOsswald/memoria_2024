@@ -14,6 +14,44 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 chile <- world[world$name == "Chile", ]
 comunas_sf <- chilemapas::mapa_comunas
 
+
+grafica_eficiencias <- function(resultados) {
+  # Parámetros para iterar
+  tipos <- c("io", "oo")
+  periodos <- list(
+    "todos" = "2014 - 2023",
+    "pre" = "2014 - 2019",
+    "post" = "2020 - 2023"
+  )
+  
+  # Generar gráficos para cada tipo y período
+  for (tipo in tipos) {
+    for (periodo in names(periodos)) {
+      # Crear dataframe
+      df <- crear_dataframe(resultados, tipo, periodo)
+      
+      # Graficar VRS
+      print(graficar_boxplots(
+        df,
+        "vrs",
+        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
+        paste("Período", periodos[[periodo]])
+      ))
+      
+      # Graficar CRS
+      print(graficar_boxplots(
+        df,
+        "crs",
+        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
+        paste("Período", periodos[[periodo]])
+      ))
+    }
+  }
+  
+}
+
+
+
 # Función genérica para graficar boxplots
 graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
   ggplot(df, aes_string(x = "year", y = eficiencia, fill = "year")) +
