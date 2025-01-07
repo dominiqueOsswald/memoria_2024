@@ -18,6 +18,7 @@ load("dataR/malmquist.RData")
 load("dataR/determinantes.RData")
 
 
+resultados 
 
 
 # ==============================================
@@ -36,6 +37,10 @@ graficar_correlaciones(resultados_sin_atipicos[["oo"]][["resultados_correlacion"
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
+
+resultados_original <- resultados
+
+resultados[["oo"]][["original"]] <- resultados_sin_atipicos[["oo"]][["iteracion_1_vrs"]]
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 grafica_eficiencias(resultados)

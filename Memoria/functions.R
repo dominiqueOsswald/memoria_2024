@@ -32,6 +32,26 @@ crear_dataframe <- function(resultados, tipo, periodo) {
   return(df)
 }
 
+# Función para crear dataframes por período
+crear_dataframe_2 <- function(resultados, tipo, periodo) {
+  # Seleccionar rango de años según el período
+  rango <- switch(
+    periodo,
+    "todos" = 2014:2023,
+    "pre"   = 2014:2019,
+    "post"  = 2020:2023,
+    stop("Período no válido. Usa 'todos', 'pre' o 'post'.")
+  )
+  
+  # Combinar datos de los años especificados
+  df <- do.call(rbind, lapply(rango, function(year) {
+    data <- resultados[[as.character(year)]][["data"]]
+    data$year <- as.factor(year)  # Añade columna del año como factor
+    return(data)
+  }))
+  return(df)
+}
+
 
 
 # Función para generar resultados
@@ -147,9 +167,6 @@ calcular_corte <- function(datos, vector_outliers) {
   lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
 }
 
-resultados_corte <- function(resultados, tipo) {
-  resultados_iteracion(calcular_corte(datos, resultados[[paste0("vector_outliers_", tipo, "_vrs")]]), tipo)
-}
 # ===================================================
 # MALMQUIST
 # ===================================================
