@@ -12,6 +12,70 @@ library(caret)
 library(deaR)
 
 
+
+
+filtrar_y_analizar <- function(datos, resultados) {
+  # Aplicar el filtro a todos los años
+  filtrar_datos <- function(datos, vector_outliers) {
+    datos_filtrados <- lapply(names(datos), function(anio) {
+      datos[[anio]] %>% 
+        filter(!(IdEstablecimiento %in% vector_outliers))
+    })
+    names(datos_filtrados) <- names(datos)
+    return(datos_filtrados)
+  }
+  
+  # Filtrar datos
+  datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
+  datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
+  
+  # Realizar iteraciones de análisis DEA
+  realizar_iteracion <- function(datos_filtrados, orientacion) {
+    sapply(datos_filtrados, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
+  }
+  
+  iteracion_1_io <- realizar_iteracion(datos_filtrados_vrs_io, "io")
+  iteracion_1_oo <- realizar_iteracion(datos_filtrados_vrs_io, "oo")
+  
+  iteracion_2_io <- realizar_iteracion(datos_filtrados_crs_oo, "io")
+  iteracion_2_oo <- realizar_iteracion(datos_filtrados_crs_oo, "oo")
+  
+  iteracion_3_io <- realizar_iteracion(datos_filtrados_vrs_oo, "io")
+  iteracion_3_oo <- realizar_iteracion(datos_filtrados_vrs_oo, "oo")
+  
+  iteracion_4_io <- realizar_iteracion(datos_filtrados_crs_io, "io")
+  iteracion_4_oo <- realizar_iteracion(datos_filtrados_crs_io, "oo")
+  
+  # Crear listas de resultados
+  resultados_sin_atipicos_vrs <- list(
+    io = list(original = datos_filtrados_vrs_io,
+              iteracion_io = iteracion_1_io,
+              iteracion_oo = iteracion_1_oo),
+    oo = list(original = datos_filtrados_vrs_oo,
+              iteracion_io = iteracion_3_io,
+              iteracion_oo = iteracion_3_oo)
+  )
+  
+  resultados_sin_atipicos_crs <- list(
+    io = list(original = datos_filtrados_crs_io,
+              iteracion_io = iteracion_2_io,
+              iteracion_oo = iteracion_2_oo),
+    oo = list(original = datos_filtrados_crs_oo,
+              iteracion_io = iteracion_4_io,
+              iteracion_oo = iteracion_4_oo)
+  )
+  
+  # Retornar resultados
+  return(list(vrs = resultados_sin_atipicos_vrs, crs = resultados_sin_atipicos_crs))
+}
+
+# Ejemplo de uso:
+# resultados_finales <- filtrar_y_analizar(datos, resultados, "vector_outliers_vrs", "vector_outliers_crs", analisis_dea_general)
+
+
+
 # Función para crear dataframes por período
 crear_dataframe <- function(resultados, tipo, periodo) {
   # Seleccionar rango de años según el período

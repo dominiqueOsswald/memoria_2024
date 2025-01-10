@@ -15,6 +15,23 @@ chile <- world[world$name == "Chile", ]
 comunas_sf <- chilemapas::mapa_comunas
 
 
+grafica_atipicos <- function(resultados){
+  
+  grafica_eficiencias_2(resultados[["vrs"]][["io"]][["iteracion_io"]],"Eliminacion atipicos VRS - IO - ")
+  grafica_eficiencias_2(resultados[["vrs"]][["io"]][["iteracion_oo"]],"Eliminacion atipicos VRS - IO - ")  # MUCHOS ATIPICOS
+  
+  grafica_eficiencias_2(resultados[["vrs"]][["oo"]][["iteracion_io"]],"Eliminacion atipicos VRS - OO - ")
+  grafica_eficiencias_2(resultados[["vrs"]][["oo"]][["iteracion_oo"]], "Eliminacion atipicos VRS - OO - ") 
+  
+  grafica_eficiencias_2(resultados[["crs"]][["io"]][["iteracion_io"]],"Eliminacion atipicos CRS - IO - ")
+  grafica_eficiencias_2(resultados[["crs"]][["io"]][["iteracion_oo"]],"Eliminacion atipicos CRS - IO - ") 
+  
+  grafica_eficiencias_2(resultados[["crs"]][["oo"]][["iteracion_io"]], "Eliminacion atipicos CRS - OO - ")
+  grafica_eficiencias_2(resultados[["crs"]][["oo"]][["iteracion_oo"]], "Eliminacion atipicos CRS - OO - ") 
+  
+}
+
+
 grafica_eficiencias <- function(resultados) {
   # Parámetros para iterar
   tipos <- c("io", "oo")
@@ -51,7 +68,7 @@ grafica_eficiencias <- function(resultados) {
 }
 
 
-grafica_eficiencias_2 <- function(resultados) {
+grafica_eficiencias_2 <- function(resultados, titulo) {
   # Parámetros para iterar
   tipos <- c("io", "oo")
   periodos <- list(
@@ -70,7 +87,7 @@ grafica_eficiencias_2 <- function(resultados) {
       print(graficar_boxplots(
         df,
         "vrs",
-        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
+        paste(titulo,"Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
         paste("Período", periodos[[periodo]])
       ))
       
@@ -78,7 +95,7 @@ grafica_eficiencias_2 <- function(resultados) {
       print(graficar_boxplots(
         df,
         "crs",
-        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
+        paste(titulo,"Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
         paste("Período", periodos[[periodo]])
       ))
     }

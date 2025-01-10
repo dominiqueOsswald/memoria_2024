@@ -26,109 +26,32 @@ datos <- lapply(datos, function(data) data[data$IdEstablecimiento %in% dmus_comu
 # ==============================================
 
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
-
-resultados <- list(
-  io = resultados_iteracion(datos, "io"),
-  oo = resultados_iteracion(datos, "oo")
-)
-
-
-
-#  SENSIBILIDAD - ELIMINACIÓN DE DATOS ATÍPICOS
-
-#resultados_sin_atipicos <- list(
-#  io = resultados_corte(resultados$io, "io"),
-#  oo = resultados_corte(resultados$oo, "oo")
-#)
-
-
-# Aplicar el filtro a todos los años
-datos_filtrados_vrs_io <- lapply(names(datos), function(anio) {
-  datos[[anio]] %>% 
-    filter(!(IdEstablecimiento %in% resultados[["io"]][["vector_outliers_vrs"]]))
-})
-
-datos_filtrados_crs_io <- lapply(names(datos), function(anio) {
-  datos[[anio]] %>% 
-    filter(!(IdEstablecimiento %in% resultados[["io"]][["vector_outliers_crs"]]))
-})
-
-datos_filtrados_vrs_oo <- lapply(names(datos), function(anio) {
-  datos[[anio]] %>% 
-    filter(!(IdEstablecimiento %in% resultados[["oo"]][["vector_outliers_vrs"]]))
-})
-
-datos_filtrados_crs_oo <- lapply(names(datos), function(anio) {
-  datos[[anio]] %>% 
-    filter(!(IdEstablecimiento %in% resultados[["oo"]][["vector_outliers_crs"]]))
-})
-
-
-
-
-# Mantener los nombres originales
-names(datos_filtrados_vrs_oo) <- names(datos)
-names(datos_filtrados_crs_oo) <- names(datos)
-names(datos_filtrados_vrs_io) <- names(datos)
-names(datos_filtrados_crs_io) <- names(datos)
-
-anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
-iteracion_1_io_vrs <-  sapply(datos_filtrados_vrs_io, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_1_io_crs <-  sapply(datos_filtrados_vrs_io, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_1_oo_vrs <-  sapply(datos_filtrados_vrs_io, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-iteracion_1_oo_crs <-  sapply(datos_filtrados_vrs_io, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-
-
-iteracion_2_io_vrs <-  sapply(datos_filtrados_crs_oo, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_2_io_crs <-  sapply(datos_filtrados_crs_oo, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_2_oo_vrs <-  sapply(datos_filtrados_crs_oo, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-iteracion_2_oo_crs <-  sapply(datos_filtrados_crs_oo, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-
-
-iteracion_3_io_vrs <-  sapply(datos_filtrados_vrs_oo, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_3_io_crs <-  sapply(datos_filtrados_vrs_oo, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_3_oo_vrs <-  sapply(datos_filtrados_vrs_oo, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-iteracion_3_oo_crs <-  sapply(datos_filtrados_vrs_oo, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-
-
-iteracion_4_io_vrs <-  sapply(datos_filtrados_crs_io, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_4_io_crs <-  sapply(datos_filtrados_crs_io, function(data) analisis_dea_general(data, "io"), simplify = FALSE)
-iteracion_4_oo_vrs <-  sapply(datos_filtrados_crs_io, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-iteracion_4_oo_crs <-  sapply(datos_filtrados_crs_io, function(data) analisis_dea_general(data, "oo"), simplify = FALSE)
-
-
-grafica_eficiencias_2(original_io_vrs)
-grafica_eficiencias_2(original_io_crs)
-grafica_eficiencias_2(original_oo_vrs)
-grafica_eficiencias_2(original_oo_crs)
-
-
-
-
+resultados <- list(io = resultados_iteracion(datos, "io"),oo = resultados_iteracion(datos, "oo"))
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
 graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes")
 graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
-# GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
-#graficar_correlaciones(resultados_sin_atipicos[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos")
-#graficar_correlaciones(resultados_sin_atipicos[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
-
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-
-
 
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
 graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
+
+
+
+#  ELIMINACIÓN DE DATOS ATÍPICOS
+resultados_sin_atipicos <- filtrar_y_analizar(datos, resultados)
+
+
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
 grafica_eficiencias(resultados)
-
+grafica_atipicos(resultados_sin_atipicos)
 
 # ==============================================
 #  MALMQUIST 
