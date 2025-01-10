@@ -14,12 +14,9 @@ anios_pandemia <- c("2020", "2021", "2022", "2023")
 
 load("dataR/datos.RData")
 load("dataR/resultados_eficiencia.RData")
+load("dataR/resultados_eficiencia_atipicos.RData")
 load("dataR/malmquist.RData")
 load("dataR/determinantes.RData")
-
-
-resultados 
-
 
 # ==============================================
 #  CÁLCULO DEA
@@ -29,21 +26,27 @@ resultados
 graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes")
 graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
-# GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
-#graficar_correlaciones(resultados_sin_atipicos[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de datos atípicos")
-#graficar_correlaciones(resultados_sin_atipicos[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de datos atípicos")
-
-
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
-
-resultados_original <- resultados
-
-resultados[["oo"]][["original"]] <- resultados_sin_atipicos[["oo"]][["iteracion_1_vrs"]]
-
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 grafica_eficiencias(resultados)
+
+
+
+# GRAFICA DE SENSIBILIDAD POR ELIMINACION DE DATOS ATIPICOS
+graficar_correlaciones(resultados_sin_atipicos_vrs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+graficar_correlaciones(resultados_sin_atipicos_vrs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+
+graficar_correlaciones(resultados_sin_atipicos_crs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
+graficar_correlaciones(resultados_sin_atipicos_crs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
+
+graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+
+graficar_correlaciones(resultados_sin_atipicos_crs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+graficar_correlaciones(resultados_sin_atipicos_crs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+
 
 
 # ==============================================

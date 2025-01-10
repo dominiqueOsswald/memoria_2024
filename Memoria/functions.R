@@ -11,19 +11,36 @@ library(dplyr)
 library(caret)
 library(deaR)
 
+filtrar_datos <- function(datos, vector_outliers) {
+  datos_filtrados <- lapply(names(datos), function(anio) {
+    datos[[anio]] %>% 
+      filter(!(IdEstablecimiento %in% vector_outliers))
+  })
+  names(datos_filtrados) <- names(datos)
+  return(datos_filtrados)
+}
+
+
+datos_filtrados_atipicos <- function(datos, resultados) {
+  # Filtrar datos
+  datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
+  datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
+  
+  return (list(
+    vrs_io = datos_filtrados_vrs_io,
+    crs_io = datos_filtrados_crs_io,
+    vrs_oo = datos_filtrados_vrs_oo,
+    crs_oo = datos_filtrados_crs_oo
+    
+  ))
+}
 
 
 
 filtrar_y_analizar <- function(datos, resultados) {
   # Aplicar el filtro a todos los años
-  filtrar_datos <- function(datos, vector_outliers) {
-    datos_filtrados <- lapply(names(datos), function(anio) {
-      datos[[anio]] %>% 
-        filter(!(IdEstablecimiento %in% vector_outliers))
-    })
-    names(datos_filtrados) <- names(datos)
-    return(datos_filtrados)
-  }
   
   # Filtrar datos
   datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])

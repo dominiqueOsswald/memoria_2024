@@ -35,24 +35,41 @@ graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlac
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
 graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
 
-
-
 #  ELIMINACIÓN DE DATOS ATÍPICOS
-resultados_sin_atipicos <- filtrar_y_analizar(datos, resultados)
+datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
+
+resultados_sin_atipicos_vrs_io <- list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo"))
+resultados_sin_atipicos_crs_io <- list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo"))
+resultados_sin_atipicos_vrs_oo <- list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo"))
+resultados_sin_atipicos_crs_oo <- list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo"))
+
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+graficar_correlaciones(resultados_sin_atipicos_vrs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+graficar_correlaciones(resultados_sin_atipicos_vrs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+
+graficar_correlaciones(resultados_sin_atipicos_crs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
+graficar_correlaciones(resultados_sin_atipicos_crs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
+
+graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+
+graficar_correlaciones(resultados_sin_atipicos_crs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+graficar_correlaciones(resultados_sin_atipicos_crs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+
+
+
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
 grafica_eficiencias(resultados)
 grafica_atipicos(resultados_sin_atipicos)
-
 # ==============================================
 #  MALMQUIST 
 # ==============================================
