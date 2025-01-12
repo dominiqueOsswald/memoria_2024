@@ -789,8 +789,8 @@ combinar_resultados_in_out <- function(resultados_in, resultados_out) {
     df_vrs_combinado <- df_vrs_input %>%
       full_join(df_vrs_output, by = "IdEstablecimiento") %>%
       mutate(
-        vrs_input = ifelse(is.na(vrs_input), "NO APLICA", vrs_input),
-        vrs_output = ifelse(is.na(vrs_output), "NO APLICA", vrs_output),
+        vrs_input = ifelse(is.na(vrs_input), NA, as.numeric(vrs_input)),
+        vrs_output = ifelse(is.na(vrs_output), NA, as.numeric(vrs_output))
       )
     
     # Seleccionar los datos de las iteraciones de CRS
@@ -802,13 +802,12 @@ combinar_resultados_in_out <- function(resultados_in, resultados_out) {
       select(IdEstablecimiento, crs) %>%
       rename(crs_output = crs)
     
-    
     # Unir los dataframes de CRS por IdEstablecimiento
     df_crs_combinado <- df_crs_input %>%
       full_join(df_crs_output, by = "IdEstablecimiento") %>%
       mutate(
-        crs_input = ifelse(is.na(crs_input), "NO APLICA", crs_input),
-        crs_output = ifelse(is.na(crs_output), "NO APLICA", crs_output)
+        crs_input = ifelse(is.na(crs_input), NA, as.numeric(crs_input)),
+        crs_output = ifelse(is.na(crs_output), NA, as.numeric(crs_output))
       )
     
     # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento

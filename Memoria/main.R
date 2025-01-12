@@ -33,13 +33,6 @@ graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlac
 graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 
-# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
-resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
-
-graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
-
-
 
 #  ELIMINACIÓN DE DATOS ATÍPICOS
 datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
@@ -65,10 +58,61 @@ graficar_correlaciones(resultados_sin_atipicos_crs_oo[["oo"]][["resultados_corre
 
 
 
+# -----------------------------------------------------------------------------------------------------------#
+# CORRELACION ENTRE EFICIENCIAS DE ATIPICOS Y TODOS LOS DATOS
+
+# -----
+# SIN ATIPICOS OUTPUT VRS
+resultados_combinaciones_atipicos_oo_vrs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
+correlacion_todos_metodos_atipicos_oo_vrs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_oo_vrs)
+
+graficar_correlaciones(correlacion_todos_metodos_atipicos_oo_vrs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
+
+# -----
+# SIN ATIPICOS OUTPUT CRS
+resultados_combinaciones_atipicos_oo_crs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_crs_oo$oo[["original"]])
+correlacion_todos_metodos_atipicos_oo_crs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_oo_crs)
+graficar_correlaciones(correlacion_todos_metodos_atipicos_oo_crs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs CRS")
+
+# -----
+# SIN ATIPICOS INPUT CRS
+resultados_combinaciones_atipicos_io_crs <-  combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos_crs_io$io[["original"]])
+correlacion_todos_metodos_atipicos_io_crs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_io_crs)
+graficar_correlaciones(correlacion_todos_metodos_atipicos_io_crs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Inputs CRS")
+
+
+# -----
+# SIN ATIPICOS INPUT VRS
+resultados_combinaciones_atipicos_io_vrs <-  combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos_vrs_io$io[["original"]])
+correlacion_todos_metodos_atipicos_io_vrs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_io_vrs)
+graficar_correlaciones(correlacion_todos_metodos_atipicos_io_vrs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Inputs VRS")
+
+
+
+
+
+# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
+resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
+correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
+
+graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+
+# --------------
+# SIN ATIPICOS
+resultados_combinaciones_sin_atipicos <- combinar_resultados_in_out(resultados_sin_atipicos_vrs_oo$io[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
+correlacion_todos_metodos_sin_atipicos <- calcular_correlaciones_all(resultados_combinaciones_sin_atipicos)
+
+graficar_correlaciones(correlacion_todos_metodos_sin_atipicos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+
+
+
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
 grafica_eficiencias(resultados)
+grafica_eficiencias(resultados_sin_atipicos_vrs_oo)
+
+
 grafica_atipicos(resultados_sin_atipicos)
 # ==============================================
 #  MALMQUIST 
@@ -80,6 +124,14 @@ malmquist_indices <- list(
   out_vrs = malmquist("vrs", "out"),
   out_crs = malmquist("crs", "out")
 )
+
+
+#malmquist_indices <- list(
+#  in_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]], "vrs", "in"),
+#  in_crs = malmquist(datos_sin_atipicos[["vrs_oo"]], "crs", "in"),
+#  out_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]], "vrs", "out"),
+#  out_crs = malmquist(datos_sin_atipicos[["vrs_oo"]], "crs", "out")
+#)
 
 procesar_y_graficar(malmquist_indices)
 
