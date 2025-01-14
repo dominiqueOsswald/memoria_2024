@@ -33,28 +33,30 @@ graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlac
 graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 
-
 #  ELIMINACIÓN DE DATOS ATÍPICOS
 datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
 
-resultados_sin_atipicos_vrs_io <- list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo"))
-resultados_sin_atipicos_crs_io <- list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo"))
-resultados_sin_atipicos_vrs_oo <- list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo"))
-resultados_sin_atipicos_crs_oo <- list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo"))
+resultados_sin_atipicos <- list(
+  vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
+  crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
+  vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
+  crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo"))
+  
+)
+
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-graficar_correlaciones(resultados_sin_atipicos_vrs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
-graficar_correlaciones(resultados_sin_atipicos_vrs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+graficar_correlaciones(resultados_sin_atipicos[["vrs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+graficar_correlaciones(resultados_sin_atipicos[["vrs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
 
-graficar_correlaciones(resultados_sin_atipicos_crs_io[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
-graficar_correlaciones(resultados_sin_atipicos_crs_io[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
+graficar_correlaciones(resultados_sin_atipicos[["crs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
+graficar_correlaciones(resultados_sin_atipicos[["crs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
 
-graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
-graficar_correlaciones(resultados_sin_atipicos_vrs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+graficar_correlaciones(resultados_sin_atipicos[["vrs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+graficar_correlaciones(resultados_sin_atipicos[["vrs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
 
-graficar_correlaciones(resultados_sin_atipicos_crs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
-graficar_correlaciones(resultados_sin_atipicos_crs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
-
+graficar_correlaciones(resultados_sin_atipicos[["crs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+graficar_correlaciones(resultados_sin_atipicos[["crs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
 
 
 
@@ -63,7 +65,17 @@ graficar_correlaciones(resultados_sin_atipicos_crs_oo[["oo"]][["resultados_corre
 
 # -----
 # SIN ATIPICOS OUTPUT VRS
-resultados_combinaciones_atipicos_oo_vrs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
+
+resultados_combinaciones_sin_atipicos <- list(
+  oo_vrs = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["vrs_oo"]]$oo[["original"]]),
+  oo_crs = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["crs_oo"]]$oo[["original"]])
+)
+
+correlaciones_sin_atipicos <- list(
+  oo_vrs = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["oo_vrs"]])
+)
+
+#resultados_combinaciones_atipicos_oo_vrs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
 correlacion_todos_metodos_atipicos_oo_vrs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_oo_vrs)
 
 graficar_correlaciones(correlacion_todos_metodos_atipicos_oo_vrs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
@@ -90,7 +102,6 @@ graficar_correlaciones(correlacion_todos_metodos_atipicos_io_vrs[["correlaciones
 
 
 
-
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
@@ -113,25 +124,26 @@ grafica_eficiencias(resultados)
 grafica_eficiencias(resultados_sin_atipicos_vrs_oo)
 
 
-grafica_atipicos(resultados_sin_atipicos)
 # ==============================================
 #  MALMQUIST 
 # ==============================================
 
+# DATOS COMPLETOS / ORIGINALES
+#malmquist_indices <- list(
+#  in_vrs = malmquist(datos,"vrs", "in"),
+#  in_crs = malmquist(datos,"crs", "in"),
+#  out_vrs = malmquist(datos,"vrs", "out"),
+#  out_crs = malmquist(datos,"crs", "out")
+#)
+
+# DATOS SIN ATIPICOS PARA VRS OO
 malmquist_indices <- list(
-  in_vrs = malmquist("vrs", "in"),
-  in_crs = malmquist("crs", "in"),
-  out_vrs = malmquist("vrs", "out"),
-  out_crs = malmquist("crs", "out")
+  in_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]],"vrs", "in"),
+  in_crs = malmquist(datos_sin_atipicos[["vrs_oo"]],"crs", "in"),
+  out_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]],"vrs", "out"),
+  out_crs = malmquist(datos_sin_atipicos[["vrs_oo"]],"crs", "out")
 )
 
-
-#malmquist_indices <- list(
-#  in_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]], "vrs", "in"),
-#  in_crs = malmquist(datos_sin_atipicos[["vrs_oo"]], "crs", "in"),
-#  out_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]], "vrs", "out"),
-#  out_crs = malmquist(datos_sin_atipicos[["vrs_oo"]], "crs", "out")
-#)
 
 procesar_y_graficar(malmquist_indices)
 
@@ -142,12 +154,15 @@ procesar_y_graficar(malmquist_indices)
 #  CONFIGURACIÓN Y MODELO RANDOM FOREST
 # -------------------------------------------- #
 
+#resultados_usar <- resultados
+resultados_usar <- resultados
+
 # Aplicar Random Forest para cada año
 random_forest <- list(
-  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "vrs")}),
-  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$io, 500, "crs")}),
-  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "vrs")}),
-  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados$oo, 500, "crs")})
+  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "vrs")}),
+  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "crs")}),
+  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "vrs")}),
+  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "crs")})
 )
 
 # Asignar nombres a la lista de modelos

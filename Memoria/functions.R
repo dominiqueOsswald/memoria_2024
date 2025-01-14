@@ -251,7 +251,7 @@ calcular_corte <- function(datos, vector_outliers) {
 # ===================================================
 # MALMQUIST
 # ===================================================
-malmquist <- function(tipo, orientacion) {
+malmquist <- function(datos,tipo, orientacion) {
   calcular_malmquist(datos, tipo, orientacion)
 }
 
@@ -563,14 +563,14 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
   techch_df <- Filter(function(x) !all(is.na(x)), techch_df)
   
   # Ordenar el dataframe por ID y TIME
-  efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
+  #efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
   
   # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
-  efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
+  #efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
   
   malmquist_df <- procesar_index(malmquist_df)
   
-  return(list(eficiencia = efficiency_wide, 
+  return(list(eficiencia = efficiency_df, 
               index = malmquist_df,
               tech = techch_df,
               eff = effch_df))
