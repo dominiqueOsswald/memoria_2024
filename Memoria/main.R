@@ -33,6 +33,15 @@ graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlac
 graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 
+# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
+resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
+correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
+
+graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+
+
+
+
 #  ELIMINACIÓN DE DATOS ATÍPICOS
 datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
 
@@ -63,65 +72,83 @@ graficar_correlaciones(resultados_sin_atipicos[["crs_oo"]][["oo"]][["resultados_
 # -----------------------------------------------------------------------------------------------------------#
 # CORRELACION ENTRE EFICIENCIAS DE ATIPICOS Y TODOS LOS DATOS
 
-# -----
-# SIN ATIPICOS OUTPUT VRS
-
 resultados_combinaciones_sin_atipicos <- list(
-  oo_vrs = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["vrs_oo"]]$oo[["original"]]),
-  oo_crs = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["crs_oo"]]$oo[["original"]])
+  vrs_oo = list(
+    original_vs_sin_atipicos =   list(
+      oo= combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["vrs_oo"]]$oo[["original"]]),
+      io= combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos[["vrs_oo"]]$io[["original"]])
+    ),
+    comparacion = combinar_resultados_in_out(resultados_sin_atipicos[["vrs_oo"]]$io[["original"]], resultados_sin_atipicos[["vrs_oo"]]$oo[["original"]])
+  ),
+  crs_oo = list(
+    original_vs_sin_atipicos =   list(
+    oo = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["crs_oo"]]$oo[["original"]]),
+    io = combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos[["crs_oo"]]$io[["original"]])
+  ),
+  comparacion = combinar_resultados_in_out(resultados_sin_atipicos[["crs_oo"]]$io[["original"]], resultados_sin_atipicos[["crs_oo"]]$oo[["original"]])
+  ),
+  vrs_io = list(
+    original_vs_sin_atipicos =   list(
+      oo = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["vrs_io"]]$oo[["original"]]),
+      io = combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos[["vrs_io"]]$io[["original"]])
+  ),
+  comparacion = combinar_resultados_in_out(resultados_sin_atipicos[["vrs_io"]]$io[["original"]], resultados_sin_atipicos[["vrs_io"]]$oo[["original"]])
+  ),
+  crs_io = list(
+    original_vs_sin_atipicos =   list(
+    oo = combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos[["crs_io"]]$oo[["original"]]),
+    io = combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos[["crs_io"]]$io[["original"]])
+  ),
+  comparacion = combinar_resultados_in_out(resultados_sin_atipicos[["crs_io"]]$io[["original"]], resultados_sin_atipicos[["crs_io"]]$oo[["original"]])
+  )
 )
 
-correlaciones_sin_atipicos <- list(
-  oo_vrs = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["oo_vrs"]])
+
+
+
+correlacion_todos_metodos_atipicos <- list(
+  vrs_oo = list(
+    original_vs_sin_atipicos =   list(
+      oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]]),
+      io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["io"]])
+    ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_oo"]][["comparacion"]])
+  ),
+  
+  crs_oo = list(
+    original_vs_sin_atipicos =   list(
+    oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_oo"]][["original_vs_sin_atipicos"]][["oo"]]),
+    io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_oo"]][["original_vs_sin_atipicos"]][["io"]])
+  ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_oo"]][["comparacion"]])
+  ),
+  
+  vrs_io = list(
+    original_vs_sin_atipicos =   list(
+      oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_io"]][["original_vs_sin_atipicos"]][["oo"]]),
+      io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_io"]][["original_vs_sin_atipicos"]][["io"]])
+    ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_io"]][["comparacion"]])
+  ),
+  crs_io = list(
+    original_vs_sin_atipicos =   list(
+      oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["oo"]]),
+      io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["io"]])
+    ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["comparacion"]])
+  )
 )
 
-#resultados_combinaciones_atipicos_oo_vrs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
-correlacion_todos_metodos_atipicos_oo_vrs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_oo_vrs)
+save(datos_sin_atipicos,resultados_sin_atipicos,resultados_combinaciones_sin_atipicos,correlacion_todos_metodos_atipicos,file="datos_atipicos.RData")
 
-graficar_correlaciones(correlacion_todos_metodos_atipicos_oo_vrs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
-
-# -----
-# SIN ATIPICOS OUTPUT CRS
-resultados_combinaciones_atipicos_oo_crs <-  combinar_resultados_in_out(resultados$oo[["original"]], resultados_sin_atipicos_crs_oo$oo[["original"]])
-correlacion_todos_metodos_atipicos_oo_crs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_oo_crs)
-graficar_correlaciones(correlacion_todos_metodos_atipicos_oo_crs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs CRS")
-
-# -----
-# SIN ATIPICOS INPUT CRS
-resultados_combinaciones_atipicos_io_crs <-  combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos_crs_io$io[["original"]])
-correlacion_todos_metodos_atipicos_io_crs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_io_crs)
-graficar_correlaciones(correlacion_todos_metodos_atipicos_io_crs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Inputs CRS")
-
-
-# -----
-# SIN ATIPICOS INPUT VRS
-resultados_combinaciones_atipicos_io_vrs <-  combinar_resultados_in_out(resultados$io[["original"]], resultados_sin_atipicos_vrs_io$io[["original"]])
-correlacion_todos_metodos_atipicos_io_vrs <- calcular_correlaciones_all(resultados_combinaciones_atipicos_io_vrs)
-graficar_correlaciones(correlacion_todos_metodos_atipicos_io_vrs[["correlaciones_lista"]], "ambos", c("vrs_original", "vrs_sin_atipicos", "crs_original", "crs_sin_atipicos"), "Comparación Original v/s sin atipicos - Orientación Inputs VRS")
-
-
-
-
-# CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
-resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
-correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
-
-graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
-
-# --------------
-# SIN ATIPICOS
-resultados_combinaciones_sin_atipicos <- combinar_resultados_in_out(resultados_sin_atipicos_vrs_oo$io[["original"]], resultados_sin_atipicos_vrs_oo$oo[["original"]])
-correlacion_todos_metodos_sin_atipicos <- calcular_correlaciones_all(resultados_combinaciones_sin_atipicos)
-
-graficar_correlaciones(correlacion_todos_metodos_sin_atipicos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
-
+graficar_correlaciones(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("vrs original", "vrs sin atipicos", "crs original", "crs sin atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
 
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
 grafica_eficiencias(resultados)
-grafica_eficiencias(resultados_sin_atipicos_vrs_oo)
+grafica_eficiencias(resultados_sin_atipicos[["vrs_oo"]])
 
 
 # ==============================================

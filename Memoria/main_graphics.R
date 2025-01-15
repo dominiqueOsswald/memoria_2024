@@ -13,10 +13,11 @@ anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
 anios_pandemia <- c("2020", "2021", "2022", "2023")
 
 load("dataR/datos.RData")
+load("dataR/datos_atipicos.RData")
 load("dataR/resultados_eficiencia.RData")
-load("dataR/resultados_eficiencia_atipicos.RData")
 load("dataR/malmquist.RData")
 load("dataR/determinantes.RData")
+#load("dataR/resultados_eficiencia_atipicos.RData")
 
 # ==============================================
 #  CÁLCULO DEA
