@@ -12,12 +12,12 @@ anios <- 2014:2023
 anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
 anios_pandemia <- c("2020", "2021", "2022", "2023")
 
-datos <- lapply(anios, consolidar_datos_por_anio)
+datos_iniciales <- lapply(anios, consolidar_datos_por_anio)
 names(datos_iniciales) <- as.character(anios)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
-dmus_comunes <- Reduce(intersect, lapply(datos, `[[`, "IdEstablecimiento"))
-datos <- lapply(datos, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
+datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
 
 
