@@ -139,7 +139,6 @@ correlacion_todos_metodos_atipicos <- list(
   )
 )
 
-save(datos_sin_atipicos,resultados_sin_atipicos,resultados_combinaciones_sin_atipicos,correlacion_todos_metodos_atipicos,file="datos_atipicos.RData")
 
 graficar_correlaciones(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("vrs original", "vrs sin atipicos", "crs original", "crs sin atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
 
@@ -156,21 +155,20 @@ grafica_eficiencias(resultados_sin_atipicos[["vrs_oo"]])
 # ==============================================
 
 # DATOS COMPLETOS / ORIGINALES
-#malmquist_indices <- list(
-#  in_vrs = malmquist(datos,"vrs", "in"),
-#  in_crs = malmquist(datos,"crs", "in"),
-#  out_vrs = malmquist(datos,"vrs", "out"),
-#  out_crs = malmquist(datos,"crs", "out")
-#)
+
+# datos_usar <- datos
+datos_usar <- datos_sin_atipicos[["crs_io"]]
 
 # DATOS SIN ATIPICOS PARA VRS OO
 malmquist_indices <- list(
-  in_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]],"vrs", "in"),
-  in_crs = malmquist(datos_sin_atipicos[["vrs_oo"]],"crs", "in"),
-  out_vrs = malmquist(datos_sin_atipicos[["vrs_oo"]],"vrs", "out"),
-  out_crs = malmquist(datos_sin_atipicos[["vrs_oo"]],"crs", "out")
+  in_vrs = malmquist(datos_usar,"vrs", "in"),
+  in_crs = malmquist(datos_usar,"crs", "in"),
+  out_vrs = malmquist(datos_usar,"vrs", "out"),
+  out_crs = malmquist(datos_usar,"crs", "out")
 )
 
+
+save(datos_usar,malmquist_indices, file="malmquist_io_crs.RData")
 
 procesar_y_graficar(malmquist_indices)
 
@@ -182,14 +180,14 @@ procesar_y_graficar(malmquist_indices)
 # -------------------------------------------- #
 
 #resultados_usar <- resultados
-resultados_usar <- resultados
+resultados_usar <- resultados_sin_atipicos[["crs_io"]]
 
 # Aplicar Random Forest para cada año
 random_forest <- list(
-  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "vrs")}),
-  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "crs")}),
-  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "vrs")}),
-  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "crs")})
+  io_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "vrs", "Entradas")}),
+  io_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$io, 500, "crs", "Entradas")}),
+  oo_vrs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "vrs", "Salidas")}),
+  oo_crs = lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "crs", "Salidas")})
 )
 
 # Asignar nombres a la lista de modelos
@@ -210,7 +208,7 @@ resultados_IncNodePurity <- resultados_importancia$IncNodePurity
 resultados_IncMSE <- resultados_importancia$IncMSE
 
 
-
+save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_crs.RData")
 # -------------------------------------------- #
 #  VISUALIZACIÓN DE FRECUENCIAS
 # -------------------------------------------- #
@@ -244,7 +242,7 @@ graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - %IncMSE",
 
 # Procesar OUTPUT
 procesar_y_guardar_resultados(
-  dataframes = crear_dataframes(resultados, "oo"),
+  dataframes = crear_dataframes(resultados_usar, "oo"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS OUTPUT.xlsx",
@@ -253,7 +251,7 @@ procesar_y_guardar_resultados(
 
 # Procesar INPUT
 procesar_y_guardar_resultados(
-  dataframes = crear_dataframes(resultados, "io"),
+  dataframes = crear_dataframes(resultados_usar, "io"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS INPUT.xlsx",
@@ -266,19 +264,19 @@ procesar_y_guardar_resultados(
 #  TODOS - GRAFICA DEA INPUT VRS
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
+  chile_map_plot(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
+  chile_map_plot(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
+  chile_map_plot(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
+  chile_map_plot(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
 })
 
 
