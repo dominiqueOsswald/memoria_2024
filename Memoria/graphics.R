@@ -15,8 +15,10 @@ chile <- world[world$name == "Chile", ]
 comunas_sf <- chilemapas::mapa_comunas
 
 
-
-grafica_eficiencias <- function(resultados) {
+# -------------------------------------- #
+# Grafica de distribución
+# -------------------------------------- #
+eficiencias_grafica <- function(resultados) {
   # Parámetros para iterar
   tipos <- c("io", "oo")
   periodos <- list(
@@ -29,7 +31,7 @@ grafica_eficiencias <- function(resultados) {
   for (tipo in tipos) {
     for (periodo in names(periodos)) {
       # Crear dataframe
-      df <- crear_dataframe(resultados, tipo, periodo)
+      df <- eficiencias_dataframe(resultados, tipo, periodo)
       
       titulo1 <- paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)")
       subtitulo1 <- paste("Período", periodos[[periodo]])
@@ -62,37 +64,10 @@ grafica_eficiencias <- function(resultados) {
   
 }
 
-
-
-
-# Función genérica para graficar boxplots
-graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
-  ggplot(df, aes_string(x = "year", y = eficiencia, fill = "year")) +
-    geom_violin(outlier.colour = "red", outlier.size = 2, alpha = 0.6) + 
-    labs(
-      title = titulo,
-      subtitle = subtitulo,
-      x = "Año",
-      y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
-    ) +
-    theme_minimal() +
-    scale_fill_brewer(palette = "Set3") + 
-    theme(
-      plot.title = element_text(size = 14, face = "bold"),
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.margin = unit(c(2, 2, 2, 2), "cm")
-    ) + 
-    labs(
-      color = "Años",    # Cambia el nombre para colores
-      fill = "Años"      # Cambia el nombre para rellenos
-    )
-  
-} 
-
-
-
-procesar_y_graficar <- function(malmquist_indices) {
-  graficas <- list()
+# -------------------------------------- #
+# Grafica de densidad de malmquist
+# -------------------------------------- #
+malmquist_graficas <- function(malmquist_indices) {
   for (key in names(malmquist_indices)) {
     index <- malmquist_indices[[key]][["index"]]
     print(paste("Generando gráfico para:", key))
@@ -138,9 +113,9 @@ procesar_y_graficar <- function(malmquist_indices) {
             legend.box = "vertical",                # Orden vertical fijo
             #legend.key.height = unit(1, "cm"),      # Altura fija para las leyendas
             #legend.key.width = unit(5, "cm"),
-            plot.margin = unit(c(3, 3, 3, 3), "cm"),
-            plot.title = element_text(size = 16, face = "bold"),
-            plot.subtitle = element_text(size = 14)) + 
+            plot.margin = unit(c(2, 2, 2, 2), "cm"),
+            plot.title = element_text(size = 14, face = "bold"),
+            plot.subtitle = element_text(size = 12)) + 
       
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
@@ -148,14 +123,14 @@ procesar_y_graficar <- function(malmquist_indices) {
       ) +
       
       # Leyenda para colores
-      scale_color_brewer(
-        palette = "Spectral",                           # Paleta de colores
+      scale_color_manual(
+        values = brewer.pal(11, "RdYlGn")[1:5],                         # Paleta de colores
         labels = c("2014 - 2015", "2015 - 2016", 
                    "2016 - 2017", "2017 - 2018", 
                    "2018 - 2019")    # Etiquetas personalizadas
       ) +
-      scale_fill_brewer(
-        palette = "Spectral",                           # Usar la misma paleta para rellenos
+      scale_fill_manual(
+        values = brewer.pal(11, "RdYlGn")[1:5],                             # Usar la misma paleta para rellenos
         labels = c("2014 - 2015", "2015 - 2016", 
                    "2016 - 2017", "2017 - 2018", 
                    "2018 - 2019")
@@ -168,6 +143,8 @@ procesar_y_graficar <- function(malmquist_indices) {
     
     
     print(grafico_pre_pandemia)
+    ggsave(paste0(titulo_pre,"_",subtitulo_pre,".jpg"), plot = grafico_pre_pandemia, width = 10, height = 8, dpi = 300)
+
     
     
     # Seleccionar columnas excepto la primera
@@ -193,33 +170,30 @@ procesar_y_graficar <- function(malmquist_indices) {
       ylab("Densidad") +
       theme_minimal() +
       ylim(0, 6) + 
-      theme(legend.position = "right",
-            legend.box = "vertical",                # Orden vertical fijo
-            #legend.key.height = unit(1, "cm"),      # Altura fija para las leyendas
-            #legend.key.width = unit(5, "cm"),
-            plot.margin = unit(c(3, 3, 3, 3), "cm"),
-            plot.title = element_text(size = 16, face = "bold"),
-            plot.subtitle = element_text(size = 14)) + 
-      
+      theme(
+        legend.position = "right",
+        legend.box = "vertical",                # Orden vertical fijo
+        plot.margin = unit(c(2, 2, 2, 2), "cm"),
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12)
+      ) +
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
         limits = rango_x  # Limitar los valores al rango simétrico
       ) +
-      
       # Leyenda para colores
-      scale_color_brewer(
-        palette = "Spectral",                           # Paleta de colores
+      scale_color_manual(
+        values = brewer.pal(11, "RdYlGn")[7:11],  # Asignar colores personalizados
         labels = c("2019 - 2020", 
                    "2020 - 2021", 
-                   "2021 - 2022", "2022 - 2023")    # Etiquetas personalizadas
+                   "2021 - 2022", "2022 - 2023")  # Etiquetas personalizadas
       ) +
-      scale_fill_brewer(
-        palette = "Spectral",                           # Usar la misma paleta para rellenos
+      scale_fill_manual(
+        values = brewer.pal(11, "RdYlGn")[7:11],  # Usar los mismos colores personalizados para rellenos
         labels = c("2019 - 2020", 
                    "2020 - 2021",
                    "2021 - 2022", "2022 - 2023")
       ) +
-      
       labs(
         color = "Años",    # Cambia el nombre para colores
         fill = "Años"      # Cambia el nombre para rellenos
@@ -227,12 +201,8 @@ procesar_y_graficar <- function(malmquist_indices) {
     
     
     print(grafico_pandemia)
-    
-    
-    
-    
-    
-    
+    ggsave(paste0(titulo_post,"_",subtitulo_post,".jpg"), plot = grafico_pandemia, width = 10, height = 8, dpi = 300)
+
     
     # Seleccionar columnas excepto la primera
     columnas_2 <- colnames(index)[11:12]
@@ -255,9 +225,9 @@ procesar_y_graficar <- function(malmquist_indices) {
       theme_minimal() +
       theme(
         legend.position = "right",
-        plot.margin = unit(c(3, 3, 3, 3), "cm"),
-        plot.title = element_text(size = 16, face = "bold"),
-        plot.subtitle = element_text(size = 14)# Márgenes
+        plot.margin = unit(c(2, 2, 2, 2), "cm"),
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12)# Márgenes
       ) +
       scale_x_continuous(
         breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
@@ -265,12 +235,13 @@ procesar_y_graficar <- function(malmquist_indices) {
       ) +
       # Leyenda para colores
       scale_color_manual(
-        values = c("red", "blue"),                    # Colores personalizados
+        #values = brewer.pal(11, "RdYlGn")[7:11]
+        values = c( brewer.pal(11, "RdYlGn")[1],  brewer.pal(11, "RdYlGn")[11]),                    # Colores personalizados
         labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
       ) +
       # Leyenda para rellenos
       scale_fill_manual(
-        values = c("pink", "lightblue"),              # Colores de relleno
+        values = c( brewer.pal(11, "RdYlGn")[1],  brewer.pal(11, "RdYlGn")[11]),              # Colores de relleno
         labels = c("Pandemia", "Pre pandemia")       # Etiquetas personalizadas
       ) +
       # Cambiar nombres de las leyendas
@@ -281,46 +252,42 @@ procesar_y_graficar <- function(malmquist_indices) {
     
 
     print(grafico_tasas)
+    ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafico_tasas, width = 10, height = 8, dpi = 300)
     
-    graficas[[key]] <- list(
-      "Pre-Pandemia" = grafico_pre_pandemia,
-      "Pandemia" =  grafico_pandemia,
-      "Tasas" = grafico_tasas
-    )
   }
   
-  ggsave(paste0(titulo_pre,"_",subtitulo_pre,".jpg"), plot = grafica1, width = 8, height = 6, dpi = 300)
-  ggsave(paste0(titulo_post,"_",subtitulo_post,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
-  ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
-  
-  
-  return (graficas)
 }
 
-
-# Función para graficar el top 10 de frecuencias
-graficar_top_10 <- function(data, titulo, subtitulo) {
-  head(data)
+# -------------------------------------- #
+# Función para graficar el top 10 de frecuencias de determinantes
+# -------------------------------------- #
+determinantes_grafica <- function(data, titulo, subtitulo) {
+  #head(data)
+  
   # Seleccionar el top 10 según la frecuencia
   top_10 <- data[order(-data$Frecuencia), ][1:10, ]
-  
+  subtitulo_1 <- paste0(subtitulo, " Entre años 2014 y 2023")
   # Crear el gráfico
   grafico <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia), y = Frecuencia, fill = Frecuencia)) +
-    geom_bar(stat = "identity") +
+    #geom_bar(stat = "identity") +
+    geom_bar(
+      stat = "identity",
+      fill = scales::alpha(RColorBrewer::brewer.pal(11, "RdYlGn")[11], 0.5), # Relleno con opacidad
+      colour = RColorBrewer::brewer.pal(11, "RdYlGn")[10],  # Contorno con color original
+      size = 0.8  # Grosor del contorno
+    ) +
     coord_flip() +  # Para que sea horizontal
     theme_minimal() +
-    ggtitle(titulo,  subtitle = paste0(subtitulo, " Entre años 2014 y 2023")) +
+    ggtitle(titulo,  subtitle = subtitulo_1) +
     labs(
       x = "Variables",
       y = "Frecuencia"
     ) +
     scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 1)) +
-    scale_fill_gradientn(
-      colors = brewer.pal(11, "Spectral"), # Usar la paleta "Spectral" con 11 colores
-      limits = c(0, 10) 
-      ) +
+    
     theme(
       plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12),
       axis.text.x = element_text(angle = 45, hjust = 1),
       plot.margin = unit(c(2, 2, 2, 2), "cm"),
       legend.position = "none"
@@ -329,26 +296,30 @@ graficar_top_10 <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico)
+  ggsave(paste0(titulo,"_",subtitulo_1,".jpg"), plot = grafico, width = 10, height = 8, dpi = 300)
   
-  
+  subtitulo_2 <- paste0(subtitulo, " Periodo pre pandemia (2014 - 2019)")
   # Crear el gráfico
   grafico_pre <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia_Pre_Pandemia), y = Frecuencia_Pre_Pandemia,  fill = Frecuencia_Pre_Pandemia)) +
-    geom_bar(stat = "identity") +
+    #geom_bar(stat = "identity") +
+    geom_bar(
+      stat = "identity",
+      fill = scales::alpha(RColorBrewer::brewer.pal(11, "RdYlGn")[4], 0.5), # Relleno con opacidad
+      colour = RColorBrewer::brewer.pal(11, "RdYlGn")[4],  # Contorno con color original
+      size = 0.8  # Grosor del contorno
+    ) +
     coord_flip() +  # Para que sea horizontal
     theme_minimal() +
-    ggtitle(titulo,  subtitle = paste0(subtitulo, " Periodo pre pandemia (2014 - 2019)")) +
+    ggtitle(titulo,  subtitle = subtitulo_2) +
     labs(
       #title = paste0(titulo, " Pre Pandemia"),
       x = "Variables",
       y = "Frecuencia"
     ) +
     scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 1)) +
-    scale_fill_gradientn(
-      colors = brewer.pal(11, "Spectral"), # Usar la paleta "Spectral" con 11 colores
-      limits = c(0, 10) 
-      ) +
     theme(
       plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12),
       axis.text.x = element_text(angle = 45, hjust = 1),
       plot.margin = unit(c(2, 2, 2, 2), "cm"),
       legend.position = "none"
@@ -356,26 +327,31 @@ graficar_top_10 <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico_pre)
+  ggsave(paste0(titulo,"_",subtitulo_2,".jpg"), plot = grafico_pre, width = 10, height = 8, dpi = 300)
   
   
+  subtitulo_3 <- paste0(subtitulo, " Periodo pandemia (2020 - 2023)")
   # Crear el gráfico
   grafico_pandemia <- ggplot(top_10, aes(x = reorder(Variable, -Frecuencia_Pandemia), y = Frecuencia_Pandemia,  fill = Frecuencia_Pandemia)) +
-    geom_bar(stat = "identity") +
+    #geom_bar(stat = "identity") +
+    geom_bar(
+      stat = "identity",
+      fill = scales::alpha(RColorBrewer::brewer.pal(11, "RdYlGn")[7], 0.5), # Relleno con opacidad
+      colour = RColorBrewer::brewer.pal(11, "RdYlGn")[7],  # Contorno con color original
+      size = 0.8  # Grosor del contorno
+    ) +
     coord_flip() +  # Para que sea horizontal
     theme_minimal() +
-    ggtitle(titulo,  subtitle = paste0(subtitulo, " Periodo pandemia (2020 - 2023)")) +
+    ggtitle(titulo,  subtitle = subtitulo_3) +
     labs(
       #title = paste0(titulo, " Pandemia") ,
       x = "Variables",
       y = "Frecuencia"
     ) +
     scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, by = 1)) +
-    scale_fill_gradientn(
-      colors = brewer.pal(11, "Spectral"), # Usar la paleta "Spectral" con 11 colores
-      limits = c(0, 10) 
-      ) +
     theme(
       plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12),
       axis.text.x = element_text(angle = 45, hjust = 1),
       plot.margin = unit(c(2, 2, 2, 2), "cm"),
       legend.position = "none"
@@ -383,18 +359,20 @@ graficar_top_10 <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico_pandemia)
+  ggsave(paste0(titulo,"_",subtitulo_3,".jpg"), plot = grafico_pandemia, width = 10, height = 8, dpi = 300)
+  
 }
 
 
-
 # -------------------------------------- #
-# Graficar Chile según el criterio de orientacion y variacion
+# Graficar Chile con sus eficiencias según el criterio de orientacion y variacion
 # -------------------------------------- #
-chile_map_plot <- function(hospitales_df, anio, tipo, titulo, subtitulo) {
-
-    ggplot(data = chile) +
+eficiencias_chile_grafica <- function(hospitales_df, anio, tipo, titulo, subtitulo) {
+    subtitulo_paste <-  paste0(subtitulo, " Año ",anio)
+    
+    grafico <- ggplot(data = chile) +
       geom_sf() +
-      ggtitle(titulo,  subtitle = paste0(subtitulo, " Año ",anio)) +
+      ggtitle(titulo,  subtitle = subtitulo_paste) +
       geom_point(
         data = hospitales_df,
         aes_string(
@@ -405,7 +383,10 @@ chile_map_plot <- function(hospitales_df, anio, tipo, titulo, subtitulo) {
         ),
         alpha = 0.7
       ) +
-      scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +
+      scale_color_gradientn(
+        colors = RColorBrewer::brewer.pal(11, "RdYlGn"), # Asignar colores del 1 al 9 de la paleta "Spectral"
+        limits = c(0, 1)  # Escala de valores
+      ) +
       labs(
         x = "Longitud", y= "Latitud",
         #title = paste(tipo, "- Año", anio),
@@ -415,20 +396,24 @@ chile_map_plot <- function(hospitales_df, anio, tipo, titulo, subtitulo) {
       theme_minimal()  +
       theme(legend.position = "right",
                              legend.box = "vertical",                
-                             plot.margin = unit(c(2, 2, 2, 2), "cm"))
+                             plot.margin = unit(c(2, 2, 2, 2), "cm"),
+            plot.title = element_text(size = 14, face = "bold"),
+            plot.subtitle = element_text(size = 12),)
+  
+    print(grafico)
+  
+  ggsave(paste0(titulo,"_",subtitulo_paste,".jpg"), plot = grafico, width = 10, height = 8, dpi = 300)
+  
 
 }
 
 
 # -------------------------------------- #
-# Colorear regiones según porcentaje
+# Correlaciones de eficiencia técnica
 # -------------------------------------- #
-graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "") {
+correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "") {
   # Definir colores personalizados
-  #colores_personalizados <- colorRampPalette(c("red", "yellow", "green"))(200)  # De rojo (mínimo) a verde (máximo)
-  #colores_personalizados <- colorRampPalette(brewer.pal(11, "YIGn"))(200)
-  #colores_personalizados <- colorRampPalette(brewer.pal(9, "YlGn"))(200)
-  colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlBu"))(200)
+  colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)
   
   # Determinar la cantidad de gráficos
   num_graficos <- length(correlaciones_lista)
@@ -437,13 +422,20 @@ graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas =
   
   # Crear lista para almacenar los gráficos
   lista_graficos <- list()
-  
+  i <- 1
   # Iterar sobre cada página
   for (pagina in 1:paginas) {
     # Definir el rango de años a mostrar en la página actual
     inicio <- (pagina - 1) * graficos_por_pagina + 1
     fin <- min(pagina * graficos_por_pagina, num_graficos)
     años_actuales <- names(correlaciones_lista)[inicio:fin]
+    
+    # Definir el nombre del archivo para guardar la página como imagen
+    archivo_salida <- paste0("correlaciones_pagina_", pagina, ".png")
+    
+    # Abrir un dispositivo gráfico para guardar como imagen
+    png(archivo_salida, width = 3500, height = 3000, res = 300)
+    
     
     # Ajustar la ventana gráfica para 2x2
     par(mfrow = c(2, 2), mar = c(2, 2, 2, 2), oma = c(4, 4, 4, 4))
@@ -502,6 +494,7 @@ graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas =
     # Ajustar márgenes exteriores para centrar contenido
     par(oma = c(5, 4, 5, 4))  # Márgenes: abajo, izquierda, arriba, derecha
     
+    dev.off()
     
     # Capturar gráfico como objeto si es necesario
     grafico <- recordPlot()
@@ -517,4 +510,27 @@ graficar_correlaciones <- function(correlaciones_lista, orientacion, etiquetas =
 
 
 
+# Función genérica para graficar boxplots
+graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
+  ggplot(df, aes_string(x = "year", y = eficiencia, fill = "year")) +
+    geom_violin(outlier.colour = "red", outlier.size = 2, alpha = 0.6) + 
+    labs(
+      title = titulo,
+      subtitle = subtitulo,
+      x = "Año",
+      y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
+    ) +
+    theme_minimal() +
+    scale_fill_brewer(palette = "Set3") + 
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.margin = unit(c(2, 2, 2, 2), "cm")
+    ) + 
+    labs(
+      color = "Años",    # Cambia el nombre para colores
+      fill = "Años"      # Cambia el nombre para rellenos
+    )
+  
+} 
 

@@ -29,15 +29,15 @@ datos <- lapply(datos, function(data) data[data$IdEstablecimiento %in% dmus_comu
 resultados <- list(io = resultados_iteracion(datos, "io"),oo = resultados_iteracion(datos, "oo"))
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-graficar_correlaciones(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes")
-graficar_correlaciones(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"),  "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
-graficar_correlaciones(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
 
 
 
@@ -55,17 +55,17 @@ resultados_sin_atipicos <- list(
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-graficar_correlaciones(resultados_sin_atipicos[["vrs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
-graficar_correlaciones(resultados_sin_atipicos[["vrs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Input")
 
-graficar_correlaciones(resultados_sin_atipicos[["crs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
-graficar_correlaciones(resultados_sin_atipicos[["crs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_io"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
 
-graficar_correlaciones(resultados_sin_atipicos[["vrs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
-graficar_correlaciones(resultados_sin_atipicos[["vrs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
 
-graficar_correlaciones(resultados_sin_atipicos[["crs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
-graficar_correlaciones(resultados_sin_atipicos[["crs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("vrs_i1", "vrs_i2", "vrs_i3", "crs_i1", "crs_i2",  "crs_i3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
+correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
 
 
 
@@ -144,18 +144,18 @@ resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-graficar_correlaciones(resultados_usar[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
-graficar_correlaciones(resultados_usar[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados_usar[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados_usar[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 
-graficar_correlaciones(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
+correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos"), "Comparación Original vs sin atipicos - Orientación Outputs VRS")
 
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
-grafica_eficiencias(resultados)
-grafica_eficiencias(resultados_usar)
+eficiencias_grafica(resultados)
+eficiencias_grafica(resultados_usar)
 
 
 # ==============================================
@@ -176,9 +176,9 @@ malmquist_indices <- list(
 )
 
 
-save(datos_usar,malmquist_indices, file="malmquist_io_vrs.RData")
+#save(datos_usar,malmquist_indices, file="malmquist_io_vrs.RData")
 
-procesar_y_graficar(malmquist_indices)
+malmquist_graficas(malmquist_indices)
 
 # ==============================================
 #  DETERMINANTES
@@ -207,30 +207,30 @@ names(random_forest$oo_crs) <- paste0(anios)
 # -------------------------------------------- #
 
 # Llamar a la función
-resultados_importancia <- procesar_importancia(random_forest, anios_pre_pandemia, anios_pandemia)
+resultados_importancia <- determinantes_importancia(random_forest, anios_pre_pandemia, anios_pandemia)
 
 # Acceder a los resultados
 resultados_IncNodePurity <- resultados_importancia$IncNodePurity
 resultados_IncMSE <- resultados_importancia$IncMSE
 
 
-save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_vrs.RData")
+#save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_vrs.RData")
 # -------------------------------------------- #
 #  VISUALIZACIÓN DE FRECUENCIAS
 # -------------------------------------------- #
 
 
 # Graficar para IncNodePurity
-graficar_top_10(resultados_IncNodePurity[["io_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - VRS -")
-graficar_top_10(resultados_IncNodePurity[["io_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - CRS -")
-graficar_top_10(resultados_IncNodePurity[["oo_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - VRS -")
-graficar_top_10(resultados_IncNodePurity[["oo_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - CRS -")
+determinantes_grafica(resultados_IncNodePurity[["io_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - VRS -")
+determinantes_grafica(resultados_IncNodePurity[["io_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a entradas - CRS -")
+determinantes_grafica(resultados_IncNodePurity[["oo_vrs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - VRS -")
+determinantes_grafica(resultados_IncNodePurity[["oo_crs"]], "Top 10 Determinantes - IncNodePurity", "Modelo orientado a salidas - CRS -")
 
 # Graficar para %IncMSE
-graficar_top_10(resultados_IncMSE[["io_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - VRS -")
-graficar_top_10(resultados_IncMSE[["io_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a entradas - CRS -")
-graficar_top_10(resultados_IncMSE[["oo_vrs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - VRS -")
-graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - %IncMSE", "Modelo orientado a salidas - CRS -")
+determinantes_grafica(resultados_IncMSE[["io_vrs"]], "Top 10 Determinantes - IncMSE", "Modelo orientado a entradas - VRS -")
+determinantes_grafica(resultados_IncMSE[["io_crs"]], "Top 10 Determinantes - IncMSE", "Modelo orientado a entradas - CRS -")
+determinantes_grafica(resultados_IncMSE[["oo_vrs"]], "Top 10 Determinantes - IncMSE", "Modelo orientado a salidas - VRS -")
+determinantes_grafica(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - IncMSE", "Modelo orientado a salidas - CRS -")
 
 
 
@@ -247,7 +247,7 @@ graficar_top_10(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - %IncMSE",
 # Generación de excel con valores de eficiencias y determinantes
 
 # Procesar OUTPUT
-procesar_y_guardar_resultados(
+guardar_resultados(
   dataframes = crear_dataframes(resultados_usar, "oo"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
@@ -256,7 +256,7 @@ procesar_y_guardar_resultados(
 )
 
 # Procesar INPUT
-procesar_y_guardar_resultados(
+guardar_resultados(
   dataframes = crear_dataframes(resultados_usar, "io"),
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
@@ -270,19 +270,19 @@ procesar_y_guardar_resultados(
 #  TODOS - GRAFICA DEA INPUT VRS
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
+  eficiencias_chile_grafica(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
+  eficiencias_chile_grafica(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - CRS -")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
+  eficiencias_chile_grafica(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - VRS -")
 })
 
 lapply(anios, function(anio) {
-  chile_map_plot(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
+  eficiencias_chile_grafica(resultados_usar$oo[["original"]][[as.character(anio)]][["data"]], anio, "crs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a salidas - CRS -")
 })
 
 

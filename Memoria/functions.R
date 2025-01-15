@@ -1,3 +1,7 @@
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+source("auxiliar.R")
+
 library(randomForest)
 library(Benchmarking)
 library(gridExtra)
@@ -11,317 +15,7 @@ library(dplyr)
 library(caret)
 library(deaR)
 
-filtrar_datos <- function(datos, vector_outliers) {
-  datos_filtrados <- lapply(names(datos), function(anio) {
-    datos[[anio]] %>% 
-      filter(!(IdEstablecimiento %in% vector_outliers))
-  })
-  names(datos_filtrados) <- names(datos)
-  return(datos_filtrados)
-}
 
-
-procesar_index <- function(index) {
-  # Asegurarse de que las columnas sean numéricas
-  index[, -1] <- lapply(index[, -1], as.numeric)
-  
-  # Renombrar las columnas de acuerdo a los años consecutivos
-  columnas <- colnames(index)[-1]
-  nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
-  colnames(index)[-1] <- c("2014_2015", nuevos_nombres)
-  
-  # Calcular la tasa promedio pre-pandemia
-  index$Tasa_Promedio_Pre_Pandemia <- rowMeans(index[, 2:6], na.rm = TRUE)
-  index$Tasa_Promedio_Pandemia <- rowMeans(index[, 7:10], na.rm = TRUE)
-  
-  return(index)
-}
-
-
-datos_filtrados_atipicos <- function(datos, resultados) {
-  # Filtrar datos
-  datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])
-  datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
-  datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
-  datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
-  
-  return (list(
-    vrs_io = datos_filtrados_vrs_io,
-    crs_io = datos_filtrados_crs_io,
-    vrs_oo = datos_filtrados_vrs_oo,
-    crs_oo = datos_filtrados_crs_oo
-    
-  ))
-}
-
-
-
-filtrar_y_analizar <- function(datos, resultados) {
-  # Aplicar el filtro a todos los años
-  
-  # Filtrar datos
-  datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])
-  datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
-  datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
-  datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
-  
-  # Realizar iteraciones de análisis DEA
-  realizar_iteracion <- function(datos_filtrados, orientacion) {
-    sapply(datos_filtrados, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
-  }
-  
-  iteracion_1_io <- realizar_iteracion(datos_filtrados_vrs_io, "io")
-  iteracion_1_oo <- realizar_iteracion(datos_filtrados_vrs_io, "oo")
-  
-  iteracion_2_io <- realizar_iteracion(datos_filtrados_crs_oo, "io")
-  iteracion_2_oo <- realizar_iteracion(datos_filtrados_crs_oo, "oo")
-  
-  iteracion_3_io <- realizar_iteracion(datos_filtrados_vrs_oo, "io")
-  iteracion_3_oo <- realizar_iteracion(datos_filtrados_vrs_oo, "oo")
-  
-  iteracion_4_io <- realizar_iteracion(datos_filtrados_crs_io, "io")
-  iteracion_4_oo <- realizar_iteracion(datos_filtrados_crs_io, "oo")
-  
-  # Crear listas de resultados
-  resultados_sin_atipicos_vrs <- list(
-    io = list(original = datos_filtrados_vrs_io,
-              iteracion_io = iteracion_1_io,
-              iteracion_oo = iteracion_1_oo),
-    oo = list(original = datos_filtrados_vrs_oo,
-              iteracion_io = iteracion_3_io,
-              iteracion_oo = iteracion_3_oo)
-  )
-  
-  resultados_sin_atipicos_crs <- list(
-    io = list(original = datos_filtrados_crs_io,
-              iteracion_io = iteracion_2_io,
-              iteracion_oo = iteracion_2_oo),
-    oo = list(original = datos_filtrados_crs_oo,
-              iteracion_io = iteracion_4_io,
-              iteracion_oo = iteracion_4_oo)
-  )
-  
-  # Retornar resultados
-  return(list(vrs = resultados_sin_atipicos_vrs, crs = resultados_sin_atipicos_crs))
-}
-
-# Ejemplo de uso:
-# resultados_finales <- filtrar_y_analizar(datos, resultados, "vector_outliers_vrs", "vector_outliers_crs", analisis_dea_general)
-
-
-
-# Función para crear dataframes por período
-crear_dataframe <- function(resultados, tipo, periodo) {
-  # Seleccionar rango de años según el período
-  rango <- switch(
-    periodo,
-    "todos" = 2014:2023,
-    "pre"   = 2014:2019,
-    "post"  = 2020:2023,
-    stop("Período no válido. Usa 'todos', 'pre' o 'post'.")
-  )
-  
-  # Combinar datos de los años especificados
-  df <- do.call(rbind, lapply(rango, function(year) {
-    data <- resultados[[tipo]][["original"]][[as.character(year)]][["data"]]
-    data$year <- as.factor(year)  # Añade columna del año como factor
-    return(data)
-  }))
-  return(df)
-}
-
-# Función para crear dataframes por período
-crear_dataframe_2 <- function(resultados, tipo, periodo) {
-  # Seleccionar rango de años según el período
-  rango <- switch(
-    periodo,
-    "todos" = 2014:2023,
-    "pre"   = 2014:2019,
-    "post"  = 2020:2023,
-    stop("Período no válido. Usa 'todos', 'pre' o 'post'.")
-  )
-  
-  # Combinar datos de los años especificados
-  df <- do.call(rbind, lapply(rango, function(year) {
-    data <- resultados[[as.character(year)]][["data"]]
-    data$year <- as.factor(year)  # Añade columna del año como factor
-    return(data)
-  }))
-  return(df)
-}
-
-
-
-# Función para generar resultados
-procesar_y_guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
-  guardar_resultados(
-    dataframes = dataframes,
-    resultados_IncNodePurity = resultados_IncNodePurity,
-    resultados_IncMSE = resultados_IncMSE,
-    archivo_salida = archivo_salida,
-    prefijo = prefijo
-  )
-}
-
-# Crear listas para dataframes
-crear_dataframes <- function(resultados, orientacion) {
-  anios <- 2014:2023
-  dataframes <- lapply(anios, function(anio) resultados[[orientacion]][["original"]][[as.character(anio)]][["data"]])
-  names(dataframes) <- as.character(anios)
-  return(dataframes)
-}
-
-guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
-  # Instalar y cargar el paquete necesario
-  if (!require(openxlsx)) install.packages("openxlsx")
-  library(openxlsx)
-  
-  # Función para reemplazar valores vacíos, NULL o NA por "-"
-  reemplazar_nulos <- function(df) {
-    df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
-    return(df)
-  }
-  
-  # Crear un workbook
-  wb <- createWorkbook()
-  
-  # Guardar resultados VRS y CRS
-  vrs <- guardar_dataframes(dataframes, "vrs")
-  crs <- guardar_dataframes(dataframes, "crs")
-  
-  # Añadir la hoja
-  addWorksheet(wb, "VRS")
-  writeData(wb, "VRS", vrs)
-  
-  addWorksheet(wb, "CRS")
-  writeData(wb, "CRS", crs)
-  
-  ### GUARDAR IMPORTANCIA ###
-  # IncNodePurity
-  addWorksheet(wb, paste0("Determinantes IncNodePurity VRS"))
-  writeData(wb, paste0("Determinantes IncNodePurity VRS"), 
-            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_vrs")]]))
-  
-  addWorksheet(wb, paste0("Determinantes IncNodePurity CRS"))
-  writeData(wb, paste0("Determinantes IncNodePurity CRS"), 
-            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_crs")]]))
-  
-  # %IncMSE
-  addWorksheet(wb, paste0("Determinantes IncMSE VRS"))
-  writeData(wb, paste0("Determinantes IncMSE VRS"), 
-            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_vrs")]]))
-  
-  addWorksheet(wb, paste0("Determinantes IncMSE CRS"))
-  writeData(wb, paste0("Determinantes IncMSE CRS"), 
-            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_crs")]]))
-  
-  # Guardar el archivo
-  saveWorkbook(wb, archivo_salida, overwrite = TRUE)
-  cat("Archivo guardado como:", archivo_salida, "\n")
-}
-
-
-guardar_dataframes <- function(dataframes, columna) {
-  # Extraer el valor especificado (vrs o crs) de cada dataframe por año
-  resultados <- lapply(names(dataframes), function(anio) {
-    df <- dataframes[[anio]]
-    
-    # Verificar si el dataframe contiene las columnas requeridas
-    if (!("IdEstablecimiento" %in% colnames(df)) || !(columna %in% colnames(df))) {
-      warning(paste("El año", anio, "no contiene las columnas necesarias"))
-      return(NULL)  # Retornar NULL si falta alguna columna
-    }
-    
-    # Seleccionar columna especificada junto con IdEstablecimiento
-    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
-    # Renombrar la columna con el año correspondiente
-    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
-    return(df_seleccionado)
-  })
-  
-  # Eliminar entradas nulas
-  resultados <- Filter(Negate(is.null), resultados)
-  
-  # Verificar que existan resultados antes de combinar
-  if (length(resultados) == 0) {
-    warning(paste("No hay datos válidos para la hoja"))
-    return(NULL)  # Salir de la función si no hay resultados válidos
-  }
-  
-  # Unir los resultados por columna (IdEstablecimiento como fila)
-  df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
-  
-  # Añadir columna de promedio
-  df_final$Promedio <- rowMeans(df_final[, -1], na.rm = TRUE)
-  
-  return (df_final)
-}
-
-
-
-# ******************************* #
-# Eliminación de datos atípicos y recalculo DEA
-calcular_corte <- function(datos, vector_outliers) {
-  lapply(datos, function(df) df %>% filter(!(IdEstablecimiento %in% vector_outliers)))
-}
-
-# ===================================================
-# MALMQUIST
-# ===================================================
-malmquist <- function(datos,tipo, orientacion) {
-  calcular_malmquist(datos, tipo, orientacion)
-}
-
-# ===================================================
-# SENSIBILIDAD
-# ===================================================
-aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno, mayor) {
-  mapply(function(data, resultado, anio) {
-    # Mostrar el nombre del año en pantalla
-    print(paste("Aplicando sensibilidad para el año:", anio))
-    
-    # Ejecutar la función principal
-    sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
-  },
-  datos, resultados, names(datos), SIMPLIFY = FALSE) # Pasar los nombres de los datos como argumento
-}
-# ===================================================
-# NORMALIZAR DATA
-# ===================================================
-normalize_min_max <- function(x) {
-  (x - min(x)) / (max(x) - min(x))
-}
-
-normalize_max_min <- function(x) {
-  (max(x) - x) / (max(x) - min(x))
-}
-
-top_eficiencia <- function(datos, tipo, cantidad, best){
-  # Creamos una lista vacía para almacenar los resultados
-  mejores_tipo <- list()
-  
-  # Iteramos sobre cada año en la lista principal
-  for (año in names(datos[["original"]])) {
-    # Accedemos al dataframe de cada año
-    df_año <- datos[["original"]][[año]][["data"]]
-    
-    # Ordenamos el dataframe por la variable 'vrs' de forma descendente
-    if (tipo == "vrs"){
-      df_ordenado <- df_año[order(-df_año$vrs), ]
-    }else{
-      df_ordenado <- df_año[order(-df_año$crs), ]
-    }
-    
-    if (best){mejores <- head(df_ordenado, cantidad)
-    
-    }else{mejores <- tail(df_ordenado, cantidad)}
-    
-    mejores_tipo[[año]] <- mejores
-  }
-  
-  
-  return (mejores_tipo)
-}
 
 # ===================================================
 # CONSOLIDACIÓN DE DATOS
@@ -524,7 +218,7 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
 # ==============================================
 #  CÁLCULO DE INDICE MALMQUIST
 # ==============================================
-calcular_malmquist <- function(datos, tipo, orientacion) {
+malmquist <- function(datos, tipo, orientacion) {
   # Extraer inputs, outputs, ID y TIME
   input_data <- do.call(rbind, lapply(names(datos), function(year) as.matrix(datos[[year]][, 8:10])))
   output_data <- do.call(rbind, lapply(names(datos), function(year) as.matrix(datos[[year]][, 5:7])))
@@ -579,13 +273,7 @@ calcular_malmquist <- function(datos, tipo, orientacion) {
   effch_df <- Filter(function(x) !all(is.na(x)),effch_df)
   techch_df <- Filter(function(x) !all(is.na(x)), techch_df)
   
-  # Ordenar el dataframe por ID y TIME
-  #efficiency_df <- efficiency_df[order(efficiency_df$ID, efficiency_df$TIME), ]
-  
-  # Transformar el dataframe en formato ancho (wide) con 'ID' como fila y 'TIME' como columnas
-  #efficiency_wide <- pivot_wider(efficiency_df, names_from = TIME, values_from = Efficiency)
-  
-  malmquist_df <- procesar_index(malmquist_df)
+  malmquist_df <- malmquist_index(malmquist_df)
   
   return(list(eficiencia = efficiency_df, 
               index = malmquist_df,
@@ -668,73 +356,51 @@ resultados_iteracion <- function(datos, orientacion){
 
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
-      print("INPUT")
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
       iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
       iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
       iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
     
   }else{
-    print("OUTPUT")
-    
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
     iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
-
-    #print(iteracion_1_vrs[[year]][["data"]]$vrs)
-    
-        
-    #print(iteracion_1_vrs[[year]][["data"]]$vrs)
   }
-  print("A")
+
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs)
   resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
   
-  print("C")
-  # Crear una lista vacía para almacenar los valores atípicos por año
+
   lista_outliers_vrs <- list()
-  print("D")
-  # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
   vector_outliers_vrs <- c()
-  print("E")
+
   lista_outliers_crs <- list()
-  # Crear un vector vacío para almacenar todos los valores atípicos sin duplicados
-  print("F")
   vector_outliers_crs <- c()
   
-  print("G")
-  # Especificar los años que quieres iterar
-  
 
+  # Especificar los años que quieres iterar
   for (anio in anios) {
-    
+    # ----------------- #
     # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
-    print("J")
-    # Filtrar el dataframe para obtener los IDs de los valores atípicos
+
     ids_outliers_vrs <- original[[anio]][["data"]] %>%
       filter(vrs %in% outliers_vrs) %>%
       select(IdEstablecimiento, vrs)
-    print("K")
-    # Añadir los valores atípicos del año actual a la lista, con el nombre del año
+
     lista_outliers_vrs[[anio]] <- ids_outliers_vrs
-    print("L")
-    # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
-    print("M")
+
+    # ----------------- #
     # Generar y almacenar los valores atípicos de CRS
     outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
-    print("N")
-    # Filtrar el dataframe para obtener los IDs de los valores atípicos
+
     ids_outliers_crs <- original[[anio]][["data"]] %>%
       filter(crs %in% outliers_crs) %>%
       select(IdEstablecimiento, crs)
-    print("O")
-    # Añadir los valores atípicos del año actual a la lista, con el nombre del año
+
     lista_outliers_crs[[anio]] <- ids_outliers_crs
-    print("P")
-    # Añadir los IDs al vector de valores atípicos, asegurando que no se repitan
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
   }
 
@@ -751,40 +417,6 @@ resultados_iteracion <- function(datos, orientacion){
     lista_outliers_crs = lista_outliers_crs,
     vector_outliers_crs = vector_outliers_crs
   )
-}
-
-calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
-  # Calcular las matrices de correlación para cada dataframe en la lista
-  correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
-    df_num <- df %>%
-      select(-IdEstablecimiento) %>%
-      mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
-      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
-    
-    cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
-  })
-  
-  # Nombrar la lista con los años para identificación
-  names(correlaciones_lista) <- names(lista_resultados_combinados_in)
-  
-  # Retornar resultados de correlación entre matrices de distintos años
-  return(list(correlaciones_lista = correlaciones_lista))
-}
-
-calcular_correlaciones <- function(df1, df2, id_col = "ID") {
-  # Encontrar IDs comunes
-  ids_comunes <- intersect(df1[[id_col]], df2[[id_col]])
-  
-  # Filtrar dataframes con los IDs comunes
-  df1_filtrado <- df1[df1[[id_col]] %in% ids_comunes, ]
-  df2_filtrado <- df2[df2[[id_col]] %in% ids_comunes, ]
-  
-  # Calcular correlaciones por año
-  correlaciones <- sapply(names(df1_filtrado)[-1], function(year) {
-    cor(df1_filtrado[[year]], df2_filtrado[[year]], use = "complete.obs")
-  })
-  
-  return(correlaciones)
 }
 
 # ==============================================
@@ -841,136 +473,8 @@ combinar_resultados_in_out <- function(resultados_in, resultados_out) {
 }
 
 # ==============================================
-#  RESUMEN DE EFICIENCIA
-# ==============================================
-resumen_eficiencia <- function(datos) {
-  # Lista para almacenar las posiciones por establecimiento
-  posiciones <- list()
-  # Lista para almacenar los porcentajes por región
-  porcentajes <- list()
-  
-  # Iteramos sobre cada año
-  for (año in names(datos)) {
-    df_año <- datos[[año]]
-    
-    # Guardamos la posición de cada establecimiento
-    posiciones[[año]] <- data.frame(
-      IdEstablecimiento = df_año$IdEstablecimiento,
-      Region = df_año$Region,
-      IDRegion = df_año$region_id,
-      Posicion = seq_len(nrow(df_año)),
-      Año = año
-    )
-    
-    # Calculamos el porcentaje de ocurrencia de cada región
-    porcentaje_region <- as.data.frame(prop.table(table(df_año$Region)) * 100)
-    colnames(porcentaje_region) <- c("Region", "Porcentaje")
-    
-    # Añadimos la columna IDRegion basada en la relación con la región
-    id_region <- unique(df_año[, c("Region", "region_id")])
-    porcentaje_region <- merge(porcentaje_region, id_region, by = "Region")
-    
-    porcentaje_region$Año <- año
-    porcentajes[[año]] <- porcentaje_region
-  }
-  
-  # Unimos todas las posiciones en un solo dataframe
-  posiciones_df <- do.call(rbind, posiciones)
-  
-  # Transformamos posiciones_df para que cada columna sea un año
-  posiciones_wide <- posiciones_df %>%
-    pivot_wider(names_from = Año, values_from = Posicion)
-  
-  # Unimos todos los porcentajes en un solo dataframe
-  porcentajes_df <- do.call(rbind, porcentajes)
-  
-  # Transformamos porcentajes_df para que cada columna sea un año y conservamos IDRegion
-  porcentajes_wide <- porcentajes_df %>%
-    pivot_wider(names_from = Año, values_from = Porcentaje, values_fill = list(Porcentaje = 0))
-  
-  # Retornamos una lista con los resultados
-  list(Posiciones = posiciones_wide, Porcentajes = porcentajes_wide)
-}
-
-
-# ==============================================
-#  SENSIBILIDAD VS ATIPICOS
-# ==============================================
-# Función para procesar datos y calcular correlaciones
-procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs, resultados_in_cut_crs, 
-                           resultados_out_cut_vrs, resultados_out_cut_crs) {
-  
-  # Crear función interna para generar dataframes base
-  generar_dataframe_base <- function(resultados, key) {
-    df <- data.frame(ID = resultados[["original"]][["2014"]][["data"]][["IdEstablecimiento"]])
-    for (year in names(resultados[["original"]])) {
-      df[[year]] <- resultados[["original"]][[year]][["data"]][[key]]
-    }
-    return(df)
-  }
-  
-  # Crear dataframes para cada caso
-  in_vrs_df <- generar_dataframe_base(resultados_in, "vrs")
-  in_crs_df <- generar_dataframe_base(resultados_in, "crs")
-  out_vrs_df <- generar_dataframe_base(resultados_out, "vrs")
-  out_crs_df <- generar_dataframe_base(resultados_out, "crs")
-  
-  in_vrs_por_anio_cut <- generar_dataframe_base(resultados_in_cut_vrs, "vrs")
-  in_crs_por_anio_cut <- generar_dataframe_base(resultados_in_cut_crs, "crs")
-  out_vrs_por_anio_cut <- generar_dataframe_base(resultados_out_cut_vrs, "vrs")
-  out_crs_por_anio_cut <- generar_dataframe_base(resultados_out_cut_crs, "crs")
-  
-  # Calcular las correlaciones
-  correlaciones_in_vrs <- calcular_correlaciones(in_vrs_df, in_vrs_por_anio_cut)
-  correlaciones_in_crs <- calcular_correlaciones(in_crs_df, in_crs_por_anio_cut)
-  correlaciones_out_vrs <- calcular_correlaciones(out_vrs_df, out_vrs_por_anio_cut)
-  correlaciones_out_crs <- calcular_correlaciones(out_crs_df, out_crs_por_anio_cut)
-  
-  # Retornar las correlaciones en una lista
-  return(list(
-    correlaciones_in_vrs = correlaciones_in_vrs,
-    correlaciones_in_crs = correlaciones_in_crs,
-    correlaciones_out_vrs = correlaciones_out_vrs,
-    correlaciones_out_crs = correlaciones_out_crs
-  ))
-}
-
-
-
-
-# ==============================================
 #  RANDOM FOREST
 # ==============================================
-#analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
-
-  #print(head(df_vrs))
-#  df_w_vrs <- df %>%
-#    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
-  
-  # Combinar los DataFrames
-#  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
-  
-  # Eliminar columnas completamente NA
-#  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
-  #print(colnames(df_merged))
-
-  # Calcular correlaciones
-#  correlaciones <- cor(df_merged[,-1])["vrs", ]
-#  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
-#  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
-  
-  
-  # Seleccionar las top_n variables más correlacionadas
-  
-#  top_vars <- head(correlaciones_ordenadas, top_n)
-  
-#  return(correlaciones_ordenadas)
-  
-#}
-
-
-
-
 analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   #year <- 2014
   print("---------------------------")
@@ -1092,9 +596,10 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   
 }
 
-
-
-procesar_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
+# ==============================================
+#  DETERMINANTES IMPORTANCIA
+# ==============================================
+determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
   # Crear listas para almacenar resultados
   resultados_IncNodePurity <- list()
   resultados_IncMSE <- list()
@@ -1173,8 +678,81 @@ procesar_importancia <- function(random_forest, anios_pre_pandemia, anios_pandem
   return(list(IncNodePurity = resultados_IncNodePurity, IncMSE = resultados_IncMSE))
 }
 
-
-reemplazar_nulos <- function(df) {
-  df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
-  return(df)
+# ==============================================
+#  FILTRO DE DATOS SEGUN DATOS ATIPICOS DE ITERACIONES AL CONJUNTO ORIGINAL
+# ==============================================
+datos_filtrados_atipicos <- function(datos, resultados) {
+  # Filtrar datos
+  datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
+  datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
+  datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
+  
+  return (list(
+    vrs_io = datos_filtrados_vrs_io,
+    crs_io = datos_filtrados_crs_io,
+    vrs_oo = datos_filtrados_vrs_oo,
+    crs_oo = datos_filtrados_crs_oo
+    
+  ))
 }
+
+# ==============================================
+#  GUARDAR DATOS DE EFICIENCIA Y DETERMINANTES
+# ==============================================
+guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+  # Instalar y cargar el paquete necesario
+  if (!require(openxlsx)) install.packages("openxlsx")
+  library(openxlsx)
+  
+  # Función para reemplazar valores vacíos, NULL o NA por "-"
+  reemplazar_nulos <- function(df) {
+    df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+    return(df)
+  }
+  
+  # Crear un workbook
+  wb <- createWorkbook()
+  
+  # Guardar resultados VRS y CRS
+  vrs <- guardar_dataframes(dataframes, "vrs")
+  crs <- guardar_dataframes(dataframes, "crs")
+  
+  # Añadir la hoja
+  addWorksheet(wb, "VRS")
+  writeData(wb, "VRS", vrs)
+  
+  addWorksheet(wb, "CRS")
+  writeData(wb, "CRS", crs)
+  
+  ### GUARDAR IMPORTANCIA ###
+  # IncNodePurity
+  addWorksheet(wb, paste0("Determinantes IncNodePurity VRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity VRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncNodePurity CRS"))
+  writeData(wb, paste0("Determinantes IncNodePurity CRS"), 
+            reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_crs")]]))
+  
+  # %IncMSE
+  addWorksheet(wb, paste0("Determinantes IncMSE VRS"))
+  writeData(wb, paste0("Determinantes IncMSE VRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Determinantes IncMSE CRS"))
+  writeData(wb, paste0("Determinantes IncMSE CRS"), 
+            reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_crs")]]))
+  
+  # Guardar el archivo
+  saveWorkbook(wb, archivo_salida, overwrite = TRUE)
+  cat("Archivo guardado como:", archivo_salida, "\n")
+}
+
+
+
+
+
+
+
+
