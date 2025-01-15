@@ -157,7 +157,7 @@ grafica_eficiencias(resultados_sin_atipicos[["vrs_oo"]])
 # DATOS COMPLETOS / ORIGINALES
 
 # datos_usar <- datos
-datos_usar <- datos_sin_atipicos[["crs_io"]]
+datos_usar <- datos_sin_atipicos[["vrs_io"]]
 
 # DATOS SIN ATIPICOS PARA VRS OO
 malmquist_indices <- list(
@@ -168,7 +168,7 @@ malmquist_indices <- list(
 )
 
 
-save(datos_usar,malmquist_indices, file="malmquist_io_crs.RData")
+save(datos_usar,malmquist_indices, file="malmquist_io_vrs.RData")
 
 procesar_y_graficar(malmquist_indices)
 
@@ -180,7 +180,7 @@ procesar_y_graficar(malmquist_indices)
 # -------------------------------------------- #
 
 #resultados_usar <- resultados
-resultados_usar <- resultados_sin_atipicos[["crs_io"]]
+resultados_usar <- resultados_sin_atipicos[["vrs_io"]]
 
 # Aplicar Random Forest para cada año
 random_forest <- list(
@@ -208,7 +208,7 @@ resultados_IncNodePurity <- resultados_importancia$IncNodePurity
 resultados_IncMSE <- resultados_importancia$IncMSE
 
 
-save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_crs.RData")
+save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_vrs.RData")
 # -------------------------------------------- #
 #  VISUALIZACIÓN DE FRECUENCIAS
 # -------------------------------------------- #
