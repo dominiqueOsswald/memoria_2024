@@ -924,37 +924,37 @@ procesar_datos <- function(resultados_in, resultados_out, resultados_in_cut_vrs,
 # ==============================================
 #  RANDOM FOREST
 # ==============================================
-analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
+#analize_rf <- function(year, resultados_in, n_top, trees, tipo, orientacion){
 
   #print(head(df_vrs))
-  df_w_vrs <- df %>%
-    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
+#  df_w_vrs <- df %>%
+#    filter(idEstablecimiento %in% df_vrs$idEstablecimiento)
   
   # Combinar los DataFrames
-  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+#  df_merged <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
   
   # Eliminar columnas completamente NA
-  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
+#  df_merged <- df_merged[, colSums(is.na(df_merged)) < nrow(df_merged)]
   #print(colnames(df_merged))
 
   # Calcular correlaciones
-  correlaciones <- cor(df_merged[,-1])["vrs", ]
-  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
-  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+#  correlaciones <- cor(df_merged[,-1])["vrs", ]
+#  correlaciones <- correlaciones[!names(correlaciones) %in% "vrs"]
+#  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
   
   
   # Seleccionar las top_n variables más correlacionadas
   
-  top_vars <- head(correlaciones_ordenadas, top_n)
+#  top_vars <- head(correlaciones_ordenadas, top_n)
   
-  return(correlaciones_ordenadas)
+#  return(correlaciones_ordenadas)
   
-}
+#}
 
 
 
 
-analize_rf <- function(year, resultados_in, n_top,tipo ){
+analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   #year <- 2014
   print("---------------------------")
   print("---------------------------")
