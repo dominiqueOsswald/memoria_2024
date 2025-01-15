@@ -139,15 +139,23 @@ correlacion_todos_metodos_atipicos <- list(
   )
 )
 
+#resultados_usar <- resultados
+resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
 
-graficar_correlaciones(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("vrs original", "vrs sin atipicos", "crs original", "crs sin atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
+
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+graficar_correlaciones(resultados_usar[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
+graficar_correlaciones(resultados_usar[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
+
+
+graficar_correlaciones(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos"), "Comparación Original v/s sin atipicos - Orientación Outputs VRS")
 
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
 
 grafica_eficiencias(resultados)
-grafica_eficiencias(resultados_sin_atipicos[["vrs_oo"]])
+grafica_eficiencias(resultados_usar)
 
 
 # ==============================================
@@ -179,8 +187,6 @@ procesar_y_graficar(malmquist_indices)
 #  CONFIGURACIÓN Y MODELO RANDOM FOREST
 # -------------------------------------------- #
 
-#resultados_usar <- resultados
-resultados_usar <- resultados_sin_atipicos[["vrs_io"]]
 
 # Aplicar Random Forest para cada año
 random_forest <- list(

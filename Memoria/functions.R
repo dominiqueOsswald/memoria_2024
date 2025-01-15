@@ -21,6 +21,23 @@ filtrar_datos <- function(datos, vector_outliers) {
 }
 
 
+procesar_index <- function(index) {
+  # Asegurarse de que las columnas sean numéricas
+  index[, -1] <- lapply(index[, -1], as.numeric)
+  
+  # Renombrar las columnas de acuerdo a los años consecutivos
+  columnas <- colnames(index)[-1]
+  nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
+  colnames(index)[-1] <- c("2014_2015", nuevos_nombres)
+  
+  # Calcular la tasa promedio pre-pandemia
+  index$Tasa_Promedio_Pre_Pandemia <- rowMeans(index[, 2:6], na.rm = TRUE)
+  index$Tasa_Promedio_Pandemia <- rowMeans(index[, 7:10], na.rm = TRUE)
+  
+  return(index)
+}
+
+
 datos_filtrados_atipicos <- function(datos, resultados) {
   # Filtrar datos
   datos_filtrados_vrs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_vrs"]])

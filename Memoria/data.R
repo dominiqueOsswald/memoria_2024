@@ -23,7 +23,7 @@ load("dataR/resultados_eficiencia.RData")
 # - input_vrs
 # - input_crs
 
-carpeta <- "output_vrs"
+carpeta <- "input_crs"
 
 load(paste0("dataR/",carpeta,"/malmquist.RData"))
 load(paste0("dataR/",carpeta,"/determinantes.RData"))

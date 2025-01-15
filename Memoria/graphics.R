@@ -15,22 +15,6 @@ chile <- world[world$name == "Chile", ]
 comunas_sf <- chilemapas::mapa_comunas
 
 
-grafica_atipicos <- function(resultados){
-  
-  grafica_eficiencias_2(resultados[["vrs"]][["io"]][["iteracion_io"]],"Eliminacion atipicos VRS - IO - ")
-  grafica_eficiencias_2(resultados[["vrs"]][["io"]][["iteracion_oo"]],"Eliminacion atipicos VRS - IO - ")  # MUCHOS ATIPICOS
-  
-  grafica_eficiencias_2(resultados[["vrs"]][["oo"]][["iteracion_io"]],"Eliminacion atipicos VRS - OO - ")
-  grafica_eficiencias_2(resultados[["vrs"]][["oo"]][["iteracion_oo"]], "Eliminacion atipicos VRS - OO - ") 
-  
-  grafica_eficiencias_2(resultados[["crs"]][["io"]][["iteracion_io"]],"Eliminacion atipicos CRS - IO - ")
-  grafica_eficiencias_2(resultados[["crs"]][["io"]][["iteracion_oo"]],"Eliminacion atipicos CRS - IO - ") 
-  
-  grafica_eficiencias_2(resultados[["crs"]][["oo"]][["iteracion_io"]], "Eliminacion atipicos CRS - OO - ")
-  grafica_eficiencias_2(resultados[["crs"]][["oo"]][["iteracion_oo"]], "Eliminacion atipicos CRS - OO - ") 
-  
-}
-
 
 grafica_eficiencias <- function(resultados) {
   # Parámetros para iterar
@@ -47,61 +31,37 @@ grafica_eficiencias <- function(resultados) {
       # Crear dataframe
       df <- crear_dataframe(resultados, tipo, periodo)
       
+      titulo1 <- paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)")
+      subtitulo1 <- paste("Período", periodos[[periodo]])
+      titulo2 <- paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)")
+      subtitulo2 <- paste("Período", periodos[[periodo]])
+      
       # Graficar VRS
-      print(graficar_boxplots(
+      grafica1 <- graficar_boxplots(
         df,
         "vrs",
-        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
-        paste("Período", periodos[[periodo]])
-      ))
+        titulo1,
+        subtitulo1
+      )
       
       # Graficar CRS
-      print(graficar_boxplots(
+      grafica2 <-graficar_boxplots(
         df,
         "crs",
-        paste("Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
-        paste("Período", periodos[[periodo]])
-      ))
+        titulo2,
+        subtitulo2
+      )
+      
+      ggsave(paste0(titulo1,"_",subtitulo1,".jpg"), plot = grafica1, width = 8, height = 6, dpi = 300)
+      ggsave(paste0(titulo2,"_",subtitulo2,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
+      
+      print(grafica1)
+      print(grafica2)
     }
   }
   
 }
 
-
-grafica_eficiencias_2 <- function(resultados, titulo) {
-  # Parámetros para iterar
-  tipos <- c("io", "oo")
-  periodos <- list(
-    "todos" = "2014 - 2023",
-    "pre" = "2014 - 2019",
-    "post" = "2020 - 2023"
-  )
-  
-  # Generar gráficos para cada tipo y período
-  for (tipo in tipos) {
-    for (periodo in names(periodos)) {
-      # Crear dataframe
-      df <- crear_dataframe_2(resultados, tipo, periodo)
-      
-      # Graficar VRS
-      print(graficar_boxplots(
-        df,
-        "vrs",
-        paste(titulo,"Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(VRS)"),
-        paste("Período", periodos[[periodo]])
-      ))
-      
-      # Graficar CRS
-      print(graficar_boxplots(
-        df,
-        "crs",
-        paste(titulo,"Distribución de Eficiencia Técnica Orientación", ifelse(tipo == "io", "Entradas", "Salidas"), "(CRS)"),
-        paste("Período", periodos[[periodo]])
-      ))
-    }
-  }
-  
-}
 
 
 
@@ -119,31 +79,16 @@ graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
     scale_fill_brewer(palette = "Set3") + 
     theme(
       plot.title = element_text(size = 14, face = "bold"),
-      axis.text.x = element_text(angle = 45, hjust = 1)
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.margin = unit(c(2, 2, 2, 2), "cm")
     ) + 
     labs(
       color = "Años",    # Cambia el nombre para colores
       fill = "Años"      # Cambia el nombre para rellenos
     )
   
-}
+} 
 
-
-procesar_index <- function(index) {
-  # Asegurarse de que las columnas sean numéricas
-  index[, -1] <- lapply(index[, -1], as.numeric)
-  
-  # Renombrar las columnas de acuerdo a los años consecutivos
-  columnas <- colnames(index)[-1]
-  nuevos_nombres <- paste(columnas[-length(columnas)], columnas[-1], sep = "_")
-  colnames(index)[-1] <- c("2014_2015", nuevos_nombres)
-  
-  # Calcular la tasa promedio pre-pandemia
-  index$Tasa_Promedio_Pre_Pandemia <- rowMeans(index[, 2:6], na.rm = TRUE)
-  index$Tasa_Promedio_Pandemia <- rowMeans(index[, 7:10], na.rm = TRUE)
-  
-  return(index)
-}
 
 
 procesar_y_graficar <- function(malmquist_indices) {
@@ -177,10 +122,14 @@ procesar_y_graficar <- function(malmquist_indices) {
     #limite <- max(abs(datos_comb$Valores), na.rm = TRUE)  # Máximo absoluto
     rango_x <- c(-2, 5)  
     
+    titulo_pre <- paste("Índice Malmquist para", key_name)
+    subtitulo_pre <- "Periodo pre pandemia por COVID-19"
+    
     # Crear el gráfico combinado
     grafico_pre_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Índice Malmquist para", key_name),  subtitle = "Periodo pre pandemia por COVID-19") +
+      ggtitle(titulo_pre,  subtitle = subtitulo_pre) +
+      
       xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
@@ -234,10 +183,12 @@ procesar_y_graficar <- function(malmquist_indices) {
     #limite <- max(abs(datos_comb$Valores), na.rm = TRUE)  # Máximo absoluto
     rango_x <- c(-2, 5)  
     
+    titulo_post <- paste("Índice Malmquist para", key_name)
+    subtitulo_post <- "Periodo de pandemia por COVID-19"
     # Crear el gráfico combinado
     grafico_pandemia <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Periodo de pandemia por COVID-19") +
+      ggtitle(titulo_post, subtitle = subtitulo_post) +
       xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
@@ -293,9 +244,12 @@ procesar_y_graficar <- function(malmquist_indices) {
       datos_comb <- rbind(datos_comb, data.frame(Valores = datos_temp, Columna = col))
     }
     
+    titulo_tasas <- paste("Índice Malmquist para", key_name)
+    subtitulo_tasas <- "Promedio por periodo"
+    
     grafico_tasas <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
       geom_density(alpha = 0.3) +  # Añadir transparencia
-      ggtitle(paste("Índice Malmquist para", key_name), subtitle = "Promedio por periodo") +
+      ggtitle(titulo_tasas, subtitle = subtitulo_tasas) +
       xlab("Índice Malmquist") +
       ylab("Densidad") +
       theme_minimal() +
@@ -334,6 +288,11 @@ procesar_y_graficar <- function(malmquist_indices) {
       "Tasas" = grafico_tasas
     )
   }
+  
+  ggsave(paste0(titulo_pre,"_",subtitulo_pre,".jpg"), plot = grafica1, width = 8, height = 6, dpi = 300)
+  ggsave(paste0(titulo_post,"_",subtitulo_post,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
+  ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
+  
   
   return (graficas)
 }
@@ -426,51 +385,7 @@ graficar_top_10 <- function(data, titulo, subtitulo) {
   print(grafico_pandemia)
 }
 
-# -------------------------------------- #
-# Graficar region de Chile según el criterio de orientacion y variacion
-# -------------------------------------- #
-region_vrs <- function(hospitales_df, region, anio, tipo) {
-  
-  # Filtro de hospitales para la región seleccionada
-  hospitales_df_rm <- hospitales_df %>%
-    filter(region_id == region) %>%
-    filter(IdEstablecimiento != 112107)
-  
-  nombre_region <- hospitales_df_rm$Region[[1]]
-  
-  if (region == 13){
-    nombre_region = "Región Metropolitana"
-  }
-  
-  # Verificar si la región tiene hospitales después del filtro
-  if (nrow(hospitales_df_rm) == 0) {
-    stop("No hay hospitales en la región seleccionada.")
-  }
-  
-  codigo <- ifelse(region < 10, paste0("0", as.character(region)), as.character(region))
-  
-  # Filtrar las comunas de la región seleccionada
-  rm_comunas <- comunas_sf[comunas_sf$codigo_region == codigo, ]
-  
-  # Verificar si hay comunas en la región seleccionada
-  if (nrow(rm_comunas) == 0) {
-    stop("No hay comunas disponibles para la región seleccionada.")
-  }
-  
-  
-  # Crear el mapa de la región seleccionada
-  mapa_rm <- ggplot(data = rm_comunas) +
-    geom_sf(aes(geometry = geometry)) + 
-    geom_point(data = hospitales_df_rm, aes(x = longitud, y = latitud, color = vrs, size = (1/vrs) * 5,  text = paste("Hospital:", Nombre, "<br>VRS:", vrs, "<br>Region:", region_id)), alpha = 0.6)  +
-    
-    scale_color_gradient(low = "red", high = "green", limits = c(0, 1)) +  # Rango de valores para los colores
-    labs(title = paste("Eficiencia técnica hospitales públicos en", nombre_region, "(",tipo,") - Año ", anio),
-         color = "Valor", 
-         size = "Valor") +
-    theme_minimal()
-  
-  return(mapa_rm)
-}
+
 
 # -------------------------------------- #
 # Graficar Chile según el criterio de orientacion y variacion
@@ -504,44 +419,6 @@ chile_map_plot <- function(hospitales_df, anio, tipo, titulo, subtitulo) {
 
 }
 
-# -------------------------------------- #
-# Colorear regiones según porcentaje
-# -------------------------------------- #
-colorear_region <- function(resumen){
-  chile_comunas <- chilemapas::mapa_comunas
-  
-  # Convertir el mapa a nivel de regiones, agrupando las comunas por región
-  chile_regiones <- chile_comunas %>%
-    group_by(codigo_region) %>%
-    summarize(geometry = st_union(geometry), .groups = "drop") %>%
-    st_as_sf()
-  
-  # Asegurarse de que la columna IDRegion en los datos de porcentaje sea de tipo character
-  resumen$Porcentajes <- resumen$Porcentajes %>%
-    mutate(region_id = as.character(region_id))
-  
-  # Unir el dataframe de porcentajes con el mapa de Chile usando el IDRegion
-  chile_porcentaje <- chile_regiones %>%
-    left_join(resumen$Porcentajes, by = c("codigo_region" = "region_id"))
-  
-  chile_porcentaje <- chile_porcentaje %>%
-    #filter(!is.na(Region)) %>%
-    mutate(across(starts_with("20"), as.numeric))  # Cambia "20" si tus columnas de año tienen otro prefijo
-  
-  
-  # Generar un gráfico para cada año
-  for (year in names(chile_porcentaje)[4:ncol(chile_porcentaje)]) { # Ajusta el índice según las columnas de año en tu data
-    
-    g <- ggplot(data = chile_porcentaje) +
-      geom_sf(aes(fill = !!sym(year)), color = "black") +
-      scale_fill_gradient(low = "#b2d8b2", high = "green", na.value = "white") +
-      labs(title = paste("Mapa de Chile - Año", year), fill = "Porcentaje") +
-      theme_minimal() 
-    #+  ggsave(paste0("mapa_chile_", year, ".png"))
-    print(g)
-  }
-  
-}
 
 # -------------------------------------- #
 # Colorear regiones según porcentaje
