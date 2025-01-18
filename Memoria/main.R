@@ -37,7 +37,7 @@ correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
-correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("vrs_io", "vrs_oo", "crs_io", "crs_oo"))
+correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output"))
 
 
 
@@ -139,8 +139,8 @@ correlacion_todos_metodos_atipicos <- list(
   )
 )
 
-#resultados_usar <- resultados
-resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
+resultados_usar <- resultados
+#resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
@@ -164,8 +164,8 @@ eficiencias_grafica(resultados_usar)
 
 # DATOS COMPLETOS / ORIGINALES
 
-# datos_usar <- datos
-datos_usar <- datos_sin_atipicos[["vrs_io"]]
+datos_usar <- datos
+#datos_usar <- datos_sin_atipicos[["vrs_io"]]
 
 # DATOS SIN ATIPICOS PARA VRS OO
 malmquist_indices <- list(
@@ -179,7 +179,7 @@ malmquist_indices <- list(
 #save(datos_usar,malmquist_indices, file="malmquist_io_vrs.RData")
 
 malmquist_graficas(malmquist_indices)
-
+save(malmquist_indices,datos_usar,file="malmquist.RData")
 # ==============================================
 #  DETERMINANTES
 # ==============================================
@@ -248,7 +248,7 @@ determinantes_grafica(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - Inc
 
 # Procesar OUTPUT
 guardar_resultados(
-  dataframes = crear_dataframes(resultados_usar, "oo"),
+  dataframes = resultados_usar[["oo"]],
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS OUTPUT.xlsx",
@@ -257,7 +257,7 @@ guardar_resultados(
 
 # Procesar INPUT
 guardar_resultados(
-  dataframes = crear_dataframes(resultados_usar, "io"),
+  dataframes = resultados_usar[["io"]],
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
   archivo_salida = "RESULTADOS INPUT.xlsx",
@@ -269,6 +269,7 @@ guardar_resultados(
 # ==============================================
 #  TODOS - GRAFICA DEA INPUT VRS
 
+#resultados_usar <- resultados
 lapply(anios, function(anio) {
   eficiencias_chile_grafica(resultados_usar$io[["original"]][[as.character(anio)]][["data"]], anio, "vrs", "Gráfica Chile - Eficiencia técnica ", "Modelo orientado a entradas - VRS - ")
 })

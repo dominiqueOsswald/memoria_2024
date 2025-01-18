@@ -27,40 +27,105 @@ filtrar_datos <- function(datos, vector_outliers) {
 # ==============================================
 #  
 # ==============================================
-guardar_dataframes <- function(dataframes, columna) {
-  # Extraer el valor especificado (vrs o crs) de cada dataframe por año
-  resultados <- lapply(names(dataframes), function(anio) {
-    df <- dataframes[[anio]]
+
+guardar_dataframes_por_anio <- function(dataframes, columnas) {
+  # Verificar que columnas sea un vector
+  if (!is.vector(columnas)) {
+    stop("El parámetro 'columnas' debe ser un vector de nombres de columnas.")
+  }
+  
+  # Crear la lista de resultados
+  resultados <- lapply(names(dataframes[["original"]]), function(anio) {
+    message(paste("Procesando el año:", anio))
+    df <- dataframes[["original"]][[anio]][["data"]]
     
-    # Verificar si el dataframe contiene las columnas requeridas
-    if (!("IdEstablecimiento" %in% colnames(df)) || !(columna %in% colnames(df))) {
-      warning(paste("El año", anio, "no contiene las columnas necesarias"))
-      return(NULL)  # Retornar NULL si falta alguna columna
+    if (is.null(df)) {
+      warning(paste("Datos nulos para el año", anio))
+      return(NULL)
     }
     
-    # Seleccionar columna especificada junto con IdEstablecimiento
-    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
-    # Renombrar la columna con el año correspondiente
-    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)
+    if (!("IdEstablecimiento" %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene 'IdEstablecimiento'"))
+      return(NULL)
+    }
+    
+    # Verificar que todas las columnas estén presentes
+    columnas_faltantes <- columnas[!columnas %in% colnames(df)]
+    if (length(columnas_faltantes) > 0) {
+      warning(paste("El año", anio, "no contiene las columnas:", paste(columnas_faltantes, collapse = ", ")))
+      return(NULL)
+    }
+    
+    message(paste("Datos válidos encontrados para el año", anio))
+    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columnas)])
     return(df_seleccionado)
   })
   
-  # Eliminar entradas nulas
+  # Asignar nombres a la lista de resultados
+  names(resultados) <- names(dataframes[["original"]])
+  
+  # Filtrar resultados no nulos
   resultados <- Filter(Negate(is.null), resultados)
   
-  # Verificar que existan resultados antes de combinar
   if (length(resultados) == 0) {
-    warning(paste("No hay datos válidos para la hoja"))
-    return(NULL)  # Salir de la función si no hay resultados válidos
+    warning("No hay datos válidos para los años procesados")
+    return(NULL)
   }
   
-  # Unir los resultados por columna (IdEstablecimiento como fila)
+  return(resultados)
+}
+
+
+
+
+
+guardar_dataframe_por_columna <- function(dataframes, columna) {
+  # Validar que la columna sea un único valor
+  if (!is.character(columna) || length(columna) != 1) {
+    stop("El parámetro 'columna' debe ser un único nombre de columna.")
+  }
+  
+  # Extraer datos para la columna especificada
+  resultados <- lapply(names(dataframes[["original"]]), function(anio) {
+    message(paste("Procesando el año:", anio))
+    df <- dataframes[["original"]][[anio]][["data"]]
+    
+    if (is.null(df)) {
+      warning(paste("Datos nulos para el año", anio))
+      return(NULL)
+    }
+    
+    if (!("IdEstablecimiento" %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene 'IdEstablecimiento'"))
+      return(NULL)
+    }
+    
+    if (!(columna %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene la columna", columna))
+      return(NULL)
+    }
+    
+    message(paste("Datos válidos encontrados para el año", anio))
+    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
+    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)  # Renombrar columna con el año
+    return(df_seleccionado)
+  })
+  
+  # Filtrar resultados no nulos
+  resultados <- Filter(Negate(is.null), resultados)
+  
+  if (length(resultados) == 0) {
+    warning("No hay datos válidos para los años procesados")
+    return(NULL)
+  }
+  
+  # Combinar resultados en un solo dataframe
   df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
   
-  # Añadir columna de promedio
+  # Calcular el promedio por fila (ignorando nulos)
   df_final$Promedio <- rowMeans(df_final[, -1], na.rm = TRUE)
   
-  return (df_final)
+  return(df_final)
 }
 
 # ==============================================

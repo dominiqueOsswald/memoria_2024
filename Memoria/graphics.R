@@ -54,8 +54,8 @@ eficiencias_grafica <- function(resultados) {
         subtitulo2
       )
       
-      ggsave(paste0(titulo1,"_",subtitulo1,".jpg"), plot = grafica1, width = 8, height = 6, dpi = 300)
-      ggsave(paste0(titulo2,"_",subtitulo2,".jpg"), plot = grafica2, width = 8, height = 6, dpi = 300)
+      ggsave(paste0(titulo1,"_",subtitulo1,".jpg"), plot = grafica1, width = 13, height = 11, dpi = 300)
+      ggsave(paste0(titulo2,"_",subtitulo2,".jpg"), plot = grafica2, width = 13, height = 11, dpi = 300)
       
       print(grafica1)
       print(grafica2)
@@ -296,7 +296,7 @@ determinantes_grafica <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico)
-  ggsave(paste0(titulo,"_",subtitulo_1,".jpg"), plot = grafico, width = 10, height = 8, dpi = 300)
+  ggsave(paste0(titulo,"_",subtitulo_1,".jpg"), plot = grafico, width = 13, height = 11, dpi = 300)
   
   subtitulo_2 <- paste0(subtitulo, " Periodo pre pandemia (2014 - 2019)")
   # Crear el gráfico
@@ -327,7 +327,7 @@ determinantes_grafica <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico_pre)
-  ggsave(paste0(titulo,"_",subtitulo_2,".jpg"), plot = grafico_pre, width = 10, height = 8, dpi = 300)
+  ggsave(paste0(titulo,"_",subtitulo_2,".jpg"), plot = grafico_pre, width = 13, height = 11, dpi = 300)
   
   
   subtitulo_3 <- paste0(subtitulo, " Periodo pandemia (2020 - 2023)")
@@ -359,7 +359,7 @@ determinantes_grafica <- function(data, titulo, subtitulo) {
   
   # Mostrar gráfico
   print(grafico_pandemia)
-  ggsave(paste0(titulo,"_",subtitulo_3,".jpg"), plot = grafico_pandemia, width = 10, height = 8, dpi = 300)
+  ggsave(paste0(titulo,"_",subtitulo_3,".jpg"), plot = grafico_pandemia, width = 13, height = 11, dpi = 300)
   
 }
 
@@ -494,12 +494,13 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     # Ajustar márgenes exteriores para centrar contenido
     par(oma = c(5, 4, 5, 4))  # Márgenes: abajo, izquierda, arriba, derecha
     
-    dev.off()
+    
     
     # Capturar gráfico como objeto si es necesario
     grafico <- recordPlot()
     lista_graficos[[pagina]] <- grafico
     
+    dev.off()
     # Restablecer configuración gráfica
     par(mfrow = c(1, 1))
   }

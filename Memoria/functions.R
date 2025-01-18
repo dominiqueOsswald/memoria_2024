@@ -708,6 +708,7 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   # Función para reemplazar valores vacíos, NULL o NA por "-"
   reemplazar_nulos <- function(df) {
     df[is.na(df) | df == ""] <- "-" # Reemplaza NA o valores vacíos
+    df <- df[order(-df$Frecuencia), ]
     return(df)
   }
   
@@ -715,8 +716,8 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   wb <- createWorkbook()
   
   # Guardar resultados VRS y CRS
-  vrs <- guardar_dataframes(dataframes, "vrs")
-  crs <- guardar_dataframes(dataframes, "crs")
+  vrs <- guardar_dataframe_por_columna(dataframes, "vrs")
+  crs <- guardar_dataframe_por_columna(dataframes, "crs")
   
   # Añadir la hoja
   addWorksheet(wb, "VRS")

@@ -12,9 +12,9 @@ anios <- 2014:2023
 anios_pre_pandemia <- c("2014", "2015", "2016", "2017", "2018", "2019")
 anios_pandemia <- c("2020", "2021", "2022", "2023")
 
-load("dataR/datos.RData")
-load("dataR/datos_atipicos.RData")
-load("dataR/resultados_eficiencia.RData")
+load("RData/datos.RData")
+load("RData/datos_atipicos.RData")
+load("RData/resultados_eficiencia.RData")
 
 # Estos deben variar segun carpeta:
 # - originales
@@ -23,10 +23,10 @@ load("dataR/resultados_eficiencia.RData")
 # - input_vrs
 # - input_crs
 
-carpeta <- "input_crs"
+carpeta <- "output_vrs"
 
-load(paste0("dataR/",carpeta,"/malmquist.RData"))
-load(paste0("dataR/",carpeta,"/determinantes.RData"))
+load(paste0("RData/",carpeta,"/malmquist.RData"))
+load(paste0("RData/",carpeta,"/determinantes.RData"))
 
 
 
