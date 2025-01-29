@@ -54,8 +54,8 @@ eficiencias_grafica <- function(resultados) {
         subtitulo2
       )
       
-      ggsave(paste0(titulo1,"_",subtitulo1,".jpg"), plot = grafica1, width = 13, height = 11, dpi = 300)
-      ggsave(paste0(titulo2,"_",subtitulo2,".jpg"), plot = grafica2, width = 13, height = 11, dpi = 300)
+      ggsave(paste0(titulo1,"_",subtitulo1,".jpg"), plot = grafica1, width = 13, height = 5, dpi = 300)
+      ggsave(paste0(titulo2,"_",subtitulo2,".jpg"), plot = grafica2, width = 13, height = 5, dpi = 300)
       
       print(grafica1)
       print(grafica2)
@@ -143,7 +143,7 @@ malmquist_graficas <- function(malmquist_indices) {
     
     
     print(grafico_pre_pandemia)
-    ggsave(paste0(titulo_pre,"_",subtitulo_pre,".jpg"), plot = grafico_pre_pandemia, width = 10, height = 8, dpi = 300)
+    ggsave(paste0(titulo_pre,"_",subtitulo_pre,".jpg"), plot = grafico_pre_pandemia, width = 13, height = 5, dpi = 300)
 
     
     
@@ -201,7 +201,7 @@ malmquist_graficas <- function(malmquist_indices) {
     
     
     print(grafico_pandemia)
-    ggsave(paste0(titulo_post,"_",subtitulo_post,".jpg"), plot = grafico_pandemia, width = 10, height = 8, dpi = 300)
+    ggsave(paste0(titulo_post,"_",subtitulo_post,".jpg"), plot = grafico_pandemia, width = 13, height = 5, dpi = 300)
 
     
     # Seleccionar columnas excepto la primera
@@ -252,7 +252,7 @@ malmquist_graficas <- function(malmquist_indices) {
     
 
     print(grafico_tasas)
-    ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafico_tasas, width = 10, height = 8, dpi = 300)
+    ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafico_tasas, width = 13, height = 5, dpi = 300)
     
   }
   
@@ -511,10 +511,10 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
 
 
 
-# Función genérica para graficar boxplots
 graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
-  ggplot(df, aes_string(x = "year", y = eficiencia, fill = "year")) +
-    geom_violin(outlier.colour = "red", outlier.size = 2, alpha = 0.6) + 
+  color_fijo <- brewer.pal(11, "RdYlGn")[9]
+  ggplot(df, aes_string(x = "year", y = eficiencia)) +
+    geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +  # Mismo color para contorno y relleno
     labs(
       title = titulo,
       subtitle = subtitulo,
@@ -522,16 +522,10 @@ graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
       y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
     ) +
     theme_minimal() +
-    scale_fill_brewer(palette = "Set3") + 
     theme(
       plot.title = element_text(size = 14, face = "bold"),
       axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.margin = unit(c(2, 2, 2, 2), "cm")
-    ) + 
-    labs(
-      color = "Años",    # Cambia el nombre para colores
-      fill = "Años"      # Cambia el nombre para rellenos
+      plot.margin = unit(c(2, 2, 2, 2), "cm"),
+      legend.position = "none"  # Ocultar la leyenda
     )
-  
-} 
-
+}
