@@ -244,6 +244,10 @@ determinantes_grafica(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - Inc
 #  RESULTADOS
 # ==============================================
 
+
+
+
+
 # Generación de excel con valores de eficiencias y determinantes
 
 # Procesar OUTPUT
@@ -251,6 +255,8 @@ guardar_resultados(
   dataframes = resultados_usar[["oo"]],
   resultados_IncNodePurity = resultados_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
+  malmquist_vrs = malmquist_indices[["out_vrs"]][["index"]],
+  malmquist_crs = malmquist_indices[["out_crs"]][["index"]],
   archivo_salida = "RESULTADOS OUTPUT.xlsx",
   prefijo = "oo"
 )

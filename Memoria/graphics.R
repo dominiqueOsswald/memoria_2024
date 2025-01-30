@@ -417,12 +417,12 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
   
   # Determinar la cantidad de gráficos
   num_graficos <- length(correlaciones_lista)
-  graficos_por_pagina <- 4  # Máximo 4 gráficos por página (2x2)
+  graficos_por_pagina <- 10  # Máximo 10 gráficos por página (2x5)
   paginas <- ceiling(num_graficos / graficos_por_pagina)
   
   # Crear lista para almacenar los gráficos
   lista_graficos <- list()
-  i <- 1
+  
   # Iterar sobre cada página
   for (pagina in 1:paginas) {
     # Definir el rango de años a mostrar en la página actual
@@ -434,11 +434,10 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     archivo_salida <- paste0("correlaciones_pagina_", pagina, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
-    png(archivo_salida, width = 3500, height = 3000, res = 300)
+    png(archivo_salida, width = 5000, height = 2500, res = 300)  # Más ancho y achatado
     
-    
-    # Ajustar la ventana gráfica para 2x2
-    par(mfrow = c(2, 2), mar = c(2, 2, 2, 2), oma = c(4, 4, 4, 4))
+    # Ajustar la ventana gráfica para 2x5
+    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(4, 4, 4, 4))
     
     # Crear las gráficas para los años actuales
     for (anio in años_actuales) {
@@ -453,12 +452,13 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         corr_matrix, 
         col = colores_personalizados, 
         method = "color", 
-        title = paste("Año", anio),
-        #mar = c(0, 0, 2, 0),  # Márgenes más pequeños para cada gráfico
-        mar = c(0.3, 0.3, 4, 0.3),
-        addCoef.col = "black",
+        title = paste("Año", anio),  # Año como título
+        mar = c(1, 1, 8, 1),  # Márgenes más pequeños
+        addCoef.col = "black",  # Números negros
+        number.cex = 1.2,  # Tamaño más grande de los números
         cl.ratio = 0.4,        # Ajustar tamaño de la barra de leyenda
-        cl.align = "r" 
+        cl.align = "r", 
+        tl.col = "black"  # Cambiar color de etiquetas a negro
       )
     }
     
@@ -491,16 +491,9 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
       )
     }
     
-    # Ajustar márgenes exteriores para centrar contenido
-    par(oma = c(5, 4, 5, 4))  # Márgenes: abajo, izquierda, arriba, derecha
-    
-    
-    
-    # Capturar gráfico como objeto si es necesario
-    grafico <- recordPlot()
-    lista_graficos[[pagina]] <- grafico
-    
+    # Cerrar el dispositivo gráfico
     dev.off()
+    
     # Restablecer configuración gráfica
     par(mfrow = c(1, 1))
   }

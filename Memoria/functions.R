@@ -700,7 +700,7 @@ datos_filtrados_atipicos <- function(datos, resultados) {
 # ==============================================
 #  GUARDAR DATOS DE EFICIENCIA Y DETERMINANTES
 # ==============================================
-guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, archivo_salida, prefijo) {
+guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, malmquist_vrs,malmquist_crs,archivo_salida, prefijo) {
   # Instalar y cargar el paquete necesario
   if (!require(openxlsx)) install.packages("openxlsx")
   library(openxlsx)
@@ -719,12 +719,22 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   vrs <- guardar_dataframe_por_columna(dataframes, "vrs")
   crs <- guardar_dataframe_por_columna(dataframes, "crs")
   
+  
+  
   # Añadir la hoja
   addWorksheet(wb, "VRS")
   writeData(wb, "VRS", vrs)
   
   addWorksheet(wb, "CRS")
   writeData(wb, "CRS", crs)
+  
+  addWorksheet(wb, "MALMQUIST VRS")
+  writeData(wb, "MALMQUIST VRS", malmquist_vrs)
+  
+  addWorksheet(wb, "MALMQUIST CRS")
+  writeData(wb, "MALMQUIST CRS", malmquist_crs)
+  
+
   
   ### GUARDAR IMPORTANCIA ###
   # IncNodePurity
