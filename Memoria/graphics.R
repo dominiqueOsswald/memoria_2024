@@ -84,6 +84,77 @@ malmquist_graficas <- function(malmquist_indices) {
     if (key == "in_crs"){
       key_name = "modelo orientado a entradas CRS"
     }
+    
+    comparativa_pre <- colnames(index)[c(2, 3, 4, 5, 6)]
+    comparativa_2020_2021 <- colnames(index)[c(7)]
+    comparativa_post <- colnames(index)[c(8, 9, 10)]
+    
+    
+    # Crear un dataframe vacío con el mismo número de filas que index
+    datos_resumen <- data.frame(matrix(nrow = nrow(index), ncol = 0))
+    
+    # Calcular el promedio y asignarlo
+    datos_resumen$pre_pandemia <- rowMeans(index[, comparativa_pre], na.rm = TRUE)
+    datos_resumen$critico <- rowMeans(index[, comparativa_2020_2021], na.rm = TRUE)
+    datos_resumen$post_pandemia <- rowMeans(index[, comparativa_post], na.rm = TRUE)
+    
+    columnas <- colnames(datos_resumen)
+    # Crear un dataframe combinado para todas las columnas
+    datos_comb <- data.frame()
+    for (col in columnas) {
+      datos_temp <- na.omit(datos_resumen[[col]])  # Omitir NAs
+      datos_comb <- rbind(datos_comb, data.frame(Valores = datos_temp, Columna = col))
+    }
+    
+
+    #limite <- max(abs(datos_comb$Valores), na.rm = TRUE)  # Máximo absoluto
+    rango_x <- c(-2, 5)  
+    
+    titulo_comparativa <- paste("Índice Malmquist para", key_name)
+    subtitulo_comparativa <- "Comparativa periodo crítico COVID-19"
+    
+    # Crear el gráfico combinado
+    grafico_comparativa <- ggplot(datos_comb, aes(x = Valores, fill = Columna, color = Columna)) +
+      geom_density(alpha = 0.3) +  # Añadir transparencia
+      ggtitle(titulo_comparativa,  subtitle = subtitulo_comparativa) +
+      
+      xlab("Índice Malmquist") +
+      ylab("Densidad") +
+      theme_minimal() +
+      ylim(0, 8) + 
+      theme(legend.position = "right",
+            legend.box = "vertical",                # Orden vertical fijo
+            #legend.key.height = unit(1, "cm"),      # Altura fija para las leyendas
+            #legend.key.width = unit(5, "cm"),
+            plot.margin = unit(c(2, 2, 2, 2), "cm"),
+            plot.title = element_text(size = 14, face = "bold"),
+            plot.subtitle = element_text(size = 12)) + 
+      
+      scale_x_continuous(
+        breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
+        limits = rango_x  # Limitar los valores al rango simétrico
+      ) +
+      
+      # Leyenda para colores
+      scale_color_manual(
+        values = brewer.pal(11, "RdYlGn")[c(1,5,11)],                         # Paleta de colores
+        labels = c("Pre critico", "Críticos","Post critico")    # Etiquetas personalizadas
+      ) +
+      scale_fill_manual(
+        values = brewer.pal(11, "RdYlGn")[c(1,5,11)],                             # Usar la misma paleta para rellenos
+        labels = c("Pre critico", "Críticos","Post critico")
+      ) +
+      
+      labs(
+        color = "Años",    # Cambia el nombre para colores
+        fill = "Años"      # Cambia el nombre para rellenos
+      )
+    
+    
+    print(grafico_comparativa)
+    ggsave(paste0(titulo_comparativa,"_",subtitulo_comparativa,".jpg"), plot = grafico_comparativa, width = 13, height = 5, dpi = 300)
+    
+    
     # Seleccionar columnas excepto la primera
     columnas <- colnames(index)[-c(1, 7, 8, 9, 10, 11, 12)]
     
