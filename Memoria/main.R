@@ -62,7 +62,7 @@ correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_io"]][["io"]][["r
 correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_io"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Input" )
 
 correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
-correlaciones_eficiencia_grafica(resultados_sin_atipicos[["vrs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
+correlaciones_eficiencia_grafica(vrs_cor_list, "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos VRS Output")
 
 correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_oo"]][["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
 correlaciones_eficiencia_grafica(resultados_sin_atipicos[["crs_oo"]][["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes - Sin datos atipicos CRS Output")
@@ -140,14 +140,45 @@ correlacion_todos_metodos_atipicos <- list(
 )
 
 resultados_usar <- resultados
-#resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
+resultados_usar <- resultados_sin_atipicos[["vrs_oo"]]
 
 
-# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA TODOS
 correlaciones_eficiencia_grafica(resultados_usar[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
 correlaciones_eficiencia_grafica(resultados_usar[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
 
+# ---- SOLO VRS OO
 
+resultados_vrs_oo <- resultados_sin_atipicos[["vrs_oo"]]
+
+
+
+# Vector de años de interés
+years <- 2014:2023
+
+# Extraemos la submatriz de correlaciones vrs para cada año
+vrs_cor_list <- lapply(years, function(y) {
+  # Accedemos a la matriz de correlaciones del año y
+  cor_matriz <- resultados_usar[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]][[as.character(y)]]
+  
+  # Filtramos filas y columnas que inician con "vrs"
+  cor_matriz_vrs <- cor_matriz[grepl("^vrs", rownames(cor_matriz)),
+                               grepl("^vrs", colnames(cor_matriz))]
+  
+  return(cor_matriz_vrs)
+})
+
+# Asignamos nombres a cada elemento de la lista para identificar el año
+names(vrs_cor_list) <- years
+
+# Ahora vrs_cor_list es una lista en la que cada elemento es la submatriz vrs de cada año
+vrs_cor_list
+
+resultados_vrs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]] <- vrs_cor_list
+
+
+
+correlaciones_eficiencia_grafica(resultados_vrs_oo[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
 correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos"), "Comparación Original vs sin atipicos - Orientación Outputs VRS")
 
 
@@ -209,9 +240,16 @@ names(random_forest$oo_crs) <- paste0(anios)
 # Llamar a la función
 resultados_importancia <- determinantes_importancia(random_forest, anios_pre_pandemia, anios_pandemia)
 
+
 # Acceder a los resultados
 resultados_IncNodePurity <- resultados_importancia$IncNodePurity
 resultados_IncMSE <- resultados_importancia$IncMSE
+
+resultados_pre_IncNodePurity = resultados_importancia$IncNodePurity_pre
+resultados_post_IncNodePurity = resultados_importancia$IncNodePurity_post
+
+resultados_pre_IncMSE = resultados_importancia$IncMSE_pre
+resultados_post_IncMSE = resultados_importancia$IncMSE_post
 
 
 #save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_vrs.RData")
@@ -254,7 +292,11 @@ determinantes_grafica(resultados_IncMSE[["oo_crs"]], "Top 10 Determinantes - Inc
 guardar_resultados(
   dataframes = resultados_usar[["oo"]],
   resultados_IncNodePurity = resultados_IncNodePurity,
+  resultados_pre_IncNodePurity = resultados_pre_IncNodePurity,
+  resultados_post_IncNodePurity = resultados_post_IncNodePurity,
   resultados_IncMSE = resultados_IncMSE,
+  resultados_pre_IncMSE = resultados_pre_IncMSE,
+  resultados_post_IncMSE = resultados_post_IncMSE,
   malmquist_vrs = malmquist_indices[["out_vrs"]][["index"]],
   malmquist_crs = malmquist_indices[["out_crs"]][["index"]],
   archivo_salida = "RESULTADOS OUTPUT.xlsx",

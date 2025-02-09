@@ -4,6 +4,7 @@ source("auxiliar.R")
 
 library(randomForest)
 library(Benchmarking)
+library(matrixStats)
 library(gridExtra)
 library(corrplot)
 library(censReg)
@@ -569,6 +570,8 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   
   importancia_IncMSE <- importancia[order(-importancia[, "%IncMSE"]), ] # Ordenar en orden descendente
   top_IncMSE <- head(importancia_IncMSE[, "%IncMSE"], 50)
+  
+  
   #print(importancia)
   
   # Graficar la importancia
@@ -597,12 +600,67 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
 }
 
 # ==============================================
+#  DETERMINANTES IMPORTANCIA 2
+# ==============================================
+determinantes_importancia_2 <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
+  # Crear listas para almacenar resultados
+  resultados_IncNodePurity <- list()
+  resultados_IncMSE <- list()
+  
+  # Iterar sobre cada método
+  for (metodo in names(random_forest)) {
+    
+    # Crear dataframes vacíos para almacenar resultados
+    df <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+
+    # Recopilar datos por año
+    for (anio in names(random_forest[[metodo]])) {
+      # Obtener importancia
+      importancia <- random_forest[[metodo]][[anio]]$importancia
+      
+      
+      temp <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, c("IncNodePurity","%IncMSE")],  # Seleccionar columna
+        Año = anio
+      )
+
+      df <- rbind(df, temp)
+    
+    }
+    
+    # --- Procesar IncNodePurity ---
+
+    
+    # --- Procesar %IncMSE ---
+    pivot <- reshape(df, 
+                            idvar = "Variable", 
+                            timevar = "Año", 
+                            direction = "wide")
+    colnames(pivot) <- gsub("Valor\\.", "", colnames(pivot))
+    
+    
+  }
+  
+  # Retornar las dos listas
+  #return(list(Importancia = df))
+  return(list(Importancia = pivot))
+}
+
+
+# ==============================================
 #  DETERMINANTES IMPORTANCIA
 # ==============================================
 determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
   # Crear listas para almacenar resultados
   resultados_IncNodePurity <- list()
   resultados_IncMSE <- list()
+  
+  resultados_pre_IncNodePurity <- list()
+  resultados_pre_IncMSE <- list()
+  
+  resultados_post_IncNodePurity <- list()
+  resultados_post_IncMSE <- list()
   
   # Iterar sobre cada método
   for (metodo in names(random_forest)) {
@@ -616,13 +674,6 @@ determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_p
       # Obtener importancia
       importancia <- random_forest[[metodo]][[anio]]$importancia
       
-      # --- IncNodePurity ---
-      temp_IncNodePurity <- data.frame(
-        Variable = rownames(importancia),
-        Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
-        Año = anio
-      )
-      df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
       
       # --- %IncMSE ---
       temp_IncMSE <- data.frame(
@@ -631,27 +682,17 @@ determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_p
         Año = anio
       )
       df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
+
+      
+      # --- IncNodePurity ---
+      temp_IncNodePurity <- data.frame(
+        Variable = rownames(importancia),
+        Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
+        Año = anio
+      )
+      df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
     }
     
-    # --- Procesar IncNodePurity ---
-    pivot_IncNodePurity <- reshape(df_IncNodePurity, 
-                                   idvar = "Variable", 
-                                   timevar = "Año", 
-                                   direction = "wide")
-    colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
-    
-    # Calcular frecuencia y promedios
-    pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
-    pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
-    pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
-    
-    # Calcular frecuencias separadas
-    pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
-    pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
-    
-    # Ordenar y seleccionar las 50 más importantes
-    pivot_IncNodePurity <- pivot_IncNodePurity[order(-pivot_IncNodePurity$Promedio_Pre_Pandemia), ]
-    resultados_IncNodePurity[[metodo]] <- head(pivot_IncNodePurity, 50)
     
     # --- Procesar %IncMSE ---
     pivot_IncMSE <- reshape(df_IncMSE, 
@@ -662,6 +703,9 @@ determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_p
     
     # Calcular frecuencia y promedios
     pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
+    pivot_IncMSE$Promedio <- rowMeans(pivot_IncMSE[, c(2:11)], na.rm = TRUE)
+    submat <- as.matrix(pivot_IncMSE[, 2:11])
+    pivot_IncMSE$Varianza <- rowVars(submat, na.rm = TRUE)
     pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
     pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
     
@@ -670,12 +714,79 @@ determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_p
     pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
     
     # Ordenar y seleccionar las 50 más importantes
-    pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia), ]
+    pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio,-pivot_IncMSE$Frecuencia), ]
+    #pivot_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio, pivot_IncMSE$Varianza), ]
     resultados_IncMSE[[metodo]] <- head(pivot_IncMSE, 50)
+    
+    pivot_pre_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pre_Pandemia,-pivot_IncMSE$Frecuencia_Pre_Pandemia), ]
+    pivot_post_IncMSE <- pivot_IncMSE[order(-pivot_IncMSE$Promedio_Pandemia,-pivot_IncMSE$Frecuencia_Pandemia), ]
+    
+    resultados_pre_IncMSE[[metodo]] <- head(pivot_pre_IncMSE, 50)
+    resultados_post_IncMSE[[metodo]] <- head(pivot_post_IncMSE, 50)
+    
+    
+    
+    # --- Procesar IncNodePurity ---
+    pivot_IncNodePurity <- reshape(df_IncNodePurity, 
+                                   idvar = "Variable", 
+                                   timevar = "Año", 
+                                   direction = "wide")
+    colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
+    
+    # Calcular frecuencia y promedios
+    pivot_IncNodePurity$Frecuencia <- table(df_IncNodePurity$Variable)[pivot_IncNodePurity$Variable]
+    pivot_IncNodePurity$Promedio <- rowMeans(pivot_IncNodePurity[, c(2:11)], na.rm = TRUE)
+    pivot_IncNodePurity$Promedio_Pre_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pre_pandemia], na.rm = TRUE)
+    pivot_IncNodePurity$Promedio_Pandemia <- rowMeans(pivot_IncNodePurity[, anios_pandemia], na.rm = TRUE)
+    
+    # Calcular frecuencias separadas
+    pivot_IncNodePurity$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pre_pandemia]))
+    pivot_IncNodePurity$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncNodePurity[, anios_pandemia]))
+    
+    pivot_pre_IncNodePurity <- pivot_IncNodePurity
+    pivot_post_IncNodePurity <- pivot_IncNodePurity
+    
+    
+    # 1) Sacar las 50 primeras variables de IncMSE
+    top50_IncMSE <- pivot_IncMSE$Variable[1:50]
+    top50_pre_IncMSE <- pivot_pre_IncMSE$Variable[1:50]
+    top50_post_IncMSE <- pivot_post_IncMSE$Variable[1:50]
+    
+    # 2) Filtrar pivot_IncNodePurity sólo con esas 50
+    #    y reordenar para que aparezcan en el mismo orden
+    pivot_IncNodePurity <- pivot_IncNodePurity[pivot_IncNodePurity$Variable %in% top50_IncMSE, ]
+    orden_np <- match(top50_IncMSE, pivot_IncNodePurity$Variable)
+    pivot_IncNodePurity <- pivot_IncNodePurity[orden_np, ]
+    
+    # 3) Finalmente, asignar pivot_IncNodePurity a tu objeto de resultados
+    resultados_IncNodePurity[[metodo]] <- pivot_IncNodePurity    
+    
+    # -----
+    pivot_pre_IncNodePurity <- pivot_pre_IncNodePurity[pivot_pre_IncNodePurity$Variable %in% top50_pre_IncMSE, ]
+    orden_np <- match(top50_pre_IncMSE, pivot_pre_IncNodePurity$Variable)
+    pivot_pre_IncNodePurity <- pivot_pre_IncNodePurity[orden_np, ]
+    
+    # 3) Finalmente, asignar pivot_IncNodePurity a tu objeto de resultados
+    resultados_pre_IncNodePurity[[metodo]] <- pivot_pre_IncNodePurity 
+    
+    # -----
+    pivot_post_IncNodePurity <- pivot_post_IncNodePurity[pivot_post_IncNodePurity$Variable %in% top50_post_IncMSE, ]
+    orden_np <- match(top50_post_IncMSE, pivot_post_IncNodePurity$Variable)
+    pivot_post_IncNodePurity <- pivot_post_IncNodePurity[orden_np, ]
+    
+    # 3) Finalmente, asignar pivot_IncNodePurity a tu objeto de resultados
+    resultados_post_IncNodePurity[[metodo]] <- pivot_post_IncNodePurity 
+    
+    
   }
   
   # Retornar las dos listas
-  return(list(IncNodePurity = resultados_IncNodePurity, IncMSE = resultados_IncMSE))
+  return(list(IncNodePurity = resultados_IncNodePurity, 
+              IncMSE = resultados_IncMSE, 
+              IncNodePurity_pre = resultados_pre_IncNodePurity, 
+              IncNodePurity_post = resultados_post_IncNodePurity,
+              IncMSE_pre = resultados_pre_IncMSE, 
+              IncMSE_post = resultados_post_IncMSE ))
 }
 
 # ==============================================
@@ -700,7 +811,7 @@ datos_filtrados_atipicos <- function(datos, resultados) {
 # ==============================================
 #  GUARDAR DATOS DE EFICIENCIA Y DETERMINANTES
 # ==============================================
-guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_IncMSE, malmquist_vrs,malmquist_crs,archivo_salida, prefijo) {
+guardar_resultados <- function(dataframes, resultados_IncNodePurity,resultados_pre_IncNodePurity,resultados_post_IncNodePurity, resultados_IncMSE,resultados_pre_IncMSE, resultados_post_IncMSE,malmquist_vrs,malmquist_crs,archivo_salida, prefijo) {
   # Instalar y cargar el paquete necesario
   if (!require(openxlsx)) install.packages("openxlsx")
   library(openxlsx)
@@ -746,6 +857,25 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   writeData(wb, paste0("Determinantes IncNodePurity CRS"), 
             reemplazar_nulos(resultados_IncNodePurity[[paste0(prefijo, "_crs")]]))
   
+  # PRE PANDEMIA #
+  addWorksheet(wb, paste0("Det PRE IncNodePurity VRS"))
+  writeData(wb, paste0("Det PRE IncNodePurity VRS"), 
+            reemplazar_nulos(resultados_pre_IncNodePurity[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Det PRE IncNodePurity CRS"))
+  writeData(wb, paste0("Det PRE IncNodePurity CRS"), 
+            reemplazar_nulos(resultados_pre_IncNodePurity[[paste0(prefijo, "_crs")]]))
+  
+  # POST #
+  addWorksheet(wb, paste0("Det POST IncNodePurity VRS"))
+  writeData(wb, paste0("Det POST IncNodePurity VRS"), 
+            reemplazar_nulos(resultados_post_IncNodePurity[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Det POST IncNodePurity CRS"))
+  writeData(wb, paste0("Det POST IncNodePurity CRS"), 
+            reemplazar_nulos(resultados_post_IncNodePurity[[paste0(prefijo, "_crs")]]))
+  
+  
   # %IncMSE
   addWorksheet(wb, paste0("Determinantes IncMSE VRS"))
   writeData(wb, paste0("Determinantes IncMSE VRS"), 
@@ -754,6 +884,24 @@ guardar_resultados <- function(dataframes, resultados_IncNodePurity, resultados_
   addWorksheet(wb, paste0("Determinantes IncMSE CRS"))
   writeData(wb, paste0("Determinantes IncMSE CRS"), 
             reemplazar_nulos(resultados_IncMSE[[paste0(prefijo, "_crs")]]))
+  
+  # PRE PANDEMIA #
+  addWorksheet(wb, paste0("Det PRE IncMSE VRS"))
+  writeData(wb, paste0("Det PRE IncMSE VRS"), 
+            reemplazar_nulos(resultados_pre_IncMSE[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Det PRE IncMSE CRS"))
+  writeData(wb, paste0("Det PRE IncMSE CRS"), 
+            reemplazar_nulos(resultados_pre_IncMSE[[paste0(prefijo, "_crs")]]))
+
+  # POST PANDEMIA #
+  addWorksheet(wb, paste0("Det POST IncMSE VRS"))
+  writeData(wb, paste0("Det POST IncMSE VRS"), 
+            reemplazar_nulos(resultados_post_IncMSE[[paste0(prefijo, "_vrs")]]))
+  
+  addWorksheet(wb, paste0("Det POST IncMSE CRS"))
+  writeData(wb, paste0("Det POST IncMSE CRS"), 
+            reemplazar_nulos(resultados_post_IncMSE[[paste0(prefijo, "_crs")]]))
   
   # Guardar el archivo
   saveWorkbook(wb, archivo_salida, overwrite = TRUE)
