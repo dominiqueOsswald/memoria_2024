@@ -505,10 +505,10 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     archivo_salida <- paste0("correlaciones_pagina_", pagina, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
-    png(archivo_salida, width = 5000, height = 2500, res = 300)  # Más ancho y achatado
+    png(archivo_salida, width = 6000, height = 3000, res = 300)  # Más ancho y achatado
     
     # Ajustar la ventana gráfica para 2x5
-    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(4, 4, 4, 4))
+    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(4,4,4,4))
     
     # Crear las gráficas para los años actuales
     for (anio in años_actuales) {
@@ -519,18 +519,24 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         colnames(corr_matrix) <- etiquetas
       }
       
+      format_num <- function(x) {
+        ifelse(x == 1, "1", format(round(x, 3), nsmall = 3))
+      }
+      
       corrplot(
         corr_matrix, 
         col = colores_personalizados, 
         method = "color", 
-        title = paste("Año", anio),  # Año como título
-        mar = c(1, 1, 8, 1),  # Márgenes más pequeños
-        addCoef.col = "black",  # Números negros
-        number.cex = 1.2,  # Tamaño más grande de los números
-        cl.ratio = 0.4,        # Ajustar tamaño de la barra de leyenda
+        title = paste("Año", anio),
+        mar = c(1, 1, 8, 1),
+        addCoef.col = "black",
+        number.cex = 1.2,
+        cl.ratio = 0.4,
         cl.align = "r", 
-        tl.col = "black"  # Cambiar color de etiquetas a negro
+        tl.col = "black",
+        number.format = format_num  # Aplicar formato personalizado
       )
+      
     }
     
     # Determinar título según orientación
@@ -571,6 +577,103 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
   
   # Retornar lista de gráficos
   return(lista_graficos)
+}
+
+
+
+
+
+
+correlaciones_single_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "") {
+  # Definir colores personalizados
+  colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)
+  
+  # Determinar la cantidad de gráficos
+  num_graficos <- length(correlaciones_lista)
+  graficos_por_pagina <- 10  # Máximo 10 gráficos por página (2x5)
+  paginas <- ceiling(num_graficos / graficos_por_pagina)
+  
+  # Crear lista para almacenar los gráficos
+  lista_graficos <- list()
+  
+  
+  # Definir el nombre del archivo para guardar la página como imagen
+  archivo_salida <- paste0("Resumen correlaciones",".png")
+  
+  # Abrir un dispositivo gráfico para guardar como imagen
+  png(archivo_salida, width = 6000, height = 3000, res = 300)  # Más ancho y achatado
+  
+  # Ajustar la ventana gráfica para 2x5
+  par(mfrow = c(2, 4), mar = c(1, 1, 2, 1), oma = c(4,4,4,4))
+  
+  metodos <- names(correlaciones_lista)
+  
+  # Crear las gráficas para los años actuales
+  for (metodo in metodos) {
+    corr_matrix <- correlaciones_lista[[metodo]]
+    
+    if (length(etiquetas) != 0) {
+      rownames(corr_matrix) <- etiquetas
+      colnames(corr_matrix) <- etiquetas
+    }
+    
+    format_num <- function(x) {
+      ifelse(x == 1, "1", format(round(x, 3), nsmall = 3))
+    }
+    
+    corrplot(
+      corr_matrix, 
+      col = colores_personalizados, 
+      method = "color", 
+      title = paste("Año", metodo),
+      mar = c(1, 1, 8, 1),
+      addCoef.col = "black",
+      number.cex = 1.2,
+      cl.ratio = 0.4,
+      cl.align = "r", 
+      tl.col = "black",
+      number.format = format_num  # Aplicar formato personalizado
+    )
+    
+  }
+  
+  # Determinar título según orientación
+  if (orientacion == "io") {
+    texto <- "Matrices de correlación de métodos orientado a entradas por año"
+  } else if (orientacion == "oo") {
+    texto <- "Matrices de correlación de métodos orientado a salidas por año"
+  } else {
+    texto <- "Matrices de correlación de métodos por año"
+  }
+  
+  # Título principal centrado
+  mtext(
+    texto, 
+    outer = TRUE, 
+    cex = 1.5,  # Tamaño del texto
+    font = 2,   # Estilo en negrita
+    line = 1.5  # Ajusta la posición vertical
+  )
+  
+  # Subtítulo centrado y más cerca del título
+  if (subtitulo != "") {
+    mtext(
+      subtitulo,
+      outer = TRUE, 
+      cex = 1.2,  # Tamaño del texto
+      font = 3,   # Cursiva
+      line = 0.1  # Justo debajo del título principal
+    )
+  }
+  
+  # Cerrar el dispositivo gráfico
+  dev.off()
+  
+  # Restablecer configuración gráfica
+  par(mfrow = c(1, 1))
+
+  
+
 }
 
 

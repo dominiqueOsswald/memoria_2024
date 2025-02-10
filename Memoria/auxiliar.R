@@ -204,9 +204,22 @@ calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
   # Nombrar la lista con los años para identificación
   names(correlaciones_lista) <- names(lista_resultados_combinados_in)
   
+  # Sumar todas las matrices con `Reduce`:
+  suma_matrices <- Reduce("+", correlaciones_lista)
+  
+  # Calcular el promedio dividiendo por la cantidad de matrices
+  n <- length(correlaciones_lista)
+  promedio_matriz <- suma_matrices / n
+  
+  promedio_matriz
+  
+  
   # Retornar resultados de correlación entre matrices de distintos años
-  return(list(correlaciones_lista = correlaciones_lista))
+  return(list(correlaciones_lista = correlaciones_lista,
+              promedio_correlacion = promedio_matriz))
 }
+
+
 
 # ==============================================
 #  
