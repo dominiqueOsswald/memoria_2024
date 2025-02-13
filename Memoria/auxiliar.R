@@ -95,8 +95,8 @@ guardar_dataframe_por_columna <- function(dataframes, columna) {
       return(NULL)
     }
     
-    if (!("IdEstablecimiento" %in% colnames(df))) {
-      warning(paste("El año", anio, "no contiene 'IdEstablecimiento'"))
+    if (!all(c("IdEstablecimiento", "Nombre") %in% colnames(df))) {
+      warning(paste("El año", anio, "no contiene 'IdEstablecimiento' o 'Nombre'"))
       return(NULL)
     }
     
@@ -106,8 +106,8 @@ guardar_dataframe_por_columna <- function(dataframes, columna) {
     }
     
     message(paste("Datos válidos encontrados para el año", anio))
-    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", columna)])
-    colnames(df_seleccionado) <- c("IdEstablecimiento", anio)  # Renombrar columna con el año
+    df_seleccionado <- reemplazar_nulos(df[, c("IdEstablecimiento", "Nombre", columna)])
+    colnames(df_seleccionado) <- c("IdEstablecimiento", "Nombre", anio)  # Renombrar columna con el año
     return(df_seleccionado)
   })
   
@@ -119,14 +119,21 @@ guardar_dataframe_por_columna <- function(dataframes, columna) {
     return(NULL)
   }
   
-  # Combinar resultados en un solo dataframe
-  df_final <- Reduce(function(x, y) merge(x, y, by = "IdEstablecimiento", all = TRUE), resultados)
+  # Combinar resultados en un solo dataframe asegurando mantener "Nombre"
+  df_final <- Reduce(function(x, y) merge(x, y, by = c("IdEstablecimiento", "Nombre"), all = TRUE), resultados)
   
-  # Calcular el promedio por fila (ignorando nulos)
-  df_final$Promedio <- rowMeans(df_final[, -1], na.rm = TRUE)
+  # Unificar filas por IdEstablecimiento
+  df_final <- df_final %>%
+    group_by(IdEstablecimiento) %>%
+    summarise(
+      Nombre = first(Nombre),  # Toma el primer nombre disponible
+      across(where(is.numeric), ~ mean(.x, na.rm = TRUE))  # Promedio de valores numéricos
+    ) %>%
+    ungroup()
   
   return(df_final)
 }
+S
 
 # ==============================================
 #  

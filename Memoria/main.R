@@ -251,6 +251,14 @@ resultados_post_IncNodePurity = resultados_importancia$IncNodePurity_post
 resultados_pre_IncMSE = resultados_importancia$IncMSE_pre
 resultados_post_IncMSE = resultados_importancia$IncMSE_post
 
+save(resultados_importancia,
+     resultados_IncNodePurity,
+     resultados_IncMSE,
+     resultados_pre_IncNodePurity,
+     resultados_post_IncNodePurity,
+     resultados_pre_IncMSE,
+     resultados_post_IncMSE,
+     file="resultados_deteterminantes_pre_post.RData")
 
 #save(resultados_usar,resultados_importancia, resultados_IncNodePurity, resultados_IncMSE, file="determinantes_io_vrs.RData")
 # -------------------------------------------- #
