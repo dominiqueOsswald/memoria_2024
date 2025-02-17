@@ -15,16 +15,6 @@ anios_pandemia <- c("2020", "2021", "2022", "2023")
 load("RData/datos.RData")
 load("RData/datos_atipicos.RData")
 load("RData/resultados_eficiencia.RData")
-
-# Estos deben variar segun carpeta:
-# - originales
-# - output_vrs
-# - output_crs
-# - input_vrs
-# - input_crs
-
-carpeta <- "output_vrs"
-
 load(paste0("RData/",carpeta,"/malmquist.RData"))
 load(paste0("RData/",carpeta,"/determinantes.RData"))
 

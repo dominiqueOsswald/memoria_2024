@@ -507,8 +507,8 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     # Abrir un dispositivo gráfico para guardar como imagen
     png(archivo_salida, width = 6000, height = 3000, res = 300)  # Más ancho y achatado
     
-    # Ajustar la ventana gráfica para 2x5
-    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(4,4,4,4))
+    # Ajustar la ventana gráfica para 2x5 con márgenes reducidos
+    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
     
     # Crear las gráficas para los años actuales
     for (anio in años_actuales) {
@@ -519,6 +519,9 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         colnames(corr_matrix) <- etiquetas
       }
       
+      # Enmascarar la diagonal superior
+      corr_matrix[upper.tri(corr_matrix)] <- NA
+      
       format_num <- function(x) {
         ifelse(x == 1, "1", format(round(x, 3), nsmall = 3))
       }
@@ -527,15 +530,20 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         corr_matrix, 
         col = colores_personalizados, 
         method = "color", 
-        title = paste("Año", anio),
-        mar = c(1, 1, 8, 1),
-        addCoef.col = "black",
-        number.cex = 1.2,
+        mar = c(1, 1, 2, 1),  # Reducir margen superior del gráfico
+        addCoef.col = "black",  # Color de los coeficientes
+        number.cex = 1.5,  # Aumenta el tamaño de los números dentro de las celdas
+        tl.cex = 1.5,  # Aumenta el tamaño de las etiquetas de los ejes (filas y columnas)
+        cl.cex = 1.5,  # Aumenta el tamaño de la escala de colores
         cl.ratio = 0.4,
         cl.align = "r", 
         tl.col = "black",
-        number.format = format_num  # Aplicar formato personalizado
+        number.format = format_num,  
+        na.label = " "
       )
+      
+      # Acercar el título al gráfico
+      mtext(paste("Año", anio), side = 3, line = -1, cex = 1.5, font = 2)  
       
     }
     
@@ -548,23 +556,23 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
       texto <- "Matrices de correlación de métodos por año"
     }
     
-    # Título principal centrado
+    # Reducir espacio entre el título general y los gráficos
     mtext(
       texto, 
       outer = TRUE, 
       cex = 1.5,  # Tamaño del texto
       font = 2,   # Estilo en negrita
-      line = 1.5  # Ajusta la posición vertical
+      line = 0.5  # Acercar más el título a los gráficos
     )
     
-    # Subtítulo centrado y más cerca del título
+    # Subtítulo centrado y más cerca del título principal
     if (subtitulo != "") {
       mtext(
         subtitulo,
         outer = TRUE, 
-        cex = 1.2,  # Tamaño del texto
-        font = 3,   # Cursiva
-        line = 0.1  # Justo debajo del título principal
+        cex = 1.2,  
+        font = 3,   
+        line = -0.5  # Subtítulo aún más cerca
       )
     }
     
