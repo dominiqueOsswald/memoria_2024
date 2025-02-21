@@ -8,7 +8,7 @@ source("graphics.R")
 # ==============================================
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
-correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output"))
+correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output", "ESC Input", "ESC Output"))
 
 
 #  ELIMINACIÓN DE DATOS ATÍPICOS

@@ -28,6 +28,7 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
 resultados <- list(io = resultados_iteracion(datos, "io"),oo = resultados_iteracion(datos, "oo"))
 
+
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
 correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
 correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
@@ -206,6 +207,23 @@ malmquist_indices <- list(
   out_crs = malmquist(datos_usar,"crs", "out")
 )
 
+# Crear esc
+malmquist_indices[["in_esc"]] <- list(
+  eficiencia = malmquist_indices[["in_crs"]][["eficiencia"]] / malmquist_indices[["in_vrs"]][["eficiencia"]],
+  index      = malmquist_indices[["in_crs"]][["index"]] / malmquist_indices[["in_vrs"]][["index"]],
+  tech       = malmquist_indices[["in_crs"]][["tech"]] / malmquist_indices[["in_vrs"]][["tech"]],
+  eff        = malmquist_indices[["in_crs"]][["eff"]] / malmquist_indices[["in_vrs"]][["eff"]]
+)
+
+malmquist_indices[["out_esc"]] <- list(
+  eficiencia = malmquist_indices[["out_crs"]][["eficiencia"]] / malmquist_indices[["out_vrs"]][["eficiencia"]],
+  index      = malmquist_indices[["out_crs"]][["index"]] / malmquist_indices[["out_vrs"]][["index"]],
+  tech       = malmquist_indices[["out_crs"]][["tech"]] / malmquist_indices[["out_vrs"]][["tech"]],
+  eff        = malmquist_indices[["out_crs"]][["eff"]] / malmquist_indices[["out_vrs"]][["eff"]]
+)
+
+
+
 
 #save(datos_usar,malmquist_indices, file="malmquist_io_vrs.RData")
 
@@ -232,6 +250,7 @@ names(random_forest$io_vrs) <- paste0(anios)
 names(random_forest$io_crs) <- paste0(anios)
 names(random_forest$oo_vrs) <- paste0(anios)
 names(random_forest$oo_crs) <- paste0(anios)
+
 
 # -------------------------------------------- #
 #  EXTRACCIÓN DE VARIABLES POR AÑO
