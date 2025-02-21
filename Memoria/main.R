@@ -38,7 +38,7 @@ correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
-correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output"))
+correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output","ESC Input", "ESC Output"))
 
 
 
@@ -47,12 +47,16 @@ correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista
 datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
 
 resultados_sin_atipicos <- list(
-  vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
-  crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
-  vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
-  crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo"))
+  #vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
+  #crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
+  #vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
+  #crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")),
+  esc_io = list(io = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo"))
+  #esc_oo = list(io = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "oo"))
   
 )
+
+TEST <- resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo")
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
@@ -132,6 +136,20 @@ correlacion_todos_metodos_atipicos <- list(
     comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["vrs_io"]][["comparacion"]])
   ),
   crs_io = list(
+    original_vs_sin_atipicos =   list(
+      oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["oo"]]),
+      io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["io"]])
+    ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["comparacion"]])
+  ),
+  esc_io = list(
+    original_vs_sin_atipicos =   list(
+      oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["oo"]]),
+      io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["io"]])
+    ),
+    comparacion = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["comparacion"]])
+  ),
+  esc_io = list(
     original_vs_sin_atipicos =   list(
       oo = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["oo"]]),
       io = calcular_correlaciones_all(resultados_combinaciones_sin_atipicos[["crs_io"]][["original_vs_sin_atipicos"]][["io"]])

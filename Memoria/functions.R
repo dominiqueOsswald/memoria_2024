@@ -384,61 +384,92 @@ resultados_iteracion <- function(datos, orientacion){
 
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
+      print("UNO")
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+      print("DOS")
       iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-      
+      print("TRES")
       iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+      print("CUATRO")
       iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-      
+      print("CINCO")
       iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
-      iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
+      print("SEIS")
+      iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
     
       
   }else{
+    print("UNO")
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    print("DOS")
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    
+    print("TRES")
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
+    print("CUATRO")
     iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
-    
+    print("CINCO")
     iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "esc", FALSE)
-    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "esc", FALSE)
+    print("SEIS")
+    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 1, orientacion, "esc", FALSE)
   }
-
+  
+  print("2")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs, iteracion_1_esc, iteracion_2_esc)
+  print("22")
   resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
   
-
+  print("222")
   lista_outliers_vrs <- list()
+  print("2")
   vector_outliers_vrs <- c()
-
+  print("22")
   lista_outliers_crs <- list()
+  print("222")
   vector_outliers_crs <- c()
+  print("2")
+  lista_outliers_esc <- list()
+  print("22")
+  vector_outliers_esc <- c()
   
-
+  print("222")
   # Especificar los años que quieres iterar
   for (anio in anios) {
     # ----------------- #
+    print("3")
     # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
-
+    print("4")
     ids_outliers_vrs <- original[[anio]][["data"]] %>%
       filter(vrs %in% outliers_vrs) %>%
       select(IdEstablecimiento, vrs)
-
+    print("5")
     lista_outliers_vrs[[anio]] <- ids_outliers_vrs
+    print("6")
     vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
-
+    print("7")
     # ----------------- #
     # Generar y almacenar los valores atípicos de CRS
     outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
-
+    print("8")
     ids_outliers_crs <- original[[anio]][["data"]] %>%
       filter(crs %in% outliers_crs) %>%
       select(IdEstablecimiento, crs)
-
+    print("9")
     lista_outliers_crs[[anio]] <- ids_outliers_crs
+    print("10")
     vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
+    print("11")
+    # ----------------- #
+    # Generar y almacenar los valores atípicos de escala
+    outliers_esc <- boxplot.stats(original[[anio]][["data"]]$escala)$out
+    print("12")
+    ids_outliers_esc <- original[[anio]][["data"]] %>%
+      filter(escala %in% outliers_esc) %>%
+      select(IdEstablecimiento, escala)
+    print("13")
+    lista_outliers_esc[[anio]] <- ids_outliers_esc
+    print("14")
+    vector_outliers_esc <- unique(c(vector_outliers_esc, ids_outliers_esc$IdEstablecimiento))
   }
 
   list(
@@ -453,10 +484,13 @@ resultados_iteracion <- function(datos, orientacion){
     
     resultados_combinados = resultados_combinados,
     resultados_correlacion = resultados_correlacion,
+    
     lista_outliers_vrs = lista_outliers_vrs,
     vector_outliers_vrs = vector_outliers_vrs,
     lista_outliers_crs = lista_outliers_crs,
-    vector_outliers_crs = vector_outliers_crs
+    vector_outliers_crs = vector_outliers_crs,
+    lista_outliers_esc = lista_outliers_esc,
+    vector_outliers_esc = vector_outliers_esc
   )
 }
 
@@ -1040,12 +1074,16 @@ datos_filtrados_atipicos <- function(datos, resultados) {
   datos_filtrados_crs_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_crs"]])
   datos_filtrados_vrs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_vrs"]])
   datos_filtrados_crs_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_crs"]])
+  datos_filtrados_esc_io <- filtrar_datos(datos, resultados[["io"]][["vector_outliers_esc"]])
+  datos_filtrados_esc_oo <- filtrar_datos(datos, resultados[["oo"]][["vector_outliers_esc"]])
   
   return (list(
     vrs_io = datos_filtrados_vrs_io,
     crs_io = datos_filtrados_crs_io,
     vrs_oo = datos_filtrados_vrs_oo,
-    crs_oo = datos_filtrados_crs_oo
+    crs_oo = datos_filtrados_crs_oo,
+    esc_io = datos_filtrados_esc_io,
+    esc_oo = datos_filtrados_esc_oo
     
   ))
 }

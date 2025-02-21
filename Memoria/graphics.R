@@ -505,10 +505,11 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     archivo_salida <- paste0("correlaciones_pagina_", pagina, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
-    png(archivo_salida, width = 6000, height = 3000, res = 300)  # Más ancho y achatado
+    png(archivo_salida, width = 7000, height = 4000, res = 300)  # Más ancho y achatado
     
     # Ajustar la ventana gráfica para 2x5 con márgenes reducidos
-    par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
+    #par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
+    par(mfrow = c(2, 5), mar = c(2, 2, 2, 2), oma = c(2, 2, 2, 2))  
     
     # Crear las gráficas para los años actuales
     for (anio in años_actuales) {
@@ -541,6 +542,8 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         number.format = format_num,  
         na.label = " "
       )
+      
+      
       
       # Acercar el título al gráfico
       mtext(paste("Año", anio), side = 3, line = -1, cex = 1.5, font = 2)  
