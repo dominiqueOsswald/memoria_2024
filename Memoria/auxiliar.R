@@ -204,7 +204,8 @@ calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
     df_num <- df %>%
       select(-IdEstablecimiento) %>%
       mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
-      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
+      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
+      mutate(across(starts_with("esc_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
     
     cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
   })

@@ -383,6 +383,63 @@ resultados_iteracion <- function(datos, orientacion){
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
   
+  
+  #aplicar_analisis_dea(datos, orientacion)
+  if (orientacion == "io"){
+    print("UNO")
+    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+    print("DOS")
+    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
+    print("TRES")
+    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+    print("CUATRO")
+    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
+    print("CINCO")
+    iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
+    print("SEIS")
+    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
+    
+    
+  }else{
+    browser()
+    print("UNO")
+    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    print("DOS")
+    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    print("TRES")
+    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
+    print("CUATRO")
+    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
+    print("CINCO")
+    iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "esc", FALSE)
+    print("SEIS")
+    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 1, orientacion, "esc", FALSE)
+  }
+  
+  
+  
+  return(list(
+    original =  original,
+    iteracion_1_vrs = iteracion_1_vrs,
+    iteracion_2_vrs = iteracion_2_vrs,
+    iteracion_1_crs = iteracion_1_crs,
+    iteracion_2_crs = iteracion_2_crs,
+    
+    iteracion_1_esc = iteracion_1_esc,
+    iteracion_2_esc = iteracion_2_esc
+    
+  ))
+  
+}
+
+
+
+
+
+old_resultados_iteracion <- function(datos, orientacion){
+  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
+  original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
+  
 
   #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
