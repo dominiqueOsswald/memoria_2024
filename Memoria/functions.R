@@ -23,8 +23,9 @@ library(deaR)
 # ===================================================
 consolidar_datos_por_anio <- function(anio) {
   
+  #browser()
   # Establecer directorio de trabajo
-  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+  #setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
   
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
@@ -286,6 +287,7 @@ malmquist <- function(datos, tipo, orientacion) {
 #  COMBINACIÓN DE RESULTADO DE ITERACIONES
 # ==============================================
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs,resultados_in_2_esc, resultados_in_3_esc) {
+  browser()
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
     # Seleccionar los datos de las iteraciones de VRS
@@ -399,6 +401,7 @@ resultados_iteracion <- function(datos, orientacion){
     
       
   }else{
+    browser()
     print("UNO")
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("DOS")
@@ -415,6 +418,9 @@ resultados_iteracion <- function(datos, orientacion){
   
   print("2")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs, iteracion_1_esc, iteracion_2_esc)
+  #resultados_combinados_out <- resultados_combinaciones
+  save(resultados_combinados,file="RESULTADOS_COMBINADOS.RData")
+  
   print("22")
   resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
   

@@ -198,6 +198,7 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
 #  
 # ==============================================
 calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
+  browser()
   # Calcular las matrices de correlación para cada dataframe en la lista
   correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
     df_num <- df %>%

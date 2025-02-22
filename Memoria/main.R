@@ -3,6 +3,12 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
+load("DATOS.RData")
+load("RESULTADOS_COMBINADOS_OUT.RData")
+load("RESULTADOS_COMBINADOS.RData")
+
+
+resultado_in <- resultados_combinados
 # ==============================================
 #  PRE PROCESAMIENTO DE DATOS
 # ==============================================
@@ -25,38 +31,45 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 #  CÁLCULO DEA
 # ==============================================
 
+#  CALCULO DE EFICIENCIA EN TODOS LOS AÑOS Y REVISIÓN DE
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
-resultados <- list(io = resultados_iteracion(datos, "io"),oo = resultados_iteracion(datos, "oo"))
-
-
-# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
-correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
-
+resultados <- list(io = resultados_iteracion(datos, "io"),
+                   oo = resultados_iteracion(datos, "oo"))
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
+# ----> 
+# GRAFICAS
+
+# GRAFICA DE SENSIBILIDAD POR EFICIENCIA
+correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
+
+# GRAFICA DE COMPARACION DE METODOS
 correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output","ESC Input", "ESC Output"))
 
+# ----> 
 
+#  NUEVO CONJUNTO DE DATOS A PARTIR DE ELIMINACIÓN DE ATÍPICOS 
 
-
-#  ELIMINACIÓN DE DATOS ATÍPICOS
 datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
 
+
+save(datos,datos_sin_atipicos,resultados,resultados_combinaciones,correlacion_todos_metodos,file="DATOS.RData")
+
 resultados_sin_atipicos <- list(
-  #vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
+  vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo"))
   #crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
   #vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
   #crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")),
-  esc_io = list(io = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo"))
+  #esc_io = list(io = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo"))
   #esc_oo = list(io = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "oo"))
   
 )
 
-TEST <- resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo")
+TEST <- resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
