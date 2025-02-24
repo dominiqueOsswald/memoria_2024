@@ -35,7 +35,7 @@ consolidar_datos_por_anio <- function(anio) {
   path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2023.xlsx"
   path_consultas <- paste0("data/", anio, "/variables/", anio, "_consultas.txt")
   path_quirofano <- paste0("data/", anio, "/variables/", anio, "_quirofano.txt")
-  
+  browser()
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
@@ -287,7 +287,7 @@ malmquist <- function(datos, tipo, orientacion) {
 #  COMBINACIÓN DE RESULTADO DE ITERACIONES
 # ==============================================
 combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, resultados_in_3_vrs, resultados_in_2_crs, resultados_in_3_crs,resultados_in_2_esc, resultados_in_3_esc) {
-  browser()
+  #browser()
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
     # Seleccionar los datos de las iteraciones de VRS
@@ -436,7 +436,7 @@ resultados_iteracion <- function(datos, orientacion){
 
 
 
-old_resultados_iteracion <- function(datos, orientacion){
+resultados_iteracion <- function(datos, orientacion){
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
   
@@ -458,7 +458,7 @@ old_resultados_iteracion <- function(datos, orientacion){
     
       
   }else{
-    browser()
+    #browser()
     print("UNO")
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("DOS")

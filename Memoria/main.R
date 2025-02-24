@@ -3,12 +3,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
-load("DATOS.RData")
-load("RESULTADOS_COMBINADOS_OUT.RData")
-load("RESULTADOS_COMBINADOS.RData")
+#load("DATOS.RData")
+#load("RESULTADOS_COMBINADOS_OUT.RData")
+#load("RESULTADOS_COMBINADOS.RData")
 
-
-resultado_in <- resultados_combinados
 # ==============================================
 #  PRE PROCESAMIENTO DE DATOS
 # ==============================================
@@ -60,16 +58,35 @@ datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
 save(datos,datos_sin_atipicos,resultados,resultados_combinaciones,correlacion_todos_metodos,file="DATOS.RData")
 
 resultados_sin_atipicos <- list(
-  vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo"))
-  #crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
-  #vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
-  #crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")),
-  #esc_io = list(io = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo"))
-  #esc_oo = list(io = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "oo"))
+  vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
+  crs_io = list(io = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_io"]], "oo")),
+  vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo")),
+  crs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")),
+  esc_io = list(io = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_io"]], "oo")),
+  esc_oo = list(io = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["esc_oo"]], "oo"))
   
 )
 
-TEST <- resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")
+
+
+
+#resultados_combinados_1 <- combinar_resultados_iteraciones(resultados_sin_atipicos[["vrs_io"]][["io"]][["original"]], 
+#                                                         resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_1_vrs"]], resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_2_vrs"]], 
+#                                                         resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_1_crs"]], resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_2_crs"]],
+#                                                         resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_1_esc"]], resultados_sin_atipicos[["vrs_io"]][["io"]][["iteracion_2_esc"]])
+
+#resultados_correlacion <- calcular_correlaciones_all(resultados_combinados_1)
+
+#resultados_combinados_2 <- combinar_resultados_iteraciones(resultados_sin_atipicos[["vrs_io"]][["oo"]][["original"]], 
+#                                                           resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_1_vrs"]], resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_2_vrs"]], 
+#                                                           resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_1_crs"]], resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_2_crs"]],
+#                                                           resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_1_esc"]], resultados_sin_atipicos[["vrs_io"]][["oo"]][["iteracion_2_esc"]])
+
+#resultados_correlacion_2 <- calcular_correlaciones_all(resultados_combinados_2)
+
+
+
+#TEST <- resultados_iteracion(datos_sin_atipicos[["crs_oo"]], "oo")
 
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
