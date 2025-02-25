@@ -408,7 +408,7 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
   mapply(function(data, resultado, anio) {
     # Mostrar el nombre del año en pantalla
     print(paste("Aplicando sensibilidad para el año:", anio))
-    
+    #browser()
     # Ejecutar la función principal
     sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
   },

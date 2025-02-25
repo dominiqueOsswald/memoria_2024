@@ -35,7 +35,7 @@ consolidar_datos_por_anio <- function(anio) {
   path_estadisticas <- "data/Consolidado estadísticas hospitalarias 2014-2023.xlsx"
   path_consultas <- paste0("data/", anio, "/variables/", anio, "_consultas.txt")
   path_quirofano <- paste0("data/", anio, "/variables/", anio, "_quirofano.txt")
-  browser()
+  #browser()
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
@@ -201,6 +201,7 @@ analisis_dea_general <- function(data, orientation) {
 
 sensibilidad_parametro_general <- function(data, data_original, mayor, valor, orientacion, tipo) {
   # Determinar la columna a trabajar (vrs o crs)
+  #browser()
   columna <- ifelse(tipo == "vrs", "vrs", ifelse(tipo == "crs", "crs", "escala"))
   
   # Filtrar los datos en función del parámetro `mayor` y el valor dado
@@ -381,81 +382,22 @@ combinar_resultados_iteraciones <- function(resultados_in, resultados_in_2_vrs, 
 # ==============================================
 #  GENERACIÓN DE RESULTADOS DE ITERACION
 # ==============================================
-resultados_iteracion <- function(datos, orientacion){
-  anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
-  original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
-  
-  
-  #aplicar_analisis_dea(datos, orientacion)
-  if (orientacion == "io"){
-    print("UNO")
-    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-    print("DOS")
-    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-    print("TRES")
-    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-    print("CUATRO")
-    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-    print("CINCO")
-    iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
-    print("SEIS")
-    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
-    
-    
-  }else{
-    browser()
-    print("UNO")
-    iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    print("DOS")
-    iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    print("TRES")
-    iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
-    print("CUATRO")
-    iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 1, orientacion, "crs", FALSE)
-    print("CINCO")
-    iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "esc", FALSE)
-    print("SEIS")
-    iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 1, orientacion, "esc", FALSE)
-  }
-  
-  
-  
-  return(list(
-    original =  original,
-    iteracion_1_vrs = iteracion_1_vrs,
-    iteracion_2_vrs = iteracion_2_vrs,
-    iteracion_1_crs = iteracion_1_crs,
-    iteracion_2_crs = iteracion_2_crs,
-    
-    iteracion_1_esc = iteracion_1_esc,
-    iteracion_2_esc = iteracion_2_esc
-    
-  ))
-  
-}
-
-
-
-
 
 resultados_iteracion <- function(datos, orientacion){
   anios <- c("2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022","2023")
   original <-  sapply(datos, function(data) analisis_dea_general(data, orientacion), simplify = FALSE)
+  names(original) <- anios
   
-
-  #aplicar_analisis_dea(datos, orientacion)
   if (orientacion == "io"){
-      print("UNO")
+      #browser()
+      print("VRS")
       iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-      print("DOS")
       iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 0.99, orientacion, "vrs", FALSE)
-      print("TRES")
-      iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-      print("CUATRO")
-      iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.99, orientacion, "crs", FALSE)
-      print("CINCO")
+      print("CRS")
+      iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.98, orientacion, "crs", FALSE)
+      iteracion_2_crs <- aplicar_sensibilidad(datos, lapply(iteracion_1_crs, `[[`, "data"), 0.98, orientacion, "crs", FALSE)
+      print("ESC")
       iteracion_1_esc <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
-      print("SEIS")
       iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 0.99, orientacion, "esc", FALSE)
     
       
@@ -474,7 +416,7 @@ resultados_iteracion <- function(datos, orientacion){
     print("SEIS")
     iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 1, orientacion, "esc", FALSE)
   }
-  
+  browser()
   print("2")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs, iteracion_1_esc, iteracion_2_esc)
   #resultados_combinados_out <- resultados_combinaciones
@@ -504,37 +446,60 @@ resultados_iteracion <- function(datos, orientacion){
     # Generar y almacenar los valores atípicos de VRS
     outliers_vrs <- boxplot.stats(original[[anio]][["data"]]$vrs)$out
     print("4")
+    if (length(outliers_vrs)  > 0 ){
     ids_outliers_vrs <- original[[anio]][["data"]] %>%
       filter(vrs %in% outliers_vrs) %>%
       select(IdEstablecimiento, vrs)
-    print("5")
-    lista_outliers_vrs[[anio]] <- ids_outliers_vrs
-    print("6")
-    vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
-    print("7")
+      print("5")
+      lista_outliers_vrs[[anio]] <- ids_outliers_vrs
+      
+      print("6")
+      vector_outliers_vrs <- unique(c(vector_outliers_vrs, ids_outliers_vrs$IdEstablecimiento))
+      print("7")
+      
+    }else{
+      lista_outliers_vrs[[anio]] <- list()
+      vector_outliers_vrs <- list()
+    }
+    
     # ----------------- #
     # Generar y almacenar los valores atípicos de CRS
     outliers_crs <- boxplot.stats(original[[anio]][["data"]]$crs)$out
     print("8")
-    ids_outliers_crs <- original[[anio]][["data"]] %>%
-      filter(crs %in% outliers_crs) %>%
-      select(IdEstablecimiento, crs)
-    print("9")
-    lista_outliers_crs[[anio]] <- ids_outliers_crs
-    print("10")
-    vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
-    print("11")
+    if (length(outliers_crs)  > 0){
+      ids_outliers_crs <- original[[anio]][["data"]] %>%
+        filter(crs %in% outliers_crs) %>%
+        select(IdEstablecimiento, crs)
+      print("9")
+      lista_outliers_crs[[anio]] <- ids_outliers_crs
+      print("10")
+      vector_outliers_crs <- unique(c(vector_outliers_crs, ids_outliers_crs$IdEstablecimiento))
+      print("11")
+      
+    }else{
+      lista_outliers_crs[[anio]] <- list()
+      vector_outliers_crs <- list()
+    }
+
     # ----------------- #
     # Generar y almacenar los valores atípicos de escala
     outliers_esc <- boxplot.stats(original[[anio]][["data"]]$escala)$out
     print("12")
-    ids_outliers_esc <- original[[anio]][["data"]] %>%
-      filter(escala %in% outliers_esc) %>%
-      select(IdEstablecimiento, escala)
-    print("13")
-    lista_outliers_esc[[anio]] <- ids_outliers_esc
-    print("14")
-    vector_outliers_esc <- unique(c(vector_outliers_esc, ids_outliers_esc$IdEstablecimiento))
+    
+    if (length(outliers_esc)  > 0){
+      ids_outliers_esc <- original[[anio]][["data"]] %>%
+        filter(escala %in% outliers_esc) %>%
+        select(IdEstablecimiento, escala)
+      print("13")
+      lista_outliers_esc[[anio]] <- ids_outliers_esc
+      print("14")
+      vector_outliers_esc <- unique(c(vector_outliers_esc, ids_outliers_esc$IdEstablecimiento))
+      
+    }else{
+      lista_outliers_esc[[anio]] <- list()
+      vector_outliers_esc <- list()
+    }
+
   }
 
   list(
