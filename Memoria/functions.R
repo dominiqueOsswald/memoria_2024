@@ -416,11 +416,11 @@ resultados_iteracion <- function(datos, orientacion){
     print("SEIS")
     iteracion_2_esc <- aplicar_sensibilidad(datos, lapply(iteracion_1_esc, `[[`, "data"), 1, orientacion, "esc", FALSE)
   }
-  browser()
+  #browser()
   print("2")
   resultados_combinados <- combinar_resultados_iteraciones(original, iteracion_1_vrs, iteracion_2_vrs, iteracion_1_crs, iteracion_2_crs, iteracion_1_esc, iteracion_2_esc)
   #resultados_combinados_out <- resultados_combinaciones
-  save(resultados_combinados,file="RESULTADOS_COMBINADOS.RData")
+  #save(resultados_combinados,file="RESULTADOS_COMBINADOS.RData")
   
   print("22")
   resultados_correlacion <- calcular_correlaciones_all(resultados_combinados)
