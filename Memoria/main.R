@@ -3,9 +3,6 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
-#load("DATOS.RData")
-#load("RESULTADOS_COMBINADOS_OUT.RData")
-#load("RESULTADOS_COMBINADOS.RData")
 
 # ==============================================
 #  PRE PROCESAMIENTO DE DATOS
@@ -42,7 +39,7 @@ correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones
 # GRAFICAS
 
 # GRAFICA DE SENSIBILIDAD POR EFICIENCIA
-correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
+correlaciones_eficiencia_grafica(resultados[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3", "ESC iteracion 1", "ESC iteracion 2",  "ESC iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
 correlaciones_eficiencia_grafica(resultados[["oo"]][["resultados_correlacion"]][["correlaciones_lista"]], "oo", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3", "CRS iteracion 1", "CRS iteracion 2",  "CRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
 
 # GRAFICA DE COMPARACION DE METODOS
@@ -181,6 +178,7 @@ correlaciones_eficiencia_grafica(resultados_usar[["oo"]][["resultados_correlacio
 
 resultados_vrs_oo <- resultados_sin_atipicos[["vrs_oo"]]
 
+correlaciones_eficiencia_grafica(resultados_vrs_oo[["io"]][["resultados_correlacion"]][["correlaciones_lista"]], "io", c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3"), "Sensibilidad por eliminación de DMU eficientes")
 
 
 # Vector de años de interés

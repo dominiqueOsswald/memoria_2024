@@ -11,9 +11,13 @@ source("graphics.R")
 correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "ambos", c("VRS Input", "VRS Output", "CRS Input", "CRS Output", "ESC Input", "ESC Output"))
 
 
+
+
+
+
 #  ELIMINACIÓN DE DATOS ATÍPICOS
 # EN GENERAL
-correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["promedio_correlacion"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos"), "Comparación Original vs sin atipicos - Orientación Outputs VRS")
+correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["oo"]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos", "ESC original", "ESC sin atipicos" ), "Comparación Original vs sin atipicos - Orientación Outputs VRS")
 
 correlaciones_promedio <- list(
   "vrs_oo_Entrada" = correlacion_todos_metodos_atipicos[["vrs_oo"]][["original_vs_sin_atipicos"]][["io"]][["promedio_correlacion"]],

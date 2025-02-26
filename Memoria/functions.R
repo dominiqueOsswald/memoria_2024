@@ -86,33 +86,13 @@ consolidar_datos_por_anio <- function(anio) {
     inner_join(predicciones_grd, by = "IdEstablecimiento") %>%
     select(IdEstablecimiento, Consultas)
   
-  # Definir quirofano
-  #quirofano <- list("idEstablecimiento", "X21220100", "X21220200", "X21220700", "X21220600", "X21400300", "X21220900",
-  #                  "X21400500","X21400600","X21800810")
   
   quirofano <- unlist(strsplit(readLines(path_quirofano), ","))
   
-  #quirofano <- list( "idEstablecimiento",
-  #  "X21220100", "X21220200", "X21220700", "X21220600", "X21220800", "X21400300", "X21220900",
-  #  "X21300100", "X21400400", "X21400500", "X21400600", "X21400700", "X21300600", "X21300700",
-  #  "X21800810", "X21800820", "X21400800", "X21400900", "X21500100", "X21500200", "X21800830",
-  #  "X21800840", "X21500300", "X21800850", "X21800860", "X21800870", "X21800880", "X21500600",
-  #  "X21600600", "X21600700", "X21600800", "X21600900", "X21700100", "X21500700", "X21500800",
-  #  "X21700300", "X21700400", "X21700500", "X21700600", "X21500900", "X21700700", "X21600100",
-  #  "X21700800", "X21700900", "X21800100", "X21800200", "X21800300", "X21600200", "X21600300",
-  #  "X21800500", "X21800600", "X21800700", "X21800800", "X21600400", "X21600500", "X21700701",
-  #  "X21700702", "X21700703", "X21700704", "X21700705", "X21700706", "X21700707", "X21700708",
-  #  "X21800890", "X21900100", "X21900110", "X21900120", "X21900130", "X21900140", "X21900150",
-  #  "X21900160", "X21900170", "X21900180", "X21900190", "X21900200", "X21900210", "X21900220",
-  #  "X21100010", "X21100020", "X21100030", "X21100040", "X21100050", "X21100060", "X21100070",
-  #  "X21100080", "X21100090", "X29101381", "X29101382", "X29101383"
-  #)
-  
   columnas_validas_q <- intersect(unlist(quirofano), colnames(datos_consolidados))
-  #print(quirofano)
+
   quirofano_data <- subset(datos_consolidados, select = unlist(columnas_validas_q))
   
-  #quirofano_data <- subset(datos_consolidados, select = unlist(quirofano))
   
   # Reemplazar comas por puntos y convertir a numérico
   quirofano_data <- quirofano_data %>%
@@ -955,6 +935,153 @@ original_determinantes_importancia <- function(random_forest, anios_pre_pandemia
               Corr_Pre = resultados_pre_corr,
               Corr_Post = resultados_post_corr))
 }
+
+
+
+
+
+determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
+  library(dplyr)
+  
+  # Crear listas para almacenar resultados
+  resultados_IncNodePurity <- list()
+  resultados_IncMSE <- list()
+  resultados_corr <- list()
+  
+  resultados_pre_IncNodePurity <- list()
+  resultados_pre_IncMSE <- list()
+  resultados_pre_corr <- list()
+  
+  resultados_post_IncNodePurity <- list()
+  resultados_post_IncMSE <- list()
+  resultados_post_corr <- list()
+  
+
+    
+  # Crear dataframes vacíos para almacenar resultados
+  df_IncMSE <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+  df_IncNodePurity <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+  df_corr <- data.frame(Variable = character(), stringsAsFactors = FALSE)
+  
+  # Recopilar datos por año
+  for (anio in names(random_forest)) {
+    # Obtener importancia
+    importancia <- random_forest[[anio]]$importancia
+    
+    # --- %IncMSE ---
+    temp_IncMSE <- data.frame(
+      Variable = rownames(importancia),
+      Valor = importancia[, "%IncMSE"],  # Seleccionar columna
+      Año = anio
+    )
+    df_IncMSE <- rbind(df_IncMSE, temp_IncMSE)
+    
+    # --- IncNodePurity ---
+    temp_IncNodePurity <- data.frame(
+      Variable = rownames(importancia),
+      Valor = importancia[, "IncNodePurity"],  # Seleccionar columna
+      Año = anio
+    )
+    df_IncNodePurity <- rbind(df_IncNodePurity, temp_IncNodePurity)
+    
+    # --- Correlación ---
+    temp_corr <- data.frame(
+      Variable = "Correlacion",
+      Valor = random_forest[[anio]]$correlaciones,  
+      Año = anio
+    )
+    df_corr <- rbind(df_corr, temp_corr)
+  }
+  
+  # --- Procesar %IncMSE ---
+  pivot_IncMSE <- reshape(df_IncMSE, idvar = "Variable", timevar = "Año", direction = "wide")
+  colnames(pivot_IncMSE) <- gsub("Valor\\.", "", colnames(pivot_IncMSE))
+  
+  # Calcular frecuencia y estadísticos
+  pivot_IncMSE$Frecuencia <- table(df_IncMSE$Variable)[pivot_IncMSE$Variable]
+  pivot_IncMSE$Promedio <- rowMeans(pivot_IncMSE[, -1], na.rm = TRUE)
+  
+  # Calcular la varianza específica por período
+  pivot_IncMSE$Varianza_Pre_Pandemia <- apply(pivot_IncMSE[, anios_pre_pandemia], 1, var, na.rm = TRUE)
+  pivot_IncMSE$Varianza_Pandemia <- apply(pivot_IncMSE[, anios_pandemia], 1, var, na.rm = TRUE)
+  
+  # Calcular los promedios por período
+  pivot_IncMSE$Promedio_Pre_Pandemia <- rowMeans(pivot_IncMSE[, anios_pre_pandemia], na.rm = TRUE)
+  pivot_IncMSE$Promedio_Pandemia <- rowMeans(pivot_IncMSE[, anios_pandemia], na.rm = TRUE)
+  
+  # Calcular frecuencias separadas
+  pivot_IncMSE$Frecuencia_Pre_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
+  pivot_IncMSE$Frecuencia_Pandemia <- rowSums(!is.na(pivot_IncMSE[, anios_pandemia]))
+  
+  # Filtrar eliminando las variables con varianza alta **global**
+  threshold_varianza <- quantile(pivot_IncMSE$Varianza_Pre_Pandemia, 0.75, na.rm = TRUE)
+  pivot_IncMSE <- pivot_IncMSE %>% filter(Varianza_Pre_Pandemia <= threshold_varianza)
+  
+  # Seleccionar las 50 mejores variables basadas en %IncMSE global
+  pivot_IncMSE <- pivot_IncMSE %>% arrange(desc(Promedio), desc(Frecuencia))
+  top50_IncMSE <- head(pivot_IncMSE$Variable, 50)
+  resultados_IncMSE <- head(pivot_IncMSE, 50)
+  
+  # --- Filtrar y ordenar para cada período ---
+  pivot_pre_IncMSE <- pivot_IncMSE %>%
+    filter(Varianza_Pre_Pandemia <= quantile(pivot_IncMSE$Varianza_Pre_Pandemia, 0.75, na.rm = TRUE)) %>%
+    arrange(desc(Promedio_Pre_Pandemia), desc(Frecuencia_Pre_Pandemia))
+  
+  pivot_post_IncMSE <- pivot_IncMSE %>%
+    filter(Varianza_Pandemia <= quantile(pivot_IncMSE$Varianza_Pandemia, 0.75, na.rm = TRUE)) %>%
+    arrange(desc(Promedio_Pandemia), desc(Frecuencia_Pandemia))
+  
+  resultados_pre_IncMSE <- head(pivot_pre_IncMSE, 50)
+  resultados_post_IncMSE <- head(pivot_post_IncMSE, 50)
+  
+  # --- Filtrar IncNodePurity con las variables seleccionadas ---
+  pivot_IncNodePurity <- reshape(df_IncNodePurity, idvar = "Variable", timevar = "Año", direction = "wide")
+  colnames(pivot_IncNodePurity) <- gsub("Valor\\.", "", colnames(pivot_IncNodePurity))
+  
+  pivot_IncNodePurity <- pivot_IncNodePurity %>% filter(Variable %in% top50_IncMSE)
+  resultados_IncNodePurity <- pivot_IncNodePurity
+  
+  # Filtrar pre y post pandemia para IncNodePurity
+  pivot_pre_IncNodePurity <- pivot_IncNodePurity %>% filter(Variable %in% resultados_pre_IncMSE$Variable)
+  pivot_post_IncNodePurity <- pivot_IncNodePurity %>% filter(Variable %in% resultados_post_IncMSE$Variable)
+  
+  resultados_pre_IncNodePurity <- pivot_pre_IncNodePurity
+  resultados_post_IncNodePurity <- pivot_post_IncNodePurity
+  
+  # --- Filtrar Correlación con las variables seleccionadas ---
+  pivot_corr <- reshape(df_corr, idvar = "Variable", timevar = "Año", direction = "wide")
+  colnames(pivot_corr) <- gsub("Valor\\.", "", colnames(pivot_corr))
+  
+  pivot_corr <- pivot_corr %>% filter(Variable %in% top50_IncMSE)
+  resultados_corr <- pivot_corr
+  
+  # Filtrar pre y post pandemia para correlación
+  pivot_pre_corr <- pivot_corr %>% filter(Variable %in% resultados_pre_IncMSE$Variable)
+  pivot_post_corr <- pivot_corr %>% filter(Variable %in% resultados_post_IncMSE$Variable)
+  
+  resultados_pre_corr <- pivot_pre_corr
+  resultados_post_corr <- pivot_post_corr
+
+  
+  return(list(
+    IncMSE = resultados_IncMSE, 
+    IncNodePurity = resultados_IncNodePurity, 
+    Corr = resultados_corr,
+    IncMSE_Pre = resultados_pre_IncMSE, 
+    IncMSE_Post = resultados_post_IncMSE,
+    IncNodePurity_Pre = resultados_pre_IncNodePurity,
+    IncNodePurity_Post = resultados_post_IncNodePurity,
+    Corr_Pre = resultados_pre_corr,
+    Corr_Post = resultados_post_corr
+  ))
+}
+
+
+
+
+
+
+
 
 determinantes_importancia <- function(random_forest, anios_pre_pandemia, anios_pandemia) {
   library(dplyr)
