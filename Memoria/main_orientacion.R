@@ -3,9 +3,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("functions.R")
 source("graphics.R")
 
-orientacion <- "oo"
+
+orientacion <- "io"
 retorno <- "vrs"
-columna <- "vrs_oo"
+columna <- "vrs_io"
 
 resultados_usar <- resultados_sin_atipicos[[columna]]
 
@@ -55,9 +56,9 @@ eficiencias_grafica(resultados_usar)
 datos_usar <- datos_sin_atipicos[[columna]]
 
 # DATOS SIN ATIPICOS PARA VRS OO
-malmquist_indices <- malmquist(datos_usar,"vrs", "out")
+malmquist_indices <- malmquist(datos_usar,retorno, "in")
 
-generar_graficas_malmquist(malmquist_indices$index,"out_vrs")
+generar_graficas_malmquist(malmquist_indices$index,"in_vrs")
 
 
 # ==============================================
@@ -65,7 +66,7 @@ generar_graficas_malmquist(malmquist_indices$index,"out_vrs")
 # ==============================================
 
 # Aplicar Random Forest para cada año
-random_forest <- lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar$oo, 500, "vrs", "Salidas")})
+random_forest <- lapply(anios, function(anio) {analize_rf(anio, resultados_in = resultados_usar[[orientacion]], 500, retorno, "Entradas")})
 
 # Asignar nombres a la lista de modelos
 names(random_forest) <- paste0(anios)
@@ -78,50 +79,21 @@ names(random_forest) <- paste0(anios)
 # Llamar a la función
 resultados_importancia <- determinantes_importancia_single(random_forest, anios_pre_pandemia, anios_pandemia)
 
-
-
-# Acceder a los resultados
-resultados_IncNodePurity <- resultados_importancia$IncNodePurity
-resultados_IncMSE <- resultados_importancia$IncMSE
-
-resultados_pre_IncNodePurity <- resultados_importancia$IncNodePurity_Pre
-resultados_post_IncNodePurity <- resultados_importancia$IncNodePurity_Post
-
-resultados_pre_IncMSE <- resultados_importancia$IncMSE_Pre
-resultados_post_IncMSE <- resultados_importancia$IncMSE_Post
-
-# -------------------------------------------- #
-#  VISUALIZACIÓN DE FRECUENCIAS
-# -------------------------------------------- #
-
-
-# Graficar para IncNodePurity
-
-# Graficar para %IncMSE
-determinantes_grafica(resultados_importancia$IncMSE, "Top 10 Determinantes - IncMSE", "Modelo orientado a salidas - VRS -")
-
-
-
-
 # ==============================================
 #  RESULTADOS
 # ==============================================
 
-# Generación de excel con valores de eficiencias y determinantes
 
-# Procesar OUTPUT
+
+# Almacenar resultados en excel
 guardar_resultados(
-  dataframes = resultados_usar[["oo"]],
-  resultados_IncNodePurity = resultados_IncNodePurity,
-  resultados_pre_IncNodePurity = resultados_pre_IncNodePurity,
-  resultados_post_IncNodePurity = resultados_post_IncNodePurity,
-  resultados_IncMSE = resultados_IncMSE,
-  resultados_pre_IncMSE = resultados_pre_IncMSE,
-  resultados_post_IncMSE = resultados_post_IncMSE,
-  malmquist_vrs = malmquist_indices[["out_vrs"]][["index"]],
-  malmquist_crs = malmquist_indices[["out_crs"]][["index"]],
-  archivo_salida = "RESULTADOS OUTPUT.xlsx",
-  prefijo = "oo"
+  dataframes = resultados_usar[[orientacion]],
+  retorno,
+  resultados_importancia,
+  malmquist = malmquist_indices$index,
+  carpeta="results/io_crs",
+  archivo_salida = "RESULTADOS.xlsx",
+  prefijo = orientacion
 )
 
 

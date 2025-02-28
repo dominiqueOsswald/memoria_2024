@@ -69,7 +69,7 @@ eficiencias_grafica <- function(resultados) {
 
 # Función para generar gráficos de un solo key
 generar_graficas_malmquist <- function(index, key) {
-  browser()
+  #browser()
   print(paste("Generando gráfico para:", key))
   
   key_name <- switch(key,
