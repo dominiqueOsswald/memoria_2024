@@ -11,26 +11,38 @@ def read_financial_data(actual_year, data_frame, hospital_ids):
     """ Reads xlsm file to retrieve
     the financial data of the hospitals
     """
+    print("a")
     workbook = pyxl.load_workbook(f'../../raw_data/financial_data/{actual_year}.xlsm',
                                   data_only= True, read_only=True)
+    print("b")
     sheet = workbook[config.FINANCIAL_DATA_SHEET]
-
+    print("c")
     results_row = get_accumulated_results_row(sheet, actual_year, data_frame)
+    print("d")
     target_row = results_row + 2 # 21 and 22 detail is in the next row
-
+    print("e")
     index_21, index_22 = get_data_columns_index(sheet, target_row)
-
+    print("f")
     data_frame['21_value'] = '--'
+    print("g")
     data_frame['22_value'] = '--'
-
+    print("h")
     for index in hospital_ids:
+        print(index)
         if index == '--':
             continue
-        data_frame.loc[index, '21_value'] = round(sheet.cell(row=data_frame.loc[index, 'row_index'],
-                                                                                       column=index_21).value)
-        data_frame.loc[index, '22_value'] = round(sheet.cell(row=data_frame.loc[index, 'row_index'],
-                                                                                       column=index_22).value)
 
+        try:
+            data_frame.loc[index, '21_value'] = round(sheet.cell(row=data_frame.loc[index, 'row_index'],
+                                                                                        column=index_21).value)
+            #print("0")
+            data_frame.loc[index, '22_value'] = round(sheet.cell(row=data_frame.loc[index, 'row_index'],
+                                                                                        column=index_22).value)
+        except Exception:
+            print("ERROR EN: ",index)
+            continue
+
+        #print("2")
 def get_accumulated_results_row(sheet, actual_year, data_frame):
     """ Gets the row index where the accumulated
     information starts
