@@ -1,7 +1,0 @@
-,coefficients,p_values,significance_levels,p_value,coefficient
-X21_value_normalized,-0.0158565976864788,0.923994271137524, ,9.24e-01,-0.02
-X22_value_normalized,-0.0319045520079291,0.763496532264336, ,7.63e-01,-0.03
-hospital_discharge_normalized,0.0887247421034427,0.516541072414917, ,5.17e-01,0.09
-diagnostic_tests_normalized,-0.161023359795708,0.117259529157131, ,1.17e-01,-0.16
-surgical_interventions_normalized,0.228625002538521,0.0891364706485248,.,8.91e-02,0.23
-medical_consultations_normalized,0.13216481521845,0.280408404296727, ,2.80e-01,0.13
