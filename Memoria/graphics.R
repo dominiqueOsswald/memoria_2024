@@ -80,8 +80,8 @@ generar_graficas_malmquist <- function(index, key) {
                      key)
   
   comparativa_pre <- colnames(index)[c(2, 3, 4, 5, 6)]
-  comparativa_2020_2021 <- colnames(index)[c(7)]
-  comparativa_post <- colnames(index)[c(8, 9, 10)]
+  comparativa_2020_2021 <- colnames(index)[c(7,8)]
+  comparativa_post <- colnames(index)[c(9, 10)]
   
   
   # Crear un dataframe vacío con el mismo número de filas que index
@@ -132,11 +132,11 @@ generar_graficas_malmquist <- function(index, key) {
     # Leyenda para colores
     scale_color_manual(
       values = brewer.pal(11, "RdYlGn")[c(1,5,11)],                         # Paleta de colores
-      labels = c("Pre critico", "Críticos","Post critico")    # Etiquetas personalizadas
+      labels = c("2014-2019", "2019-2021","2021-2023")    # Etiquetas personalizadas
     ) +
     scale_fill_manual(
       values = brewer.pal(11, "RdYlGn")[c(1,5,11)],                             # Usar la misma paleta para rellenos
-      labels = c("Pre critico", "Críticos","Post critico")
+      labels = c("2014-2019", "2019-2021","2021-2023")
     ) +
     
     labs(
@@ -759,7 +759,7 @@ eficiencias_chile_grafica <- function(hospitales_df, anio, tipo, titulo, subtitu
 # -------------------------------------- #
 # Correlaciones de eficiencia técnica
 # -------------------------------------- #
-correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "") {
+correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "", nombre_archivo) {
   # Definir colores personalizados
   #browser()
   colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)
@@ -780,7 +780,7 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     años_actuales <- names(correlaciones_lista)[inicio:fin]
     
     # Definir el nombre del archivo para guardar la página como imagen
-    archivo_salida <- paste0("correlaciones_pagina_", pagina, ".png")
+    archivo_salida <- paste0(nombre_archivo, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
     png(archivo_salida, width = 7000, height = 4000, res = 300)  # Más ancho y achatado

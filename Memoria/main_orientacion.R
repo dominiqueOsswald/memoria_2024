@@ -4,9 +4,9 @@ source("functions.R")
 source("graphics.R")
 
 
-orientacion <- "io"
+orientacion <- "oo"
 retorno <- "vrs"
-columna <- "vrs_io"
+columna <- "vrs_oo"
 
 resultados_usar <- resultados_sin_atipicos[[columna]]
 
@@ -14,6 +14,7 @@ resultados_usar <- resultados_sin_atipicos[[columna]]
 
 # Vector de años de interés
 years <- 2014:2023
+# --------------------------- #
 
 # Extraemos la submatriz de correlaciones vrs para cada año
 vrs_cor_list <- lapply(years, function(y) {
@@ -37,8 +38,32 @@ resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista
 
 
 
-correlaciones_eficiencia_grafica(resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista"]], orientacion, c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes")
-correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos", "CRS original", "CRS sin atipicos", "ESC original", "ESC sin atipicos"), "Comparación Original vs sin atipicos - Orientación Outputs VRS")
+correlaciones_eficiencia_grafica(resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista"]], orientacion, c("VRS iteracion 1", "VRS iteracion 2", "VRS iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes", "iteraciones")
+# --------------------------- #
+
+
+# Extraemos la submatriz de correlaciones vrs para cada año
+vrs_atp_list <- lapply(years, function(y) {
+  # Accedemos a la matriz de correlaciones del año y
+  cor_matriz <- correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]][[as.character(y)]]
+  
+  # Filtramos filas y columnas que inician con "vrs"
+  cor_matriz_vrs <- cor_matriz[grepl("^vrs", rownames(cor_matriz)),
+                               grepl("^vrs", colnames(cor_matriz))]
+  
+  return(cor_matriz_vrs)
+})
+
+# Asignamos nombres a cada elemento de la lista para identificar el año
+names(vrs_atp_list) <- years
+
+# Ahora vrs_cor_list es una lista en la que cada elemento es la submatriz vrs de cada año
+vrs_atp_list
+
+correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]] <- vrs_atp_list
+
+
+correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]], "ambos", c("VRS original", "VRS sin atipicos"), "Comparación Original vs sin atipicos - Orientación Outputs VRS", "sin_atipicos")
 
 
 
@@ -56,9 +81,9 @@ eficiencias_grafica(resultados_usar)
 datos_usar <- datos_sin_atipicos[[columna]]
 
 # DATOS SIN ATIPICOS PARA VRS OO
-malmquist_indices <- malmquist(datos_usar,retorno, "in")
+malmquist_indices <- malmquist(datos_usar,retorno, "out")
 
-generar_graficas_malmquist(malmquist_indices$index,"in_vrs")
+generar_graficas_malmquist(malmquist_indices$index,"out_vrs")
 
 
 # ==============================================

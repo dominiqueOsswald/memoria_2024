@@ -629,7 +629,7 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   
   # Importancia de las variables
   importancia <- importance(modelo_rf)
-  
+
   
   print("---------------------------")
   print("---------------------------")
@@ -655,7 +655,7 @@ determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, 
   for (anio in names(random_forest)) {
     importancia <- random_forest[[anio]]$importancia
     importancia <- importancia[order(-importancia[, "%IncMSE"]), ]  
-    
+  
     temp_IncMSE <- data.frame(
       Variable = rownames(importancia),
       Valor = importancia[, "%IncMSE"],
@@ -677,7 +677,7 @@ determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, 
     )
     df_corr <- rbind(df_corr, temp_corr)
   }
-  
+  browser()
   pivot_IncMSE <- df_IncMSE %>% pivot_wider(names_from = Año, values_from = Valor)
   pivot_IncMSE$Frecuencia_General <- rowSums(!is.na(pivot_IncMSE[, -1]))
   pivot_IncMSE$Frecuencia_Pre <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
@@ -706,14 +706,24 @@ determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, 
     filter(Varianza_General <= quantile(Varianza_General, 0.75, na.rm = TRUE)) %>%
     arrange(desc(Promedio_General))
   
+  
+  pivot_General <- pivot_General[order(-pivot_General$Promedio_General), ]
+  pivot_Pre <- pivot_Pre[order(-pivot_Pre$Promedio_Pre), ] 
+  pivot_Post <- pivot_Post[order(-pivot_Post$Promedio_Post), ] 
+  
   top50_IncMSE_General <- head(pivot_General$Variable, 50)
   top50_IncMSE_Pre <- head(pivot_Pre$Variable, 50)
   top50_IncMSE_Post <- head(pivot_Post$Variable, 50)
   
+  
+  
+  
+  
+  
   pivot_IncNodePurity <- df_IncNodePurity %>% pivot_wider(names_from = Año, values_from = Valor)
   pivot_corr <- df_corr %>% pivot_wider(names_from = Año, values_from = Valor)
   
-  generar_dataframe_intercalado <- function(variables_seleccionadas, incmse, incnodepurity, corr, anios) {
+  generar_dataframe_intercalado <- function(variables_seleccionadas, incmse, incnodepurity, corr, anios, periodo) {
     df_final <- data.frame(Variable = variables_seleccionadas, stringsAsFactors = FALSE)
     
     for (anio in anios) {
@@ -722,16 +732,29 @@ determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, 
       df_final[[paste0(anio, "_Correlacion")]] <- as.numeric(unlist(corr[match(df_final$Variable, corr$Variable), anio]))
     }
     
-    df_final$Frecuencia <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Frecuencia_General"]))
-    df_final$Promedio <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Promedio_General"]))
-    df_final$Varianza <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Varianza_General"]))
-    
+    if (periodo == "pre"){
+      df_final$Frecuencia <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Frecuencia_Pre"]))
+      df_final$Promedio <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Promedio_Pre"]))
+      df_final$Varianza <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Varianza_Pre"]))
+      
+    }else if (periodo == "post"){
+      df_final$Frecuencia <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Frecuencia_Post"]))
+      df_final$Promedio <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Promedio_Post"]))
+      df_final$Varianza <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Varianza_Post"]))
+      
+    }else{
+      df_final$Frecuencia <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Frecuencia_General"]))
+      df_final$Promedio <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Promedio_General"]))
+      df_final$Varianza <- as.numeric(unlist(incmse[match(df_final$Variable, incmse$Variable), "Varianza_General"]))
+      
+    }
+
     return(df_final)
   }
   
-  df_pre_pandemia <- generar_dataframe_intercalado(top50_IncMSE_Pre, pivot_Pre, pivot_IncNodePurity, pivot_corr, anios_pre_pandemia)
-  df_post_pandemia <- generar_dataframe_intercalado(top50_IncMSE_Post, pivot_Post, pivot_IncNodePurity, pivot_corr, anios_pandemia)
-  df_general <- generar_dataframe_intercalado(top50_IncMSE_General, pivot_General, pivot_IncNodePurity, pivot_corr, c(anios_pre_pandemia, anios_pandemia))
+  df_pre_pandemia <- generar_dataframe_intercalado(top50_IncMSE_Pre, pivot_Pre, pivot_IncNodePurity, pivot_corr, anios_pre_pandemia, "pre")
+  df_post_pandemia <- generar_dataframe_intercalado(top50_IncMSE_Post, pivot_Post, pivot_IncNodePurity, pivot_corr, anios_pandemia, "post")
+  df_general <- generar_dataframe_intercalado(top50_IncMSE_General, pivot_General, pivot_IncNodePurity, pivot_corr, c(anios_pre_pandemia, anios_pandemia), "general")
   
   return(list(
     DataFrame_Pre = df_pre_pandemia,
