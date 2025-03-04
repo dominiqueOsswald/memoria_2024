@@ -144,7 +144,7 @@ lapply(anios, function(anio) {
 verificar_normalidad <- function(df, columnas) {
   resultados <- data.frame(Columna = character(), p_valor = numeric(), Normalidad = character())
   for (col in columnas) {
-    mat <- as.matrix(df[[col]])
+    mat <- as.matrix(df[,col])
     vec <- as.numeric(mat) 
     
     shapiro <- shapiro.test(vec)
@@ -162,23 +162,27 @@ verificar_normalidad <- function(df, columnas) {
 
 ef_tec <- guardar_dataframe_por_columna(resultados_usar[["oo"]], retorno)
 
-columnas <- c("2014", "2015", "2016", "2017", "2018", "2019","2020","2021","2022", "2023")
 
-normalidad_ef_tec <- verificar_normalidad(ef_tec, columnas)
-print(normalidad_todas)
+normalidad_ef_tec <- verificar_normalidad(ef_tec, c(3:12))
+print(normalidad_ef_tec)
 
 qqnorm(ef_tec[["2014"]])
 qqline(ef_tec[["2014"]], col = "red") 
 
 
 
+mal_tec <- malmquist_indices[["index"]][,c(2:10)]
+
+normalidad_ef_tec <- verificar_normalidad(mal_tec,c(1:9))
+print(normalidad_ef_tec)
+
+
 # NO SON NORMALES LOS DATOS
 
 
-# SE REALIZA PRUEBA NO PARAMETRICA:
 
-
-df_long <- ef_tec %>%
+# REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
+df_long_ef <- ef_tec[,c("2018","2019","2020","2021","2022", "2023")] %>%
   mutate(DMU = row_number()) %>%        # Identificador del DMU
   pivot_longer(
     cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
@@ -186,10 +190,128 @@ df_long <- ef_tec %>%
     values_to = "efficiency"
   ) %>%
   mutate(
-    DMU  = as.factor(DMU),
     year = as.factor(year)  # o as.numeric si prefieres, pero factor para la prueba
   )
 
+# Aplicar la prueba de Kruskal-Wallis
+resultado_kruskal <- kruskal.test(efficiency ~ year, data = df_long_ef)
+
+# Mostrar el resultado
+print(resultado_kruskal)
+
+
+
+library(dunn.test)
+
+# Aplicar la prueba de Dunn
+resultado_dunn <- dunn.test(df_long_short$efficiency, df_long_short$year, method = "bonferroni")
+
+# Mostrar el resultado
+print(resultado_dunn)
+
+
+
+ggplot(df_long_ef, aes(x = factor(year), y = efficiency, fill = factor(year))) +
+  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +
+  labs(title = "Eficiencia técnica por año",
+       x = "Años", y = "Índice Malmquist") +
+  theme_minimal()
+
+
+# REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
+df_long_malm <- mal_tec %>%
+  mutate(DMU = row_number()) %>%        # Identificador del DMU
+  pivot_longer(
+    cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
+    names_to = "year",
+    values_to = "index"
+  ) %>%
+  mutate(
+    year = as.factor(year)  # o as.numeric si prefieres, pero factor para la prueba
+  )
+
+# Aplicar la prueba de Kruskal-Wallis
+resultado_kruskal <- kruskal.test(index ~ year, data = df_long_malm)
+
+# Mostrar el resultado
+print(resultado_kruskal)
+
+
+
+# Aplicar la prueba de Dunn
+resultado_dunn <- dunn.test(df_long_malm$index, df_long_malm$year, method = "bonferroni")
+
+# Mostrar el resultado
+print(resultado_dunn)
+
+
+color_fijo <- brewer.pal(11, "RdYlGn")[9]
+# Gráfico de cajas para comparar los años
+ggplot(df_long_malm, aes(x = factor(year), y = index, fill = factor(year))) +
+  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +
+  labs(title = "Eficiencia técnica por año",
+       x = "Años", y = "Índice Malmquist") +
+  theme_minimal()
+
+
+
+
+#ggplot(df, aes_string(x = "year", y = eficiencia)) +
+#  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +  # Mismo color para contorno y relleno
+#  labs(
+#    title = titulo,
+#    subtitle = subtitulo,
+#    x = "Año",
+#    y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
+#  ) +
+#  theme_minimal() +
+#  theme(
+#    plot.title = element_text(size = 14, face = "bold"),
+#    axis.text.x = element_text(angle = 45, hjust = 1),
+#    plot.margin = unit(c(2, 2, 2, 2), "cm"),
+#    legend.position = "none"  # Ocultar la leyenda
+#  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# SE REALIZA PRUEBA NO PARAMETRICA:
 
 friedman.test(efficiency ~ year | DMU, data = df_long)
 # Si este test da un p-valor muy pequeño, indica que hay al menos un año diferente de los demás
