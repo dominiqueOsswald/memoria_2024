@@ -135,4 +135,17 @@ lapply(anios, function(anio) {
 })
 
 
+# PRUEBA DE HIPÓTESIS
+
+
+
+
+df_2020_2021 <- resultados_usar[resultados_usar$Año %in% c(2020, 2021), "Eficiencia"]
+df_otros <- df[!(df$Año %in% c(2020, 2021)), "Eficiencia"]
+
+
+shapiro.test(grupo_a)  # Test de normalidad para el grupo A
+shapiro.test(grupo_b)  # Test de normalidad para el grupo B
+
+
 
