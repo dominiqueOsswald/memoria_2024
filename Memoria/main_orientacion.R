@@ -182,7 +182,7 @@ print(normalidad_ef_tec)
 
 
 # REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
-df_long_ef <- ef_tec[,c("2018","2019","2020","2021","2022", "2023")] %>%
+df_long_ef <- ef_tec[,c("2014","2015","2016","2017","2018","2019","2020","2021","2022", "2023")] %>%
   mutate(DMU = row_number()) %>%        # Identificador del DMU
   pivot_longer(
     cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
@@ -204,236 +204,19 @@ print(resultado_kruskal)
 library(dunn.test)
 
 # Aplicar la prueba de Dunn
-resultado_dunn <- dunn.test(df_long_short$efficiency, df_long_short$year, method = "bonferroni")
+resultado_dunn <- dunn.test(df_long_ef$efficiency, df_long_ef$year, method = "holm")
 
 # Mostrar el resultado
 print(resultado_dunn)
 
-
+color_fijo <- brewer.pal(11, "RdYlGn")[9]
+color_median <- brewer.pal(11, "RdYlGn")[11]
 
 ggplot(df_long_ef, aes(x = factor(year), y = efficiency, fill = factor(year))) +
   geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +
+  stat_summary(fun = median, geom = "point", size = 3, color = color_median) + # Agrega puntos de la mediana
+  stat_summary(fun = median, geom = "crossbar", width = 0.2, color = color_median) + # Agrega una barra en la mediana
   labs(title = "Eficiencia técnica por año",
        x = "Años", y = "Índice Malmquist") +
   theme_minimal()
-
-
-# REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
-df_long_malm <- mal_tec %>%
-  mutate(DMU = row_number()) %>%        # Identificador del DMU
-  pivot_longer(
-    cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
-    names_to = "year",
-    values_to = "index"
-  ) %>%
-  mutate(
-    year = as.factor(year)  # o as.numeric si prefieres, pero factor para la prueba
-  )
-
-# Aplicar la prueba de Kruskal-Wallis
-resultado_kruskal <- kruskal.test(index ~ year, data = df_long_malm)
-
-# Mostrar el resultado
-print(resultado_kruskal)
-
-
-
-# Aplicar la prueba de Dunn
-resultado_dunn <- dunn.test(df_long_malm$index, df_long_malm$year, method = "bonferroni")
-
-# Mostrar el resultado
-print(resultado_dunn)
-
-
-color_fijo <- brewer.pal(11, "RdYlGn")[9]
-# Gráfico de cajas para comparar los años
-ggplot(df_long_malm, aes(x = factor(year), y = index, fill = factor(year))) +
-  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +
-  labs(title = "Eficiencia técnica por año",
-       x = "Años", y = "Índice Malmquist") +
-  theme_minimal()
-
-
-
-
-#ggplot(df, aes_string(x = "year", y = eficiencia)) +
-#  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +  # Mismo color para contorno y relleno
-#  labs(
-#    title = titulo,
-#    subtitle = subtitulo,
-#    x = "Año",
-#    y = paste("Eficiencia", toupper(eficiencia))  # VRS o CRS
-#  ) +
-#  theme_minimal() +
-#  theme(
-#    plot.title = element_text(size = 14, face = "bold"),
-#    axis.text.x = element_text(angle = 45, hjust = 1),
-#    plot.margin = unit(c(2, 2, 2, 2), "cm"),
-#    legend.position = "none"  # Ocultar la leyenda
-#  )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# SE REALIZA PRUEBA NO PARAMETRICA:
-
-friedman.test(efficiency ~ year | DMU, data = df_long)
-# Si este test da un p-valor muy pequeño, indica que hay al menos un año diferente de los demás
-
-# revisar como difieren los años
-pairwise.wilcox.test(
-  x      = df_long$efficiency,
-  g      = df_long$year,
-  paired = TRUE,
-  p.adjust.method = "bonferroni",
-  alternative = "less"  # si tu hipótesis es que X < Y para la comparación de años
-)
-
-
-#Pairwise comparisons using Wilcoxon signed rank test with continuity correction 
-
-#data:  df_long$efficiency and df_long$year 
-
-#2014  2015  2016  2017  2018  2019  2020  2021  2022 
-#2015 0.035 -     -     -     -     -     -     -     -    
-#  2016 1.000 1.000 -     -     -     -     -     -     -    
-#  2017 1.000 1.000 1.000 -     -     -     -     -     -    
-#  2018 1.000 1.000 1.000 1.000 -     -     -     -     -    
-#  2019 1.000 1.000 1.000 1.000 1.000 -     -     -     -    
-#  2020 1.000 1.000 1.000 1.000 0.542 0.472 -     -     -    
-#  2021 1.000 1.000 1.000 1.000 0.781 0.149 1.000 -     -    
-#  2022 1.000 1.000 1.000 1.000 0.310 0.132 1.000 1.000 -    
-#  2023 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
-
-#P value adjustment method: bonferroni 
-
-
-pairwise.wilcox.test(
-  x      = df_long$efficiency,
-  g      = df_long$year,
-  paired = TRUE,
-  p.adjust.method = "bonferroni",
-  alternative = "two.sided"  # si tu hipótesis es que X < Y para la comparación de años
-)
-
-
-#Pairwise comparisons using Wilcoxon signed rank test with continuity correction 
-
-#data:  df_long$efficiency and df_long$year 
-
-#2014    2015    2016    2017    2018    2019    2020    2021    2022   
-#2015 0.06907 -       -       -       -       -       -       -       -      
-#  2016 1.00000 0.59298 -       -       -       -       -       -       -      
-#  2017 1.00000 0.01480 0.01394 -       -       -       -       -       -      
-#  2018 0.14960 2.3e-05 1.3e-06 3.7e-05 -       -       -       -       -      
-#  2019 0.16942 2.3e-05 6.2e-06 0.00228 1.00000 -       -       -       -      
-#  2020 1.00000 0.17178 1.00000 1.00000 1.00000 0.94444 -       -       -      
-#  2021 1.00000 0.43112 1.00000 1.00000 1.00000 0.29739 1.00000 -       -      
-#  2022 1.00000 1.00000 1.00000 1.00000 0.61911 0.26358 1.00000 1.00000 -      
-#  2023 0.00033 1.8e-07 2.8e-05 0.00062 0.30616 1.00000 0.01304 0.00014 2.2e-05
-
-#P value adjustment method: bonferroni 
-
-
-
-
-
-
-
-# MALMQUIST
-
-hip_data <- malmquist_indices[["index"]]
-hip_data_2020_2021 <- hip_data[["2020_2021"]]
-
-hip_data_otros <- hip_data[,c(2,3,4,5,6,7,9,10)]
-
-columnas_previas <- c("2014_2015", "2015_2016", "2016_2017", "2017_2018", "2018_2019", "2019_2020","2020_2021","2021_2022","2022_2023")
-
-
-normalidad_todas <- verificar_normalidad(hip_data, columnas_previas)
-print(normalidad_todas)
-
-
-# ----------------------- #
-# ----------------------- #
-
-# Nombres de las columnas:
-columnas_previas <- c("2014_2015", "2015_2016", "2016_2017", "2017_2018", "2018_2019", "2019_2020","2021_2022","2022_2023")
-columna_critica <- "2020_2021"
-
-# Crear un dataframe para guardar resultados
-resultados <- data.frame(
-  Periodo_Previo = character(),
-  Estadistico_W = numeric(),
-  p_valor = numeric(),
-  stringsAsFactors = FALSE
-)
-
-# Bucle para comparar la columna crítica con cada periodo previo
-for (periodo in columnas_previas) {
-  # Aplicar Mann-Whitney (alternative = "less" para H₁: crítica < previo)
-  prueba <- wilcox.test(
-    x = hip_data[[columna_critica]], 
-    y = hip_data[[periodo]], 
-    alternative = "less",  # Evalúa si la crítica es menor que el periodo previo
-    paired = FALSE  # Muestras independientes
-  )
-  
-  # Guardar resultados
-  resultados <- rbind(resultados, data.frame(
-    Periodo_Previo = periodo,
-    Estadistico_W = prueba$statistic,
-    p_valor = prueba$p.value
-  ))
-}
-
-
-
-resultados$p_valor_ajustado <- p.adjust(resultados$p_valor, method = "bonferroni")
-
-
-print(resultados)
-
-
-
-
-
-
-
 

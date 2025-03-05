@@ -1,6 +1,7 @@
 # Funciones auxiliares
 library(randomForest)
 library(Benchmarking)
+library(dunn.test)
 library(gridExtra)
 library(corrplot)
 library(censReg)
@@ -11,7 +12,6 @@ library(tidyr)
 library(dplyr)
 library(caret)
 library(deaR)
-
 # ==============================================
 #  
 # ==============================================
@@ -413,4 +413,25 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
     sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
   },
   datos, resultados, names(datos), SIMPLIFY = FALSE) # Pasar los nombres de los datos como argumento
+}
+
+
+# ===================================================
+# normalidad de los datos
+# ===================================================
+
+verificar_normalidad <- function(df, columnas) {
+  resultados <- data.frame(Columna = character(), p_valor = numeric(), Normalidad = character())
+  for (col in columnas) {
+    mat <- as.matrix(df[,col])
+    vec <- as.numeric(mat) 
+    
+    shapiro <- shapiro.test(vec)
+    resultados <- rbind(resultados, data.frame(
+      Columna = col,
+      p_valor = shapiro$p.value,
+      Normalidad = ifelse(shapiro$p.value > 0.05, "Sí", "No")
+    ))
+  }
+  return(resultados)
 }

@@ -865,9 +865,27 @@ correlaciones_single_eficiencia_grafica <- function(correlaciones_lista, orienta
 
 
 graficar_boxplots <- function(df, eficiencia, titulo, subtitulo) {
+
   color_fijo <- brewer.pal(11, "RdYlGn")[9]
+  color_median <- brewer.pal(11, "RdYlGn")[11]
+  color_linea <- "black"  # Color de la línea de medianas
+  
+  # Calcular la mediana por año
+  medianas <- df %>%
+    group_by(year) %>%
+    summarise(mediana = median(.data[[eficiencia]], na.rm = TRUE))  # Usar `na.rm = TRUE` para evitar problemas con NA
+  
   ggplot(df, aes_string(x = "year", y = eficiencia)) +
     geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +  # Mismo color para contorno y relleno
+    #stat_summary(fun = median, geom = "point", size = 3, color = color_median) + # Agrega puntos de la mediana
+    #stat_summary(fun = median, geom = "crossbar", width = 0.2, color = color_median) +
+    
+
+    geom_line(data = medianas, aes(x = factor(year), y = mediana, group = 1), 
+              color = color_median, size = 0.5, linetype = "dashed") +  # Línea punteada
+    geom_point(data = medianas, aes(x = factor(year), y = mediana), 
+               color = color_median, size = 1) +  # Puntos en la línea
+    
     labs(
       title = titulo,
       subtitle = subtitulo,
