@@ -864,6 +864,23 @@ guardar_resultados <- function(dataframes, retorno, resultados_importancia,
 
 
 
+# PARA VERIFICAR QUE LAS EFICIENCIAS CAMBIAN
+verificar_normalidad <- function(df, columnas) {
+  resultados <- data.frame(Columna = character(), p_valor = numeric(), Normalidad = character())
+  for (col in columnas) {
+    mat <- as.matrix(df[,col])
+    vec <- as.numeric(mat) 
+    
+    shapiro <- shapiro.test(vec)
+    resultados <- rbind(resultados, data.frame(
+      Columna = col,
+      p_valor = shapiro$p.value,
+      Normalidad = ifelse(shapiro$p.value > 0.05, "Sí", "No")
+    ))
+  }
+  return(resultados)
+}
+
 
 
 

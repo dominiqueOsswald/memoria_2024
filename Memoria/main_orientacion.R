@@ -140,27 +140,53 @@ lapply(anios, function(anio) {
 # ---------------------------------------- #
 # ---------------------------------------- #
 # PRUEBA DE HIPÓTESIS
-
-verificar_normalidad <- function(df, columnas) {
-  resultados <- data.frame(Columna = character(), p_valor = numeric(), Normalidad = character())
-  for (col in columnas) {
-    mat <- as.matrix(df[,col])
-    vec <- as.numeric(mat) 
-    
-    shapiro <- shapiro.test(vec)
-    resultados <- rbind(resultados, data.frame(
-      Columna = col,
-      p_valor = shapiro$p.value,
-      Normalidad = ifelse(shapiro$p.value > 0.05, "Sí", "No")
-    ))
-  }
-  return(resultados)
-}
-
-
-
-
 ef_tec <- guardar_dataframe_por_columna(resultados_usar[["oo"]], retorno)
+
+
+# PARA VER SIHAY DIFERENCIAS ENTRE PRE Y POST
+grupo_1_medianas <- apply(ef_tec[, 3:8], 1, median)
+grupo_2_medianas <- apply(ef_tec[, 9:12], 1, median)
+
+wilcox.test(grupo_1_medianas, grupo_2_medianas, paired = TRUE, alternative = "two.sided")
+
+# TWO SIDED
+
+#Dado que el p-valor = 0.8079 es mayor que 0.05, NO se rechaza la hipótesis nula 
+#Esto significa que no hay suficiente evidencia estadística para afirmar que las medianas de los dos grupos son significativamente diferentes.
+
+
+
+# IMPACTO ENTRE 20189 Y 2020
+wilcox.test(ef_tec$'2019', ef_tec$'2020', paired = TRUE, alternative = "greater")
+
+
+# GREATER
+#Dado que el p-valor = 0.01049 es menor que 0.05, se rechaza la hipótesis nula con un nivel de significancia del 5%.
+# Esto indica que la mediana de la eficiencia técnica en 2020 es significativamente mayor que en 2019.
+
+
+# IMPACTO ENTRE 20210 Y 2021
+wilcox.test(ef_tec$'2020', ef_tec$'2021', paired = TRUE, alternative = "two.sided")
+
+
+# TWO SIDED
+
+#Dado que el V = 5452, p-value = 0.3587 es mayor que 0.05, NO se rechaza la hipótesis nula 
+
+# Esto significa que no hay suficiente evidencia estadística para afirmar que la mediana de la eficiencia técnica en 2021 es menor que en 2020.
+
+# ¿Qué significa en términos prácticos?
+  
+#No se puede concluir que hubo una disminución en la eficiencia técnica entre estos dos años.
+#Aunque pueda haber una diferencia en los valores observados, esta no es estadísticamente significativa.
+#Es posible que la eficiencia técnica se haya mantenido estable o que la diferencia observada sea producto del azar.
+
+
+
+
+
+
+
 
 
 normalidad_ef_tec <- verificar_normalidad(ef_tec, c(3:12))
@@ -208,15 +234,4 @@ resultado_dunn <- dunn.test(df_long_ef$efficiency, df_long_ef$year, method = "ho
 
 # Mostrar el resultado
 print(resultado_dunn)
-
-color_fijo <- brewer.pal(11, "RdYlGn")[9]
-color_median <- brewer.pal(11, "RdYlGn")[11]
-
-ggplot(df_long_ef, aes(x = factor(year), y = efficiency, fill = factor(year))) +
-  geom_violin(fill = color_fijo, color = color_fijo, alpha = 0.6) +
-  stat_summary(fun = median, geom = "point", size = 3, color = color_median) + # Agrega puntos de la mediana
-  stat_summary(fun = median, geom = "crossbar", width = 0.2, color = color_median) + # Agrega una barra en la mediana
-  labs(title = "Eficiencia técnica por año",
-       x = "Años", y = "Índice Malmquist") +
-  theme_minimal()
 
