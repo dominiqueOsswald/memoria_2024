@@ -900,6 +900,7 @@ importancia_dataframe <- function(random_forest) {
 
   # Crear listas para almacenar cada métrica por año
   lista_incmse <- list()
+  lista_incmse_10 <- list()
   lista_incnp <- list()
   lista_corr <- list()
   lista_todos <- list()
@@ -927,9 +928,11 @@ importancia_dataframe <- function(random_forest) {
     df_final <- merge(importancia, corr, by = "Variable")
     
     df_top50 <- df_final[order(-df_final$IncMSE), ][1:50, ]
+    df_top10 <- df_final[order(-df_final$IncMSE), ][1:10, ]
     
     # Guardar cada métrica en listas separadas con Variable como índice
     lista_incmse[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, IncMSE = df_top50$IncMSE)
+    lista_incmse_10[[as.character(anio)]] <- data.frame(Variable = df_top10$Variable, IncMSE = df_top10$IncMSE)
     lista_corr[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, Corr = df_top50$Corr)
     lista_todos[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, IncMSE = df_top50$IncMSE, Corr = df_top50$Corr)
     
@@ -938,12 +941,17 @@ importancia_dataframe <- function(random_forest) {
     
     # Guardar en la lista de Top 50
     lista_top50_incmse[[as.character(anio)]] <- df_top50
+    
   }
   
   
   
   # Crear dataframes con años como columnas
   df_incmse <- crear_dataframe(lista_incmse)
+  df_incmse_10  <- crear_dataframe(lista_incmse_10)
   
-  return(df_incmse)
+  return(list(top_50 = lista_top50_incmse,
+    df_incmse = df_incmse,
+    df_incmse_10 = df_incmse_10,
+    df_incmse_est = calcular_estadisticas(df_incmse)))
 }

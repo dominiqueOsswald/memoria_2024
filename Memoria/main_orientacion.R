@@ -300,7 +300,7 @@ print(resultado_dunn)
 # REVISAR SI HAY SIGNIFICANCIA POR AÑO EN DETERMINANTES:
 
 
-
+df_incmse <- resultados_importancia[["df_incmse_10"]]
 df_incmse_all <- df_incmse
 df_incmse_pre <- df_incmse[,c(1:7)]
 df_incmse_post <- df_incmse[,c(1,8:11)]
@@ -386,15 +386,79 @@ print(n=100,kruskal_results_post)
 print(n=100,kruskal_results_pre_post)
 
 
-df_incmse <- df_incmse %>%
+df_long_kruskal_all <- df_long_all %>% filter(Variable %in% kruskal_results_all$Variable)
+df_long_kruskal_pre <- df_long_pre %>% filter(Variable %in% kruskal_results_pre$Variable)
+df_long_kruskal_post <- df_long_post %>% filter(Variable %in% kruskal_results_post$Variable)
+
+# Gráfico de evolución de las variables analizadas
+
+library(ggplot2)
+library(RColorBrewer)
+
+grafica <- ggplot(df_long_kruskal_all, aes(x = Año, y = Variable, fill = Valor)) +
+  geom_tile() +
+  theme_minimal() +
+  labs(title = "Matriz de valores por variable y año",
+       x = "Año", y = "Variable", fill = "Valor") +
+  scale_fill_gradientn(
+    colors = brewer.pal(11, "RdYlGn"),  # Paleta de colores RdYlGn
+    limits = range(df_long_kruskal_all$Valor, na.rm = TRUE)  # Escala de valores automática
+  )
+
+
+
+ggsave(paste0("determinantes","_","todos",".jpg"), plot = grafica, width = 10, height = 8, dpi = 300)
+
+
+
+grafica <- ggplot(df_long_kruskal_pre, aes(x = Año, y = Variable, fill = Valor)) +
+  geom_tile() +
+  theme_minimal() +
+  labs(title = "Matriz de valores por variable y año",
+       x = "Año", y = "Variable", fill = "Valor") +
+  scale_fill_gradientn(
+    colors = brewer.pal(11, "RdYlGn"),  # Paleta de colores RdYlGn
+    limits = range(df_long_kruskal_pre$Valor, na.rm = TRUE)  # Escala de valores automática
+  )
+
+
+
+ggsave(paste0("determinantes","_","pre",".jpg"), plot = grafica, width = 10, height = 8, dpi = 300)
+
+
+
+
+
+grafica <- ggplot(df_long_kruskal_post, aes(x = Año, y = Variable, fill = Valor)) +
+  geom_tile() +
+  theme_minimal() +
+  labs(title = "Matriz de valores por variable y año",
+       x = "Año", y = "Variable", fill = "Valor") +
+  scale_fill_gradientn(
+    colors = brewer.pal(11, "RdYlGn"),  # Paleta de colores RdYlGn
+    limits = range(df_long_kruskal_post$Valor, na.rm = TRUE)  # Escala de valores automática
+  )
+
+
+
+ggsave(paste0("determinantes","_","post",".jpg"), plot = grafica, width = 10, height = 8, dpi = 300)
+
+
+
+
+df_incmse_est <- resultados_importancia[["df_incmse_est"]]
+
+
+
+df_incmse_est <- df_incmse_est %>%
   left_join(kruskal_results_all, by = "Variable") %>%
   rename(P_value_all = p_value)  # Cambia el nombre de la columna
 
-df_incmse <- df_incmse %>%
+df_incmse_est <- df_incmse_est %>%
   left_join(kruskal_results_pre, by = "Variable") %>%
   rename(P_value_pre = p_value)  # Cambia el nombre de la columna
 
-df_incmse <- df_incmse %>%
+df_incmse_est <- df_incmse_est %>%
   left_join(kruskal_results_post, by = "Variable") %>%
   rename(P_value_post = p_value)  # Cambia el nombre de la columna
 
