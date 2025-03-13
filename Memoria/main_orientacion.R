@@ -110,19 +110,6 @@ resultados_importancia <- importancia_dataframe(random_forest)
 
 
 
-# Almacenar resultados en excel
-guardar_resultados(
-  dataframes = resultados_usar[[orientacion]],
-  retorno,
-  resultados_importancia,
-  malmquist = malmquist_indices$index,
-  carpeta="results/io_crs",
-  archivo_salida = "RESULTADOS.xlsx",
-  prefijo = orientacion
-)
-
-
-
 # ==============================================
 #    GRAFICAS
 # ==============================================
@@ -446,7 +433,7 @@ ggsave(paste0("determinantes","_","post",".jpg"), plot = grafica, width = 10, he
 
 
 
-df_incmse_est <- resultados_importancia[["df_incmse_est"]]
+df_incmse_est <- resultados_importancia[["df_incmse_est_10"]]
 
 
 
@@ -465,7 +452,16 @@ df_incmse_est <- df_incmse_est %>%
 
 
 
-
+# Almacenar resultados en excel
+guardar_resultados(
+  dataframes = resultados_usar[[orientacion]],
+  retorno,
+  df_incmse_est,
+  malmquist = malmquist_indices$index,
+  carpeta="results/io_crs",
+  archivo_salida = "RESULTADOS.xlsx",
+  prefijo = orientacion
+)
 
 
 

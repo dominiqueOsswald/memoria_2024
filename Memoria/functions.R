@@ -830,29 +830,37 @@ guardar_resultados <- function(dataframes, retorno, resultados_importancia,
 
 
   
-
+  #df_pre <- as.data.frame(resultados_importancia[["DataFrame_Pre"]])
+  #df_post <- as.data.frame(resultados_importancia[["DataFrame_Post"]])
+  #df_general <- as.data.frame(resultados_importancia[["DataFrame_General"]])
+  
+  # Escribir en el Excel solo si no están vacíos
+  if (nrow(resultados_importancia) > 0) {
+    addWorksheet(wb, "DETERM")
+    writeData(wb, "DETERM", resultados_importancia)
+  }
 
   
   # Convertir listas a DataFrames si es necesario
-  df_pre <- as.data.frame(resultados_importancia[["DataFrame_Pre"]])
-  df_post <- as.data.frame(resultados_importancia[["DataFrame_Post"]])
-  df_general <- as.data.frame(resultados_importancia[["DataFrame_General"]])
+  #df_pre <- as.data.frame(resultados_importancia[["DataFrame_Pre"]])
+  #df_post <- as.data.frame(resultados_importancia[["DataFrame_Post"]])
+  #df_general <- as.data.frame(resultados_importancia[["DataFrame_General"]])
   
   # Escribir en el Excel solo si no están vacíos
-  if (nrow(df_pre) > 0) {
-    addWorksheet(wb, "DET PRE")
-    writeData(wb, "DET PRE", df_pre)
-  }
+  #if (nrow(df_pre) > 0) {
+  #  addWorksheet(wb, "DET PRE")
+  #  writeData(wb, "DET PRE", df_pre)
+  #}
   
-  if (nrow(df_post) > 0) {
-    addWorksheet(wb, "DET POST")
-    writeData(wb, "DET POST", df_post)
-  }
+  #if (nrow(df_post) > 0) {
+  #  addWorksheet(wb, "DET POST")
+  #  writeData(wb, "DET POST", df_post)
+  #}
   
-  if (nrow(df_general) > 0) {
-    addWorksheet(wb, "DET GENERAL")
-    writeData(wb, "DET GENERAL", df_general)
-  }
+  #if (nrow(df_general) > 0) {
+  #  addWorksheet(wb, "DET GENERAL")
+  #  writeData(wb, "DET GENERAL", df_general)
+  #}
 
 
   
@@ -953,5 +961,6 @@ importancia_dataframe <- function(random_forest) {
   return(list(top_50 = lista_top50_incmse,
     df_incmse = df_incmse,
     df_incmse_10 = df_incmse_10,
-    df_incmse_est = calcular_estadisticas(df_incmse)))
+    df_incmse_est = calcular_estadisticas(df_incmse),
+    df_incmse_est_10 = calcular_estadisticas(df_incmse_10) ))
 }
