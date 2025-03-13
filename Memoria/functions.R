@@ -881,8 +881,69 @@ verificar_normalidad <- function(df, columnas) {
   return(resultados)
 }
 
+# Función para calcular frecuencia y mediana
+calcular_estadisticas <- function(df) {
+  df$Frecuencia <- rowSums(!is.na(df[,-1]))  # Cuenta cuántos años tiene datos
+  df$Mediana <- apply(df[, -c(1, ncol(df))], 1, median, na.rm = TRUE)  # Mediana ignorando NA
+  return(df)
+}
+
+# Función para generar el dataframe con años como columnas
+crear_dataframe <- function(lista_metrica) {
+  df <- Reduce(function(x, y) merge(x, y, by = "Variable", all = TRUE), lista_metrica)
+  colnames(df)[-1] <- names(lista_metrica)  # Renombrar columnas con los años
+  return(df)
+}
 
 
+importancia_dataframe <- function(random_forest) {
 
-
-
+  # Crear listas para almacenar cada métrica por año
+  lista_incmse <- list()
+  lista_incnp <- list()
+  lista_corr <- list()
+  lista_todos <- list()
+  lista_top50_incmse <- list()
+  
+  # Iterar sobre los años del 2014 al 2023
+  for (anio in 2014:2023) {
+    
+    # Extraer importancia y correlaciones
+    importancia <- data.frame(
+      Variable = rownames(random_forest[[as.character(anio)]][["importancia"]]), 
+      IncMSE = random_forest[[as.character(anio)]][["importancia"]][,1]
+    )
+    
+    # Extraer correlaciones
+    corr <- as.data.frame(random_forest[[as.character(anio)]][["correlaciones"]])
+    
+    # Agregar nombres de fila como columna y limpiar formato
+    corr$Variable <- rownames(corr)
+    corr$Corr <- corr[,1]
+    corr <- corr[, c("Variable", "Corr")]
+    rownames(corr) <- NULL
+    
+    # Unir las tablas por la columna 'Variable'
+    df_final <- merge(importancia, corr, by = "Variable")
+    
+    df_top50 <- df_final[order(-df_final$IncMSE), ][1:50, ]
+    
+    # Guardar cada métrica en listas separadas con Variable como índice
+    lista_incmse[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, IncMSE = df_top50$IncMSE)
+    lista_corr[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, Corr = df_top50$Corr)
+    lista_todos[[as.character(anio)]] <- data.frame(Variable = df_top50$Variable, IncMSE = df_top50$IncMSE, Corr = df_top50$Corr)
+    
+    # Filtrar las 50 variables con mayor IncMSE en ese año
+    df_top50$Año <- anio
+    
+    # Guardar en la lista de Top 50
+    lista_top50_incmse[[as.character(anio)]] <- df_top50
+  }
+  
+  
+  
+  # Crear dataframes con años como columnas
+  df_incmse <- crear_dataframe(lista_incmse)
+  
+  return(df_incmse)
+}
