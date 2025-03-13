@@ -565,7 +565,10 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   #print(data_path)
   # Leer los datos consolidados
   datos_consolidados <- read.table(data_path, sep = ";", header = TRUE)
+  colnames(datos_consolidados) <- gsub("\\.0$", "", colnames(datos_consolidados))
+  
   df <- datos_consolidados
+
   
   # Convertir columnas a enteros
   df[colnames(datos_consolidados)] <- lapply(df[colnames(datos_consolidados)], as.integer)
