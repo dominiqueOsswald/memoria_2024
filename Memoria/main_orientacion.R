@@ -126,11 +126,24 @@ lapply(anios, function(anio) {
 # ---------------------------------------- #
 # ---------------------------------------- #
 # ---------------------------------------- #
-# PRUEBA DE HIPÓTESIS - EFICIENCIA
+# ==============================================
+#    PRUEBAS ESTADISTICAS
+# ==============================================
+
+# ==============================================
+#    EFICIENCIA
+# ==============================================
+
+
 ef_tec <- guardar_dataframe_por_columna(resultados_usar[["oo"]], retorno)
 
+# NO SON NORMALES LOS DATOS
 
-# PARA VER SIHAY DIFERENCIAS ENTRE PRE Y POST
+
+
+
+
+# PARA VER SIHAY DIFERENCIAS DE MEDIANA ENTRE PRE Y POST
 grupo_1_medianas <- apply(ef_tec[, 3:8], 1, median)
 grupo_2_medianas <- apply(ef_tec[, 9:12], 1, median)
 
@@ -152,84 +165,36 @@ if (mediana_grupo1 > mediana_grupo2) {
 
 
 
-
+# REVISION DE LOS DOS GRUPOS PRE Y POT
 wilcox.test(grupo_1_medianas, grupo_2_medianas, paired = TRUE, alternative = "two.sided")
 
-# TWO SIDED
 
-#Dado que el p-valor = 0.8079 es mayor que 0.05, NO se rechaza la hipótesis nula 
-#Esto significa que no hay suficiente evidencia estadística para afirmar que las medianas de los dos grupos son significativamente diferentes.
+# COMPARACION DE HOSPITALES
 
 
 
-# IMPACTO ENTRE 2019 Y 2020
-wilcox.test(ef_tec$'2019', ef_tec$'2020', paired = TRUE, alternative = "greater")
+ef_tec <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
+ef_tec <- ef_tec[,-2]
+
+hospitals_long_ef <- ef_tec%>%
+  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+df <- data.frame(
+  IdEstablecimiento = rep(paste("Hospital", 1:10), each = 10),  # 10 hospitales
+  Año = rep(2014:2023, times = 10),                    # Años de 2014 a 2023
+  Valor = runif(100, min = 10, max = 100)              # Valores aleatorios
+)
 
 
-# GREATER
-#Dado que el p-valor = 0.01049 es menor que 0.05, se rechaza la hipótesis nula con un nivel de significancia del 5%.
-# Esto indica que la mediana de la eficiencia técnica en 2020 es significativamente mayor que en 2019.
+#KRUSKAL PARA REVISAR POR AÑO SI HAY DIFERENCIAS:
 
 
-# IMPACTO ENTRE 20210 Y 2021
-wilcox.test(ef_tec$'2020', ef_tec$'2021', paired = TRUE, alternative = "two.sided")
+resultados_kruskal <- by(hospitals_long_ef, hospitals_long_ef$Año, function(subset) {
+  kruskal_result <- kruskal.test(Valor ~ IdEstablecimiento, data = subset)
+  return(kruskal_result)
+})
 
-
-# TWO SIDED
-
-#Dado que el V = 5452, p-value = 0.3587 es mayor que 0.05, NO se rechaza la hipótesis nula 
-
-# Esto significa que no hay suficiente evidencia estadística para afirmar que la mediana de la eficiencia técnica en 2021 es menor que en 2020.
-
-# ¿Qué significa en términos prácticos?
-  
-#No se puede concluir que hubo una disminución en la eficiencia técnica entre estos dos años.
-#Aunque pueda haber una diferencia en los valores observados, esta no es estadísticamente significativa.
-#Es posible que la eficiencia técnica se haya mantenido estable o que la diferencia observada sea producto del azar.
-
-
-
-
-
-normalidad_ef_tec <- verificar_normalidad(ef_tec, c(3:12))
-print(normalidad_ef_tec)
-
-qqnorm(ef_tec[["2014"]])
-qqline(ef_tec[["2014"]], col = "red") 
-
-
-
-# NO SON NORMALES LOS DATOS
-
-
-
-# REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
-df_long_ef <- ef_tec[,c("2014","2015","2016","2017","2018","2019","2020","2021","2022", "2023")] %>%
-  mutate(DMU = row_number()) %>%        # Identificador del DMU
-  pivot_longer(
-    cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
-    names_to = "year",
-    values_to = "efficiency"
-  ) %>%
-  mutate(
-    year = as.factor(year)  # o as.numeric si prefieres, pero factor para la prueba
-  )
-
-# Aplicar la prueba de Kruskal-Wallis
-resultado_kruskal <- kruskal.test(efficiency ~ year, data = df_long_ef)
-
-# Mostrar el resultado
-print(resultado_kruskal)
-
-
-
-library(dunn.test)
-
-# Aplicar la prueba de Dunn
-resultado_dunn <- dunn.test(df_long_ef$efficiency, df_long_ef$year, method = "holm")
-
-# Mostrar el resultado
-print(resultado_dunn)
+#NO HAY DIFERENCIAS SIGNIFICATIVAS (NO HAY HOSPITALES QUE TENGAN VALORES MAS SIGNIFICATIVOS POR AÑO)
 
 
 
@@ -238,19 +203,62 @@ print(resultado_dunn)
 
 
 
-# MALMQUIST
+#FRIEDMAN
+
+friedman_result <- friedman.test(Valor ~ IdEstablecimiento | Año, data = hospitals_long_ef)
+
+
+print(friedman_result)
+
+# HAY DIFERENCIAS SIGNIFICATIVAS
+
+#library(FSA)
+
+
+#posthoc_dunn <- dunnTest(Valor ~ Año, data = hospitals_long_ef, method = "holm")
+
+#print(posthoc_dunn)
+#library(ggplot2)
+#ggplot(hospitals_long_ef, aes(x = as.factor(Año), y = Valor)) +
+#  geom_boxplot() +
+#  theme_minimal() +
+#  labs(title = "Distribución de valores por año", x = "Año", y = "Valor")
+
+
+
+
+#if (!requireNamespace("rstatix", quietly = TRUE)) install.packages("rstatix")
+
+# Cargar librería
+library(rstatix)
+
+posthoc_wilcoxon <- hospitals_long_ef %>%
+  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+
+# Mostrar resultados
+print(n=50,posthoc_wilcoxon)
+
+
+
+
+
+
+
+# ==============================================
+#    MALMQUIST
+# ==============================================
+
 
 
   
-mal_tec <- malmquist_indices[["index"]][,c(2:10)]
+mal_tec <- malmquist_indices[["index"]][,c(1:10)]
 
 normalidad_malm <- verificar_normalidad(mal_tec,c(1:9))
-print(normalidad_ef_tec)
+print(normalidad_malm)
 
 
 # REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
-df_long_malm <- mal_tec %>%
-  mutate(DMU = row_number()) %>%        # Identificador del DMU
+df_long_malm <- mal_tec %>%        # Identificador del DMU
   pivot_longer(
     cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
     names_to = "year",
@@ -276,14 +284,20 @@ resultado_dunn <- dunn.test(df_long_malm$index, df_long_malm$year, method = "hol
 # Mostrar el resultado
 print(resultado_dunn)
 
+posthoc_wilcoxon_mal <- df_long_malm %>%
+  pairwise_wilcox_test(index ~ year, paired = TRUE, p.adjust.method = "holm")
+
+# Mostrar resultados
+print(n=50,posthoc_wilcoxon)
 
 
 
 
 
 
-
-# DETERMINANTES
+# ==============================================
+#    DETERMINANTES
+# ==============================================
 # REVISAR SI HAY SIGNIFICANCIA POR AÑO EN DETERMINANTES:
 
 
@@ -292,6 +306,9 @@ df_incmse_all <- df_incmse
 df_incmse_pre <- df_incmse[,c(1:7)]
 df_incmse_post <- df_incmse[,c(1,8:11)]
 
+
+df_long_all_comp <- df_incmse_all %>% pivot_longer(-Variable, names_to = "Año", values_to = "Valor")
+df_long_all_comp <- na.omit(df_long_all_comp)
 
 # Calcular la mediana de los valores en el periodo "pre" (columnas 2 a 7)
 df_median_pre <- df_incmse_pre %>%
@@ -379,6 +396,35 @@ df_long_kruskal_post <- df_long_post %>% filter(Variable %in% kruskal_results_po
 
 # Gráfico de evolución de las variables analizadas
 
+
+
+
+
+
+
+
+
+
+grafica <- ggplot(df_long_all_comp, aes(x = Año, y = Variable, fill = Valor)) +
+  geom_tile() +
+  theme_bw() +  # Cambiar a theme_bw() para fondo blanco
+  labs(title = "Matriz de valores por variable y año",
+       x = "Año", y = "Variable", fill = "Valor") +
+  scale_fill_gradientn(
+    colors = brewer.pal(11, "RdYlGn"),  # Paleta de colores RdYlGn
+    limits = range(df_long_all_comp$Valor, na.rm = TRUE)  # Escala de valores automática
+  ) +
+  theme(
+    panel.background = element_blank(),  # Fondo del panel en blanco
+    plot.background = element_blank(),   # Fondo del gráfico en blanco
+    panel.grid.major = element_blank(),  # Eliminar líneas de la cuadrícula principales
+    panel.grid.minor = element_blank()   # Eliminar líneas de la cuadrícula secundarias
+  )
+
+
+ggsave(paste0("determinantes.jpg"), plot = grafica, width = 15, height = 20, dpi = 500)
+
+
 library(ggplot2)
 library(RColorBrewer)
 
@@ -465,14 +511,6 @@ guardar_resultados(
 
 
 
-
-
-
-
-
-
-
-
 # Gráfico de evolución de las 10 variables
 ggplot(df_long_10, aes(x = Año, y = Valor, group = Variable, color = Variable)) +
   geom_line() + 
@@ -481,35 +519,3 @@ ggplot(df_long_10, aes(x = Año, y = Valor, group = Variable, color = Variable))
   labs(title = "Evolución de las primeras 10 variables (2014-2023)",
        x = "Año", y = "Valor de la Variable")
 
-
-
-
-
-
-
-
-
-
-
-
-
-kruskal.test(IncMSE ~ Variable, data = df_importancia_2014)
-
-
-
-
-
-library(dunn.test)
-resultado_dunn <- dunn.test(df_importancia_2014$IncMSE, df_importancia_2014$Variable, method = "bonferroni", table = TRUE)
-
-# Convertir los resultados a un dataframe
-df_dunn <- data.frame(
-  Comparacion = resultado_dunn$comparisons,
-  p_value = resultado_dunn$P.adjusted
-)
-
-# Filtrar solo las comparaciones significativas (p < 0.05)
-df_dunn_significativas <- df_dunn[df_dunn$p_value < 0.05, ]
-
-# Mostrar solo las comparaciones significativas
-print(df_dunn_significativas)
