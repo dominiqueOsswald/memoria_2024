@@ -131,6 +131,102 @@ lapply(anios, function(anio) {
 # ==============================================
 
 # ==============================================
+#    REVISAR LA DIFERENCIA ENTRE VARIABLES
+# ==============================================
+
+
+# Lista de años disponibles
+anios <- names(datos)
+
+# Lista de columnas de interés
+columnas_interes <- c("Egresos.GRD", "Consultas", "Quirofano", "X21_value", 
+                      "X22_value", "dias_cama_disponible")
+
+# Crear un listado de dataframes por cada columna
+dataframes_por_columna <- lapply(columnas_interes, function(col) {
+  df <- do.call(cbind, lapply(anios, function(anio) datos[[anio]][[col]]))
+  colnames(df) <- anios
+  df <- as.data.frame(df)
+  return(df)
+})
+
+# Asignar nombres a los dataframes generados
+names(dataframes_por_columna) <- columnas_interes
+
+
+
+print(dataframes_por_columna$`Egresos.GRD`)
+
+for (col in columnas_interes) {
+  # Convertir los datos en formato largo
+  df_melted <- melt(dataframes_por_columna[[col]], variable.name = "Año", value.name = col)
+  
+  # Generar el gráfico de violín
+  p <- ggplot(df_melted, aes(x = Año, y = get(col))) +
+    geom_violin(fill = "blue", alpha = 0.5) +
+    geom_jitter(width = 0.2, alpha = 0.5) +
+    labs(title = paste("Distribución de", col, "por Año"),
+         x = "Año",
+         y = col) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  # Mostrar el gráfico
+  print(p)
+}
+
+
+# Variables de interés
+variables_interes <- c("X21_value", "X22_value")
+
+# Función para realizar ANOVA y Kruskal-Wallis
+realizar_pruebas <- function(df, variable) {
+  df_melted <- df %>%
+    pivot_longer(cols = everything(), names_to = "Año", values_to = "Valor") %>%
+    na.omit()
+  
+  
+  # Prueba de Kruskal-Wallis
+  kruskal_result <- kruskal.test(Valor ~ Año, data = df_melted)
+  
+  # Imprimir resultados
+  cat("\nPrueba de Kruskal-Wallis:\n")
+  print(kruskal_result)
+}
+
+# Aplicar pruebas para cada variable
+for (var in variables_interes) {
+  realizar_pruebas(dataframes_por_columna[[var]], var)
+}
+
+
+
+posthoc_wilcoxon <- hospitals_long_ef %>%
+  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+
+
+# Función para aplicar la prueba de Wilcoxon por pares con corrección de Holm
+realizar_posthoc_wilcoxon <- function(df, variable) {
+  df_melted <- df %>%
+    pivot_longer(cols = everything(), names_to = "Año", values_to = "Valor") %>%
+    na.omit()
+  
+  # Prueba de Wilcoxon pareada con corrección de Holm
+  posthoc_wilcoxon <- df_melted %>%
+    pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+  
+  # Mostrar resultados
+  cat("\n### Prueba de Wilcoxon post-hoc para:", variable, "###\n")
+  print(posthoc_wilcoxon)
+}
+
+# Aplicar la prueba a cada variable
+for (var in variables_interes) {
+  realizar_posthoc_wilcoxon(dataframes_por_columna[[var]], var)
+}
+
+
+# ==============================================
 #    EFICIENCIA
 # ==============================================
 
@@ -298,6 +394,8 @@ print(n=50,posthoc_wilcoxon)
 # ==============================================
 #    DETERMINANTES
 # ==============================================
+
+
 # REVISAR SI HAY SIGNIFICANCIA POR AÑO EN DETERMINANTES:
 
 
