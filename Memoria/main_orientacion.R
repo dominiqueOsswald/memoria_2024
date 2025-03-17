@@ -130,6 +130,31 @@ lapply(anios, function(anio) {
 #    PRUEBAS ESTADISTICAS
 # ==============================================
 
+
+path_hospitales_complejidades <- paste0("data/hospitales.csv")
+hospitales_complejidades <- read.csv(path_hospitales_complejidades) %>% rename("IdEstablecimiento" = "hospital_id")
+
+for (year in 2014:2023) {
+  resultados_usar[[orientacion]]$original[[as.character(year)]]$data <- resultados_usar[[orientacion]]$original[[as.character(year)]]$data %>%
+    left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
+              by = "IdEstablecimiento")
+}
+
+
+# ANÁLISIS DE EFICIENCIA A HOSPITALES
+
+# ALTA COMPLEJIDAD
+ef_tec_alta <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
+
+
+# MEDIANA
+
+# BAJA
+
+
+
+
+
 # ==============================================
 #    REVISAR LA DIFERENCIA ENTRE VARIABLES
 # ==============================================
@@ -596,13 +621,36 @@ df_incmse_est <- df_incmse_est %>%
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Almacenar resultados en excel
 guardar_resultados(
   dataframes = resultados_usar[[orientacion]],
   retorno,
   df_incmse_est,
   malmquist = malmquist_indices$index,
-  carpeta="results/io_crs",
+  carpeta="results/oo_vrs",
   archivo_salida = "RESULTADOS.xlsx",
   prefijo = orientacion
 )
