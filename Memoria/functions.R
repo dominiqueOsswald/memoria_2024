@@ -30,6 +30,7 @@ consolidar_datos_por_anio <- function(anio) {
   
   # Definir rutas de archivos utilizando el año como variable
   path_hospitales <- paste0("data/", anio, "/", anio, "_hospitals.csv")
+  path_hospitales_complejidades <- paste0("data/hospitales.csv")
   path_predicciones_grd <- paste0("data/", anio, "/", anio, "_prediciones_grd.txt")
   path_datos_consolidados <- paste0("data/", anio, "/", anio, "_consolidated_data.csv")
   path_financiero <- paste0("data/", anio, "/", anio, "_financial_data.csv")
@@ -39,6 +40,14 @@ consolidar_datos_por_anio <- function(anio) {
   #browser()
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
+  
+  hospitales_complejidades <- read.csv(path_hospitales_complejidades) %>% rename("IdEstablecimiento" = "hospital_id")
+  
+  hospitales <- hospitales %>%
+    left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
+              by = "IdEstablecimiento")
+  
+  
   predicciones_grd <- read.csv(path_predicciones_grd, sep=",")
   datos_consolidados <- read.table(path_datos_consolidados, sep=";", header=TRUE)
   financiero <- read.csv(path_financiero) %>% 
@@ -125,7 +134,7 @@ consolidar_datos_por_anio <- function(anio) {
   
   # Consolidar todos los datos
   all <- inner_join(output, input, by = "IdEstablecimiento") %>%
-    left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud), by = "IdEstablecimiento") %>%
+    left_join(hospitales %>% select(IdEstablecimiento, region_id, latitud, longitud,complejidad), by = "IdEstablecimiento") %>%
     relocate(region_id, .after = Region)
   
   all_sin_duplicados <- distinct(all)
@@ -159,6 +168,7 @@ analisis_dea_general <- function(data, orientation) {
   eficiencia_df <- data.frame(
     IdEstablecimiento = data$IdEstablecimiento,
     Nombre = data$'Nombre Establecimiento',
+    complejidad = data$complejidad,
     Region = data$'Region',
     vrs = round(eficiencia_vrs, 3),
     crs = round(eficiencia_crs, 3),
@@ -819,7 +829,7 @@ guardar_resultados <- function(dataframes, retorno, resultados_importancia,
   wb <- createWorkbook()
   
   # EFICIENCIA TÉCNICA
-
+  browser()
   ef_tec <- guardar_dataframe_por_columna(dataframes, retorno)
 
   addWorksheet(wb, "ET")
