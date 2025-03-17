@@ -131,29 +131,6 @@ lapply(anios, function(anio) {
 # ==============================================
 
 
-path_hospitales_complejidades <- paste0("data/hospitales.csv")
-hospitales_complejidades <- read.csv(path_hospitales_complejidades) %>% rename("IdEstablecimiento" = "hospital_id")
-
-for (year in 2014:2023) {
-  resultados_usar[[orientacion]]$original[[as.character(year)]]$data <- resultados_usar[[orientacion]]$original[[as.character(year)]]$data %>%
-    left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
-              by = "IdEstablecimiento")
-}
-
-
-# ANÁLISIS DE EFICIENCIA A HOSPITALES
-
-# ALTA COMPLEJIDAD
-ef_tec_alta <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
-
-
-# MEDIANA
-
-# BAJA
-
-
-
-
 
 # ==============================================
 #    REVISAR LA DIFERENCIA ENTRE VARIABLES
@@ -261,66 +238,16 @@ ef_tec <- guardar_dataframe_por_columna(resultados_usar[["oo"]], retorno)
 # NO SON NORMALES LOS DATOS
 
 
-
-
-
-# PARA VER SIHAY DIFERENCIAS DE MEDIANA ENTRE PRE Y POST
-grupo_1_medianas <- apply(ef_tec[, 3:8], 1, median)
-grupo_2_medianas <- apply(ef_tec[, 9:12], 1, median)
-
-# Calcular la mediana de cada grupo
-mediana_grupo1 <- median(grupo_1_medianas, na.rm = TRUE)
-mediana_grupo2 <- median(grupo_2_medianas, na.rm = TRUE)
-
-
-variacion <- 100 * ( (mediana_grupo2-mediana_grupo1)/mediana_grupo1 )
-
-# Comparación
-if (mediana_grupo1 > mediana_grupo2) {
-  print("La mediana del grupo 1 es mayor que la del grupo 2.")
-} else if (mediana_grupo1 < mediana_grupo2) {
-  print("La mediana del grupo 2 es mayor que la del grupo 1.")
-} else {
-  print("Las medianas de ambos grupos son iguales.")
-}
-
-
-
-# REVISION DE LOS DOS GRUPOS PRE Y POT
-wilcox.test(grupo_1_medianas, grupo_2_medianas, paired = TRUE, alternative = "two.sided")
-
-
 # COMPARACION DE HOSPITALES
 
 
+# TODOS los hospitales
 
 ef_tec <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
-ef_tec <- ef_tec[,-2]
+ef_tec <- ef_tec[,-c(2,3)]
 
 hospitals_long_ef <- ef_tec%>%
   pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
-
-df <- data.frame(
-  IdEstablecimiento = rep(paste("Hospital", 1:10), each = 10),  # 10 hospitales
-  Año = rep(2014:2023, times = 10),                    # Años de 2014 a 2023
-  Valor = runif(100, min = 10, max = 100)              # Valores aleatorios
-)
-
-
-#KRUSKAL PARA REVISAR POR AÑO SI HAY DIFERENCIAS:
-
-
-resultados_kruskal <- by(hospitals_long_ef, hospitals_long_ef$Año, function(subset) {
-  kruskal_result <- kruskal.test(Valor ~ IdEstablecimiento, data = subset)
-  return(kruskal_result)
-})
-
-#NO HAY DIFERENCIAS SIGNIFICATIVAS (NO HAY HOSPITALES QUE TENGAN VALORES MAS SIGNIFICATIVOS POR AÑO)
-
-
-
-
-
 
 
 
@@ -331,24 +258,6 @@ friedman_result <- friedman.test(Valor ~ IdEstablecimiento | Año, data = hospit
 
 print(friedman_result)
 
-# HAY DIFERENCIAS SIGNIFICATIVAS
-
-#library(FSA)
-
-
-#posthoc_dunn <- dunnTest(Valor ~ Año, data = hospitals_long_ef, method = "holm")
-
-#print(posthoc_dunn)
-#library(ggplot2)
-#ggplot(hospitals_long_ef, aes(x = as.factor(Año), y = Valor)) +
-#  geom_boxplot() +
-#  theme_minimal() +
-#  labs(title = "Distribución de valores por año", x = "Año", y = "Valor")
-
-
-
-
-#if (!requireNamespace("rstatix", quietly = TRUE)) install.packages("rstatix")
 
 # Cargar librería
 library(rstatix)
@@ -362,6 +271,143 @@ print(n=50,posthoc_wilcoxon)
 
 
 
+
+
+
+
+
+# Alta complejidad:
+
+
+path_hospitales_complejidades <- paste0("data/hospitales.csv")
+hospitales_complejidades <- read.csv(path_hospitales_complejidades) %>% rename("IdEstablecimiento" = "hospital_id")
+
+for (year in 2014:2023) {
+  resultados_usar[[orientacion]]$original[[as.character(year)]]$data <- resultados_usar[[orientacion]]$original[[as.character(year)]]$data %>%
+    left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
+              by = "IdEstablecimiento")
+}
+
+
+# ANÁLISIS DE EFICIENCIA A HOSPITALES
+ef_tec_complejidades <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
+
+
+
+
+
+# ALTA COMPLEJIDAD
+
+ef_tec_alta <-  ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Alta")
+
+
+ef_tec_alta_long <- ef_tec_alta[,-c(2,3)]%>%
+  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+
+friedman_result_alta <- friedman.test(Valor ~ IdEstablecimiento | Año, data = ef_tec_alta_long)
+
+
+print(friedman_result_alta)
+
+
+
+posthoc_wilcoxon_alta <- ef_tec_alta_long %>%
+  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+
+# Mostrar resultados
+print(n=50,posthoc_wilcoxon_alta)
+
+
+
+#✔ Existen diferencias significativas en la distribución de "Valor" entre distintos años, especialmente entre 2014-2017, 2015-2018, 2016-2018 y 2021-2023.
+#✔ Las diferencias más marcadas se encuentran en los primeros años (2014-2017), lo que sugiere un cambio importante en los valores en ese periodo.
+#✔ Algunos pares de años no presentan diferencias significativas (ns), lo que indica que en esos años los valores de la variable se mantuvieron relativamente estables.
+
+
+
+# MEDIANA
+ef_tec_mediana <- ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Mediana")
+
+
+
+
+ef_tec_mediana_long <- ef_tec_mediana[,-c(2,3)]%>%
+  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+
+friedman_result_mediana <- friedman.test(Valor ~ IdEstablecimiento | Año, data = ef_tec_mediana_long)
+
+
+print(friedman_result_mediana)
+
+
+
+posthoc_wilcoxon_mediana <- ef_tec_mediana_long %>%
+  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+
+# Mostrar resultados
+print(n=50,posthoc_wilcoxon_mediana)
+
+
+
+#✔ Existen diferencias significativas en la distribución de "Valor" en algunos pares de años, especialmente 2014-2016, 2016-2020 y 2021-2023.
+#✔ No todas las diferencias son significativas después del ajuste de p-valores, lo que indica que en muchos casos la variación entre años no es suficiente para afirmar que hubo un cambio real en la distribución de los valores.
+#✔ Los mayores cambios parecen ocurrir en los períodos 2014-2016 y 2021-2023, lo que sugiere tendencias o eventos que afectaron los valores en esos años.
+
+
+# BAJA
+ef_tec_baja <- ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Baja")
+
+
+ef_tec_long_baja <- ef_tec_baja[,-c(2,3)]%>%
+  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+
+friedman_result_baja <- friedman.test(Valor ~ IdEstablecimiento | Año, data = ef_tec_long_baja)
+
+
+print(friedman_result_mediana)
+
+posthoc_wilcoxon_baja <- ef_tec_long_baja %>%
+  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+
+# Mostrar resultados
+print(n=50,posthoc_wilcoxon_baja)
+
+
+
+
+# Convertir a formato largo
+df_long <- ef_tec_complejidades %>%
+  pivot_longer(cols = starts_with("20"),  # Seleccionar columnas de los años
+               names_to = "Año", 
+               values_to = "Valor")
+
+medianas <- df_long %>%
+  group_by(Año, complejidad) %>%
+  summarise(Mediana = median(Valor, na.rm = TRUE), .groups = "drop")
+# Definir el ancho de desplazamiento
+dodge_width <- 0.87  # Ajustar el desplazamiento para alinear mejor
+
+# Crear el gráfico de violín con líneas de medianas alineadas
+ggplot(df_long, aes(x = factor(Año), y = Valor, fill = complejidad)) +
+  geom_violin(trim = FALSE, alpha = 0.5, position = position_dodge(dodge_width)) +  # Gráfico de violín
+  # Puntos de mediana en su violín respectivo
+  geom_line(data = medianas, 
+            aes(x = as.numeric(factor(Año)) + (as.numeric(factor(complejidad)) - 2) * 0.3, 
+                y = Mediana, group = complejidad, color = complejidad), 
+            size = 1.2) +  # Línea de medianas ajustada
+  geom_point(data = medianas, 
+             aes(x = as.numeric(factor(Año)) + (as.numeric(factor(complejidad)) - 2) * 0.3, 
+                 y = Mediana, color = complejidad), 
+             size = 3) +  # Puntos en la línea de medianas
+  labs(title = "Distribución de valores según complejidad en los años",
+       x = "Año", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotar etiquetas del eje X
+  scale_fill_brewer(palette = "Set2") +  # Colores para los violines
+  scale_color_brewer(palette = "Set2")   # Colores para las líneas de medianas
 
 
 
