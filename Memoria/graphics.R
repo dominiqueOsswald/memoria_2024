@@ -125,9 +125,13 @@ generar_graficas_malmquist <- function(index, key) {
           plot.subtitle = element_text(size = 12)) + 
     
     scale_x_continuous(
-      breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
-      limits = rango_x  # Limitar los valores al rango simétrico
+      breaks = seq(floor(min(datos_comb$Valores)), ceiling(max(datos_comb$Valores)), by = 1),  # Ajuste dinámico de los límites
+      limits = c(min(datos_comb$Valores) - 0.5, max(datos_comb$Valores) + 0.5)  # Expandir un poco los límites
     ) +
+    #scale_x_continuous(
+    #  breaks = seq(floor(-2), ceiling(5), by = 1),  # Incrementos de 1 en 1
+    #  limits = rango_x  # Limitar los valores al rango simétrico
+    #) +
     
     # Leyenda para colores
     scale_color_manual(
@@ -319,6 +323,9 @@ generar_graficas_malmquist <- function(index, key) {
   print(grafico_tasas)
   ggsave(paste0(titulo_tasas,"_",subtitulo_tasas,".jpg"), plot = grafico_tasas, width = 13, height = 5, dpi = 300)
 }
+
+
+
 
 # Función para generar gráficos de manera masiva
 malmquist_graficas_masiva <- function(malmquist_indices) {

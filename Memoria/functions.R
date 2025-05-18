@@ -41,7 +41,7 @@ consolidar_datos_por_anio <- function(anio) {
   # Cargar datos
   hospitales <- read.csv(path_hospitales) %>% rename("IdEstablecimiento" = "hospital_id")
   
-  hospitales_complejidades <- read.csv(path_hospitales_complejidades) %>% rename("IdEstablecimiento" = "hospital_id")
+  hospitales_complejidades <- read.csv(path_hospitales_complejidades, sep=";") %>% rename("IdEstablecimiento" = "hospital_id")
   
   hospitales <- hospitales %>%
     left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
@@ -147,12 +147,31 @@ consolidar_datos_por_anio <- function(anio) {
 # ===================================================
 
 analisis_dea_general <- function(data, orientation) {
+  #browser()
+  
+
+  
+  #summary(data[, 5:10])  # Verificar que el mínimo sea > 0
+  #any(data[, 5:10] <= 0)  # Debe ser FALSE
+  
+  
+  #data[, 5:10] <- apply(data[, 5:10], 2, function(x) {
+  #  x[x <= 0] <- 1e-10  # Reemplaza ceros y negativos con un valor pequeño positivo
+  #  return(x)
+  #})
+  
+  #summary(data[, 5:10])  # Verificar que el mínimo sea > 0
+  #any(data[, 5:10] <= 0)  # Debe ser FALSE
+  
   # --- Preparar inputs y outputs
-  model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
+  model <- make_deadata(data, dmus = 3, inputs = 8:10, outputs = 5:7)
+  #model <- make_deadata(data, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
+  #model <- make_deadata(data_shifted, ni=3, no="IdEstablecimiento", dmus=3, inputs=8:10, outputs=5:7)
+  
   #browser()
   # ---Aplicar DEA con la orientación y RTS (VRS y CRS)
-  resultado_dea_vrs <- model_basic(model, orientation=orientation, rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
   resultado_dea_crs <- model_basic(model, orientation=orientation, rts="crs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
+  resultado_dea_vrs <- model_basic(model, orientation=orientation, rts="vrs", dmu_eval = 1:nrow(data), dmu_ref = 1:nrow(data)) 
   
   #--- Calcular eficiencias
   eficiencia_vrs <- deaR::efficiencies(resultado_dea_vrs)
@@ -201,10 +220,19 @@ sensibilidad_parametro_general <- function(data, data_original, mayor, valor, or
   } else {
     data_filtrada <- subset(data_original, data_original[[columna]] < valor)
   }
-  
-  # Filtrar el dataset por IdEstablecimiento
-  data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
+  #browser()
+  if (nrow(data_filtrada) < nrow(data_original) / 2) {
+    # Si es menos de la mitad, no aplicar el filtro, usar data_original
+    data_set <- data
+  } else {
+    # Si no es menos de la mitad, filtrar según IdEstablecimiento
+    data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
+  }
 
+  # Filtrar el dataset por IdEstablecimiento
+  #data_set <- data[data$IdEstablecimiento %in% data_filtrada$IdEstablecimiento, ]
+  
+  #browser()
   # Aplicar el análisis DEA
   resultados_in  <- analisis_dea_general(data_set, orientacion)
   
@@ -393,7 +421,9 @@ resultados_iteracion <- function(datos, orientacion){
       
   }else{
     print("VRS")
+    #browser()
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
+    browser()
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("CRS")
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
@@ -593,63 +623,91 @@ analize_rf <- function(year, resultados_in, n_top,tipo, orientacion ){
   
   # Combinar los DataFrames
   df_merged_original <- merge(df_w_vrs, df_vrs, by = "idEstablecimiento", all.x = TRUE)
+  #browser()
   df_merged_clean <- df_merged_original[, colSums(is.na(df_merged_original)) == 0]
   
-  
-  correlaciones <- cor(df_merged_clean[,-1])[tipo, ]
-  correlaciones <- correlaciones[!names(correlaciones) %in% tipo]
-  correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
-  
-  top_correlacion <- head(correlaciones_ordenadas, n=n_top)
-  top_variables <- names(top_correlacion)
-  
-  
-  columnas_a_incluir <- c(tipo, top_variables)
-  
-  # Crear el DataFrame con las variables seleccionadas
-  df_top <- df_merged_clean[, columnas_a_incluir]
-  
-  
-  # PROBANDO RANDOM FOREST
-  
-  set.seed(123)  # Para reproducibilidad
+  colnames_merged <- colnames(df_merged_clean)
 
-  trainIndex <- createDataPartition(df_top[[tipo]], p = 0.7, list = FALSE)
-  
-  trainData <- df_top[trainIndex, ]
-  testData <- df_top[-trainIndex, ]
-  
-  control <- trainControl(method = "cv", number = 10)  # 10-fold CV
-  formula <- as.formula(paste(tipo, "~ ."))
-  
-  cat(paste0("\n", year, "-", orientacion, " ", tipo))
-  # Ajustar el modelo de Random Forest
-  modelo_rf <- randomForest(formula, 
-                            data = trainData, 
-                            importance = TRUE, 
-                            trControl = control, 
-                            ntree = 700,
-                            do.trace = 100 )
-  
-  
-  # Predicciones en el conjunto de prueba
-  predicciones <- predict(modelo_rf, newdata = testData)
-  
-  # Evaluar el rendimiento
-  r2 <- R2(predicciones, testData[[tipo]])
-  rmse <- rmse(predicciones, testData[[tipo]])
-  cat("R²:", r2, "\nRMSE:", rmse)
-  
-  # Importancia de las variables
-  importancia <- importance(modelo_rf)
 
+  correlaciones_cor <- cor(df_merged_clean)
   
-  print("---------------------------")
-  print("---------------------------")
+  correlaciones <- tryCatch({
+    correlaciones_cor[tipo,]  # Intenta acceder a la variable
+    
+    
+    
+    
+    
+    
+  }, error = function(e) {
+    print(paste("Error: No se encontró la variable", tipo, "en correlaciones_cor."))
+    return(NULL)  # Retorna NULL para evitar que el código se detenga
+  })
+  #correlaciones <- correlaciones_cor[tipo,]
   
-  return(list(importancia = importancia,
-              modelo = modelo_rf,
-              correlaciones = top_correlacion))
+  
+  if (!is.null(correlaciones)){
+    
+    print("SIGO")
+    correlaciones <- correlaciones[!names(correlaciones) %in% tipo]
+    correlaciones_ordenadas <- sort(abs(correlaciones), decreasing = TRUE)
+    
+    top_correlacion <- head(correlaciones_ordenadas, n=n_top)
+    top_variables <- names(top_correlacion)
+    
+    
+    columnas_a_incluir <- c(tipo, top_variables)
+    
+    # Crear el DataFrame con las variables seleccionadas
+    df_top <- df_merged_clean[, columnas_a_incluir]
+    
+    
+    # PROBANDO RANDOM FOREST
+    
+    set.seed(123)  # Para reproducibilidad
+    
+    trainIndex <- createDataPartition(df_top[[tipo]], p = 0.7, list = FALSE)
+    
+    trainData <- df_top[trainIndex, ]
+    testData <- df_top[-trainIndex, ]
+    
+    control <- trainControl(method = "cv", number = 10)  # 10-fold CV
+    formula <- as.formula(paste(tipo, "~ ."))
+    
+    cat(paste0("\n", year, "-", orientacion, " ", tipo))
+    # Ajustar el modelo de Random Forest
+    modelo_rf <- randomForest(formula, 
+                              data = trainData, 
+                              importance = TRUE, 
+                              trControl = control, 
+                              ntree = 700,
+                              do.trace = 100 )
+    
+    
+    # Predicciones en el conjunto de prueba
+    predicciones <- predict(modelo_rf, newdata = testData)
+    
+    # Evaluar el rendimiento
+    r2 <- R2(predicciones, testData[[tipo]])
+    rmse <- rmse(predicciones, testData[[tipo]])
+    cat("R²:", r2, "\nRMSE:", rmse)
+    
+    # Importancia de las variables
+    importancia <- importance(modelo_rf)
+    
+    
+    print("---------------------------")
+    print("---------------------------")
+    
+    return(list(importancia = importancia,
+                modelo = modelo_rf,
+                correlaciones = top_correlacion))
+    
+    
+  }
+  
+  return(NULL)
+  
 }
 
 
@@ -690,7 +748,7 @@ determinantes_importancia_single <- function(random_forest, anios_pre_pandemia, 
     )
     df_corr <- rbind(df_corr, temp_corr)
   }
-  browser()
+  #browser()
   pivot_IncMSE <- df_IncMSE %>% pivot_wider(names_from = Año, values_from = Valor)
   pivot_IncMSE$Frecuencia_General <- rowSums(!is.na(pivot_IncMSE[, -1]))
   pivot_IncMSE$Frecuencia_Pre <- rowSums(!is.na(pivot_IncMSE[, anios_pre_pandemia]))
@@ -829,7 +887,7 @@ guardar_resultados <- function(dataframes, retorno, resultados_importancia,
   wb <- createWorkbook()
   
   # EFICIENCIA TÉCNICA
-  browser()
+  #browser()
   ef_tec <- guardar_dataframe_por_columna(dataframes, retorno)
 
   addWorksheet(wb, "ET")
@@ -930,6 +988,10 @@ importancia_dataframe <- function(random_forest) {
   # Iterar sobre los años del 2014 al 2023
   for (anio in 2014:2023) {
     
+    if (is.null(random_forest[[as.character(anio)]])){
+      next
+      
+    }
     # Extraer importancia y correlaciones
     importancia <- data.frame(
       Variable = rownames(random_forest[[as.character(anio)]][["importancia"]]), 

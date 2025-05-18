@@ -258,7 +258,7 @@ calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
 
 
 old_calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
-  browser()
+  #browser()
   # Calcular las matrices de correlación para cada dataframe en la lista
   correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
     df_num <- df %>%
@@ -410,6 +410,14 @@ aplicar_sensibilidad <- function(datos, resultados, umbral, orientacion, retorno
     # Mostrar el nombre del año en pantalla
     print(paste("Aplicando sensibilidad para el año:", anio))
     #browser()
+    if (anio == "2016") {
+      #browser()
+      
+
+      
+
+      #browser()
+    }
     # Ejecutar la función principal
     sensibilidad_parametro_general(data, resultado, mayor, umbral, orientacion, retorno)
   },

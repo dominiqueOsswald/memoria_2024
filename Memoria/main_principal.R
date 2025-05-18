@@ -18,9 +18,31 @@ names(datos_iniciales) <- as.character(anios)
 
 # Encontrar las DMUs comunes en todos los años y filtrar los datos para incluir solo esas DMUs
 dmus_comunes <- Reduce(intersect, lapply(datos_iniciales, `[[`, "IdEstablecimiento"))
-datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
+
+datos_completos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in% dmus_comunes, ])
 
 
+
+# Aplicando logaritmo a los valores antes de normalizar
+datos_normalizados <- lapply(datos_completos, function(data) {
+  cols_a_normalizar <- 5:10
+  
+  # Aplicamos logaritmo a las columnas seleccionadas
+  for (col in cols_a_normalizar) {
+    data[[col]] <- log1p(data[[col]])  # log(1 + valor), evita log(0)
+  }
+  
+  # Luego, normalizamos entre 0 y 1
+  for (col in cols_a_normalizar) {
+    min_col <- min(data[[col]], na.rm = TRUE)
+    max_col <- max(data[[col]], na.rm = TRUE)
+    data[[col]] <- (data[[col]] - min_col) / (max_col - min_col)
+  }
+  
+  return(data)
+})                                                                       
+
+datos <- datos_normalizados
 
 # ==============================================
 #  CÁLCULO DEA
@@ -28,8 +50,10 @@ datos <- lapply(datos_iniciales, function(data) data[data$IdEstablecimiento %in%
 
 #  CALCULO DE EFICIENCIA EN TODOS LOS AÑOS Y REVISIÓN DE
 #  SENSIBILIDAD - ELIMINACION EFICIENTES
-resultados <- list(io = resultados_iteracion(datos, "io"),
-                   oo = resultados_iteracion(datos, "oo"))
+#resultados <- list(oo = resultados_iteracion(datos_normalizados, "oo"))
+
+resultados <- list(io = resultados_iteracion(datos_normalizados, "io"),
+                   oo = resultados_iteracion(datos_normalizados, "oo"))
 
 # CORRELACION DE VALORES ORIGINALES PARA TODAS LAS COMBINACIONES EN TODOS LOS AÑOS
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
@@ -38,7 +62,8 @@ correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones
 
 #  NUEVO CONJUNTO DE DATOS A PARTIR DE ELIMINACIÓN DE ATÍPICOS 
 
-datos_sin_atipicos <- datos_filtrados_atipicos(datos,resultados)
+datos_sin_atipicos <- datos_filtrados_atipicos(datos_normalizados,resultados)
+
 
 resultados_sin_atipicos <- list(
   vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
@@ -85,6 +110,7 @@ resultados_combinaciones_sin_atipicos <- list(
   comparacion = combinar_resultados_in_out(resultados_sin_atipicos[["crs_io"]]$io[["original"]], resultados_sin_atipicos[["crs_io"]]$oo[["original"]])
   )
 )
+
 
 correlacion_todos_metodos_atipicos <- list(
   vrs_oo = list(
