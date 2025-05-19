@@ -16,7 +16,9 @@ library(tidyr)
 library(dplyr)
 library(caret)
 library(deaR)
-
+library(dplyr)
+library(rstatix)
+library(boot)
 
 
 # ===================================================
@@ -421,9 +423,7 @@ resultados_iteracion <- function(datos, orientacion){
       
   }else{
     print("VRS")
-    #browser()
     iteracion_1_vrs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "vrs", FALSE)
-    browser()
     iteracion_2_vrs <- aplicar_sensibilidad(datos, lapply(iteracion_1_vrs, `[[`, "data"), 1, orientacion, "vrs", FALSE)
     print("CRS")
     iteracion_1_crs <- aplicar_sensibilidad(datos, lapply(original, `[[`, "data"), 1, orientacion, "crs", FALSE)
@@ -524,6 +524,77 @@ resultados_iteracion <- function(datos, orientacion){
 #  COMBINAR RESULTADOS IN OUT
 # ==============================================
 combinar_resultados_in_out <- function(resultados_in, resultados_out) {
+  # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
+  lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
+    # Seleccionar los datos de las iteraciones de VRS
+    df_vrs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_input = vrs)
+    
+    df_vrs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, vrs) %>%
+      rename(vrs_output = vrs)
+    
+    # Unir los dataframes de VRS por IdEstablecimiento
+    df_vrs_combinado <- df_vrs_input %>%
+      full_join(df_vrs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        vrs_input = ifelse(is.na(vrs_input), NA, as.numeric(vrs_input)),
+        vrs_output = ifelse(is.na(vrs_output), NA, as.numeric(vrs_output))
+      )
+    
+    # Seleccionar los datos de las iteraciones de CRS
+    df_crs_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_input = crs)
+    
+    df_crs_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, crs) %>%
+      rename(crs_output = crs)
+    
+    # Unir los dataframes de CRS por IdEstablecimiento
+    df_crs_combinado <- df_crs_input %>%
+      full_join(df_crs_output, by = "IdEstablecimiento") %>%
+      mutate(
+        crs_input = ifelse(is.na(crs_input), NA, as.numeric(crs_input)),
+        crs_output = ifelse(is.na(crs_output), NA, as.numeric(crs_output))
+      )
+    
+    # Seleccionar los datos de las iteraciones de CRS
+    df_esc_input <- resultados_in[[anio]]$data %>%
+      select(IdEstablecimiento, escala) %>%
+      rename(esc_input = escala)
+    
+    df_esc_output <- resultados_out[[anio]]$data %>%
+      select(IdEstablecimiento, escala) %>%
+      rename(esc_output = escala)
+    
+    # Unir los dataframes de CRS por IdEstablecimiento
+    df_esc_combinado <- df_esc_input %>%
+      full_join(df_esc_output, by = "IdEstablecimiento") %>%
+      mutate(
+        esc_input = ifelse(is.na(esc_input), NA, as.numeric(esc_input)),
+        esc_output = ifelse(is.na(esc_output), NA, as.numeric(esc_output))
+      )
+    
+    # Unir los resultados de VRS y CRS en un solo dataframe por IdEstablecimiento
+    df_combinado <- df_vrs_combinado %>%
+      full_join(df_crs_combinado, by = "IdEstablecimiento") %>%
+      full_join(df_esc_combinado, by = "IdEstablecimiento")
+    
+    return(df_combinado)
+  })
+  
+  # Nombrar la lista con los años para identificación
+  names(lista_resultados_combinados) <- unique(names(resultados_in))
+  
+  return(lista_resultados_combinados)
+}
+
+# ==============================================
+#  COMBINAR RESULTADOS IN OUT
+# ==============================================
+combinar_resultados_con_sin_atipicos <- function(resultados_in, resultados_out) {
   # Crear una lista de dataframes, uno por cada año, con valores de VRS y CRS
   lista_resultados_combinados <- lapply(unique(names(resultados_in)), function(anio) {
     # Seleccionar los datos de las iteraciones de VRS
@@ -1038,4 +1109,66 @@ importancia_dataframe <- function(random_forest) {
     df_incmse_10 = df_incmse_10,
     df_incmse_est = calcular_estadisticas(df_incmse),
     df_incmse_est_10 = calcular_estadisticas(df_incmse_10) ))
+}
+
+
+
+analisis_eficiencia_tecnica <- function(df) {
+
+  
+  # --- 1. Prueba de Friedman
+  cat("==== PRUEBA DE FRIEDMAN ====\n")
+  friedman_result <- friedman.test(Valor ~ IdEstablecimiento | Año, data = df)
+  print(friedman_result)
+  
+  # --- 2. Post-hoc Wilcoxon pareado (two-sided)
+  cat("\n==== POST-HOC WILCOXON PAREADO (two-sided) ====\n")
+  posthoc_wilcoxon <- df %>%
+    pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
+  print(posthoc_wilcoxon, n = 50)
+  
+  # --- 3. Post-hoc Wilcoxon pareado con alternativa "less"
+  cat("\n==== POST-HOC WILCOXON PAREADO (alternative = 'less') ====\n")
+  posthoc_wilcoxon_less <- df %>%
+    pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm", alternative = "less")
+  print(posthoc_wilcoxon_less, n = 50)
+  
+  # --- 4. Bootstrap: comparar mediana pre vs post pandemia
+  cat("\n==== BOOTSTRAP PARA DIFERENCIA DE MEDIANAS ENTRE PERIODOS ====\n")
+  
+  pre <- df %>%
+    filter(Año %in% 2014:2019) %>%
+    group_by(IdEstablecimiento) %>%
+    summarise(pre = median(Valor, na.rm = TRUE))
+  
+  post <- df %>%
+    filter(Año %in% 2020:2023) %>%
+    group_by(IdEstablecimiento) %>%
+    summarise(post = median(Valor, na.rm = TRUE))
+  
+  datos_df <- inner_join(pre, post, by = "IdEstablecimiento")
+  
+  # Función para bootstrap
+  bootstrap_mediana <- function(data, indices) {
+    d <- data[indices, ]
+    med_pre <- median(d$pre)
+    med_post <- median(d$post)
+    return((med_post - med_pre) / med_pre * 100)
+  }
+  
+  set.seed(123)
+  resultado_boot <- boot(data = datos_df, statistic = bootstrap_mediana, R = 10000)
+  
+  # Mostrar IC
+  ic <- boot.ci(resultado_boot, type = "perc")
+  print(ic)
+  
+  # Retornar todo si se desea guardar resultados
+  return(list(
+    friedman = friedman_result,
+    wilcoxon = posthoc_wilcoxon,
+    wilcoxon_less = posthoc_wilcoxon_less,
+    bootstrap = resultado_boot,
+    intervalo_confianza = ic
+  ))
 }

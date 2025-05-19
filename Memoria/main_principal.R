@@ -59,11 +59,16 @@ resultados <- list(io = resultados_iteracion(datos_normalizados, "io"),
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
+correlaciones_eficiencia_grafica_vertical(correlacion_todos_metodos[["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS")
+
 
 #  NUEVO CONJUNTO DE DATOS A PARTIR DE ELIMINACIÓN DE ATÍPICOS 
 
 datos_sin_atipicos <- datos_filtrados_atipicos(datos_normalizados,resultados)
 
+
+resultados_sin_atipicos <- list( vrs_oo = vrs_oo)
+vrs_oo = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_oo"]], "oo"))
 
 resultados_sin_atipicos <- list(
   vrs_io = list(io = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "io"),oo = resultados_iteracion(datos_sin_atipicos[["vrs_io"]], "oo")),
@@ -79,6 +84,8 @@ resultados_sin_atipicos <- list(
 
 # -----------------------------------------------------------------------------------------------------------#
 # CORRELACION ENTRE EFICIENCIAS DE ATIPICOS Y TODOS LOS DATOS
+
+
 
 resultados_combinaciones_sin_atipicos <- list(
   vrs_oo = list(

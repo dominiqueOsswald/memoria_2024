@@ -777,6 +777,121 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
 
 
 
+
+correlaciones_eficiencia_grafica_vertical <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "", nombre_archivo) {
+  # Definir colores personalizados
+  #browser()
+  colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)
+  
+  # Determinar la cantidad de gráficos
+  num_graficos <- length(correlaciones_lista)
+  graficos_por_pagina <- 10  # Máximo 10 gráficos por página (2x5)
+  paginas <- ceiling(num_graficos / graficos_por_pagina)
+  
+  # Crear lista para almacenar los gráficos
+  lista_graficos <- list()
+  
+  # Iterar sobre cada página
+  for (pagina in 1:paginas) {
+    # Definir el rango de años a mostrar en la página actual
+    inicio <- (pagina - 1) * graficos_por_pagina + 1
+    fin <- min(pagina * graficos_por_pagina, num_graficos)
+    años_actuales <- names(correlaciones_lista)[inicio:fin]
+    
+    # Definir el nombre del archivo para guardar la página como imagen
+    archivo_salida <- paste0(nombre_archivo, ".png")
+    
+    # Abrir un dispositivo gráfico para guardar como imagen
+    png(archivo_salida, width = 4000, height = 7500, res = 300)  # Más ancho y achatado
+    
+    # Ajustar la ventana gráfica para 2x5 con márgenes reducidos
+    #par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
+    par(mfrow = c(5, 2), mar = c(2, 2, 2, 2), oma = c(2, 2, 2, 2))  
+    
+    # Crear las gráficas para los años actuales
+    for (anio in años_actuales) {
+      corr_matrix <- correlaciones_lista[[anio]]
+      
+      if (length(etiquetas) != 0) {
+        rownames(corr_matrix) <- etiquetas
+        colnames(corr_matrix) <- etiquetas
+      }
+      
+      # Enmascarar la diagonal superior
+      corr_matrix[upper.tri(corr_matrix)] <- NA
+      
+      format_num <- function(x) {
+        ifelse(x == 1, "1", format(round(x, 3), nsmall = 3))
+      }
+      
+      corrplot(
+        corr_matrix, 
+        col = colores_personalizados, 
+        method = "color", 
+        mar = c(1, 1, 2, 1),  # Reducir margen superior del gráfico
+        addCoef.col = "black",  # Color de los coeficientes
+        number.cex = 1.5,  # Aumenta el tamaño de los números dentro de las celdas
+        tl.cex = 1.6,  # Aumenta el tamaño de las etiquetas de los ejes (filas y columnas)
+        cl.cex = 1.4,  # Aumenta el tamaño de la escala de colores
+        cl.ratio = 0.3,
+        tl.pos = "d", 
+        cl.align = "r", 
+        tl.col = "black",
+        number.format = format_num,  
+        na.label = " "
+      )
+      
+      
+      
+      # Acercar el título al gráfico
+      mtext(paste("Año", anio), side = 3, line = -1, cex = 1.5, font = 2)  
+      
+    }
+    
+    # Determinar título según orientación
+    if (orientacion == "io") {
+      texto <- "Matrices de correlación de métodos orientado a entradas por año"
+    } else if (orientacion == "oo") {
+      texto <- "Matrices de correlación de métodos orientado a salidas por año"
+    } else {
+      texto <- "Matrices de correlación de métodos por año"
+    }
+    
+    # Reducir espacio entre el título general y los gráficos
+    mtext(
+      texto, 
+      outer = TRUE, 
+      cex = 1.5,  # Tamaño del texto
+      font = 2,   # Estilo en negrita
+      line = 0.5  # Acercar más el título a los gráficos
+    )
+    
+    # Subtítulo centrado y más cerca del título principal
+    if (subtitulo != "") {
+      mtext(
+        subtitulo,
+        outer = TRUE, 
+        cex = 1.2,  
+        font = 3,   
+        line = -0.5  # Subtítulo aún más cerca
+      )
+    }
+    
+    # Cerrar el dispositivo gráfico
+    dev.off()
+    
+    # Restablecer configuración gráfica
+    par(mfrow = c(1, 1))
+  }
+  
+  # Retornar lista de gráficos
+  return(lista_graficos)
+}
+
+
+
+
+
 correlaciones_single_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "") {
   # Definir colores personalizados
   colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)

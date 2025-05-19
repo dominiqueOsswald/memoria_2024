@@ -198,8 +198,8 @@ top_eficiencia <- function(datos, tipo, cantidad, best){
 # ==============================================
 #  
 # ==============================================
-calcular_correlaciones_all <- function(lista_resultados_combinados_in, umbral = 0.5) {
-  browser()
+umbral_calcular_correlaciones_all <- function(lista_resultados_combinados_in, umbral = 0.5) {
+  #browser()
   correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
     df_num <- df %>%
       select(-IdEstablecimiento) %>%
@@ -228,7 +228,7 @@ calcular_correlaciones_all <- function(lista_resultados_combinados_in, umbral = 
 
 
 calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
-  #browser()
+  browser()
   # Calcular las matrices de correlación para cada dataframe en la lista
   correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
     df_num <- df %>%
@@ -254,40 +254,6 @@ calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
   return(list(correlaciones_lista = correlaciones_lista,
               promedio_correlacion = promedio_matriz))
 }
-
-
-
-old_calcular_correlaciones_all <- function(lista_resultados_combinados_in) {
-  #browser()
-  # Calcular las matrices de correlación para cada dataframe en la lista
-  correlaciones_lista <- lapply(lista_resultados_combinados_in, function(df) {
-    df_num <- df %>%
-      select(-IdEstablecimiento) %>%
-      mutate(across(starts_with("vrs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
-      mutate(across(starts_with("crs_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA)))) %>%
-      mutate(across(starts_with("esc_iteracion_"), ~ as.numeric(replace(., . == "NO APLICA", NA))))
-    
-    cor(df_num[, sapply(df_num, is.numeric)], use = "complete.obs")
-  })
-  
-  # Nombrar la lista con los años para identificación
-  names(correlaciones_lista) <- names(lista_resultados_combinados_in)
-  
-  # Sumar todas las matrices con `Reduce`:
-  suma_matrices <- Reduce("+", correlaciones_lista)
-  
-  # Calcular el promedio dividiendo por la cantidad de matrices
-  n <- length(correlaciones_lista)
-  promedio_matriz <- suma_matrices / n
-  
-  promedio_matriz
-  
-  
-  # Retornar resultados de correlación entre matrices de distintos años
-  return(list(correlaciones_lista = correlaciones_lista,
-              promedio_correlacion = promedio_matriz))
-}
-
 
 
 # ==============================================
