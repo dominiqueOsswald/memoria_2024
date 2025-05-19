@@ -59,7 +59,7 @@ resultados <- list(io = resultados_iteracion(datos_normalizados, "io"),
 resultados_combinaciones <- combinar_resultados_in_out(resultados$io[["original"]], resultados$oo[["original"]])
 correlacion_todos_metodos <- calcular_correlaciones_all(resultados_combinaciones)
 
-correlaciones_eficiencia_grafica_vertical(correlacion_todos_metodos[["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS")
+correlaciones_eficiencia_grafica(correlacion_todos_metodos[["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS", 2,1.5, 4000,6500, 3,4)
 
 
 #  NUEVO CONJUNTO DE DATOS A PARTIR DE ELIMINACIÓN DE ATÍPICOS 

@@ -663,7 +663,7 @@ eficiencias_chile_grafica <- function(hospitales_df, anio, tipo, titulo, subtitu
 # -------------------------------------- #
 # Correlaciones de eficiencia técnica
 # -------------------------------------- #
-correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "", nombre_archivo) {
+correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, etiquetas = c(), subtitulo = "", nombre_archivo, n_cex, tl_cex, largo,ancho, matrix_x,matrix_y) {
   # Definir colores personalizados
   #browser()
   colores_personalizados <- colorRampPalette(brewer.pal(9, "RdYlGn"))(200)
@@ -687,11 +687,11 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
     archivo_salida <- paste0(nombre_archivo, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
-    png(archivo_salida, width = 7000, height = 4000, res = 300)  # Más ancho y achatado
+    png(archivo_salida, width = ancho, height = largo, res = 300)  # Más ancho y achatado
     
     # Ajustar la ventana gráfica para 2x5 con márgenes reducidos
     #par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
-    par(mfrow = c(2, 5), mar = c(2, 2, 2, 2), oma = c(2, 2, 2, 2))  
+    par(mfrow = c(matrix_x, matrix_y), mar = c(2, 2, 2, 2), oma = c(2, 2, 2, 2))  
     
     # Crear las gráficas para los años actuales
     for (anio in años_actuales) {
@@ -715,15 +715,17 @@ correlaciones_eficiencia_grafica <- function(correlaciones_lista, orientacion, e
         method = "color", 
         mar = c(1, 1, 2, 1),  # Reducir margen superior del gráfico
         addCoef.col = "black",  # Color de los coeficientes
-        number.cex = 1.5,  # Aumenta el tamaño de los números dentro de las celdas
-        tl.cex = 1.5,  # Aumenta el tamaño de las etiquetas de los ejes (filas y columnas)
-        cl.cex = 1.5,  # Aumenta el tamaño de la escala de colores
-        cl.ratio = 0.4,
+        number.cex = n_cex,  # Aumenta el tamaño de los números dentro de las celdas
+        tl.cex = tl_cex,  # Aumenta el tamaño de las etiquetas de los ejes (filas y columnas)
+        cl.cex = 1.4,  # Aumenta el tamaño de la escala de colores
+        cl.ratio = 0.3,
         cl.align = "r", 
         tl.col = "black",
         number.format = format_num,  
-        na.label = " "
+        na.label = " ",
+        tl.pos = "d"
       )
+      
       
       
       
@@ -802,7 +804,7 @@ correlaciones_eficiencia_grafica_vertical <- function(correlaciones_lista, orien
     archivo_salida <- paste0(nombre_archivo, ".png")
     
     # Abrir un dispositivo gráfico para guardar como imagen
-    png(archivo_salida, width = 4000, height = 7500, res = 300)  # Más ancho y achatado
+    png(archivo_salida, width = 4000, height = 8000, res = 300)  # Más ancho y achatado
     
     # Ajustar la ventana gráfica para 2x5 con márgenes reducidos
     #par(mfrow = c(2, 5), mar = c(1, 1, 2, 1), oma = c(2, 2, 2, 2)) 
@@ -830,7 +832,7 @@ correlaciones_eficiencia_grafica_vertical <- function(correlaciones_lista, orien
         method = "color", 
         mar = c(1, 1, 2, 1),  # Reducir margen superior del gráfico
         addCoef.col = "black",  # Color de los coeficientes
-        number.cex = 1.5,  # Aumenta el tamaño de los números dentro de las celdas
+        number.cex = 2.5,  # Aumenta el tamaño de los números dentro de las celdas
         tl.cex = 1.6,  # Aumenta el tamaño de las etiquetas de los ejes (filas y columnas)
         cl.cex = 1.4,  # Aumenta el tamaño de la escala de colores
         cl.ratio = 0.3,
