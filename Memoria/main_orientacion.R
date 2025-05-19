@@ -2,12 +2,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("functions.R")
 source("graphics.R")
-# Cargar librería
-library(rstatix)
-
-library(ggplot2)
-library(RColorBrewer)
-library(dunn.test)
+source("data.RData")
 
 # ==============================================
 #  INICIO 

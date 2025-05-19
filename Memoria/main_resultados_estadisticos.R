@@ -21,11 +21,18 @@ columnas_interes <- c("Egresos.GRD", "Consultas", "Quirofano", "X21_value",
                       "X22_value", "dias_cama_disponible")
 
 # TODOS los hospitales
-ef_tec <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
-ef_tec <- ef_tec[,-c(2,3)]
+ef_tec_all <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
+ef_tec <- ef_tec_all[,-c(2,3)]
 
 # Variables de interés
 variables_interes <- c("X21_value", "X22_value")
+
+mal_tec <- malmquist_indices[["index"]][, c(1:10)] %>% 
+  na.omit() %>% rename(IdEstablecimiento = ID)
+
+malm_compl <- mal_tec %>% 
+  left_join(ef_tec_all %>% select(IdEstablecimiento, complejidad), 
+            by = "IdEstablecimiento")
 # ==============================================
 #    REVISAR LA DIFERENCIA ENTRE VARIABLES
 # ==============================================
@@ -53,186 +60,181 @@ names(dataframes_por_columna) <- columnas_interes
 # ==============================================
 
 
+# ------ TODOS LOS ESTABLECIMIENTOS
 
 normalidad_EF <- verificar_normalidad(ef_tec,c(2:11))
 print(normalidad_EF)
 
-# NO SON NORMALES LOS DATOS
+# Resultados: NO SON NORMALES LOS DATOS
+
+hospitals_long_ef <- ef_tec %>% pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
 
 all_ef <- analisis_eficiencia_tecnica(hospitals_long_ef)
 
+#El análisis global indica que hubo cambios estadísticamente significativos en la 
+#eficiencia técnica de los hospitales chilenos entre los años 2014 y 2023. Algunos 
+#años muestran mejoras, mientras que otros presentan caídas, especialmente durante o 
+#después de eventos disruptivos como la pandemia. No obstante, al analizar la diferencia 
+#en medianas mediante bootstrap, no se encontró una diferencia estadísticamente robusta 
+#entre periodos específicos. Esto sugiere que, aunque hay cambios en la distribución 
+#general, la mediana de eficiencia podría haberse mantenido relativamente estable en 
+#algunos intervalos.
+
+#Este comportamiento no lineal y heterogéneo podría deberse a la implementación desigual 
+#de políticas públicas, diferencias regionales, variabilidad en recursos humanos y 
+#materiales, o efectos externos como emergencias sanitarias.
 
 
-path_hospitales_complejidades <- paste0("data/hospitales.csv")
-hospitales_complejidades <- read.csv(path_hospitales_complejidades, sep=";" ) %>% rename("IdEstablecimiento" = "hospital_id")
-
-for (year in 2014:2023) {
-  resultados_usar[[orientacion]]$original[[as.character(year)]]$data <- resultados_usar[[orientacion]]$original[[as.character(year)]]$data %>%
-    left_join(hospitales_complejidades %>% select(IdEstablecimiento, complejidad), 
-              by = "IdEstablecimiento")
-}
+# --- MALMQUIST
 
 
-# ANÁLISIS DE EFICIENCIA A HOSPITALES
-ef_tec_complejidades <- guardar_dataframe_por_columna(resultados_usar[[orientacion]], retorno)
+normalidad_malm <- verificar_normalidad(mal_tec,c(2:10))
+print(normalidad_malm)
 
 
-# ALTA COMPLEJIDAD
+df_long_malm <- mal_tec %>%
+  pivot_longer(
+    cols = starts_with("20"),
+    names_to = "Año",
+    values_to = "Valor") %>%
+  mutate(Año = as.factor(sub(".*_", "", Año)))  %>%
+  group_by(IdEstablecimiento) %>%
+  filter(n_distinct(Año) == max(n_distinct(Año))) %>%  
+  ungroup()
 
-ef_tec_alta <-  ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Alta")
+# 3. Verificar que no haya NAs
+sum(is.na(df_complete$Valor))  # Debe ser 0
+
+all_malm <- analisis_eficiencia_tecnica(df_long_malm)
+
+#Aunque la prueba de Friedman no detecta diferencias globales significativas, las 
+#pruebas post-hoc y el intervalo bootstrap indican que hubo variaciones importantes 
+#en la productividad técnica de los hospitales a lo largo del tiempo, especialmente 
+#entre años clave como 2016, 2018, 2020 y 2022.
+
+#El hecho de que el intervalo bootstrap indique una diferencia significativa en la 
+#mediana sugiere que, a pesar de la heterogeneidad en los datos y de la exclusión de 
+#algunos hospitales por valores NA, hubo un cambio positivo neto en la productividad. 
+#Esto podría asociarse a procesos de modernización, digitalización, políticas de eficiencia 
+#o efectos adaptativos tras la pandemia.
 
 
-ef_tec_alta_long <- ef_tec_alta[,-c(2,3)]%>%
-  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+# -------------------------------------------------------------
+# -------------------------------------------------------------
+# ----- ANÁLISIS POR COMPLEJIDAD DE HOSPITAL
+
+##########################
+# --- ALTA COMPLEJIDAD
+
+ef_tec_alta_long <- ef_tec_all %>%
+  filter(complejidad == "Alta") %>%
+  select(-c(2, 3)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor")
 
 
 alta_ef <- analisis_eficiencia_tecnica(ef_tec_alta_long)
 
 
-# MEDIANA COMPLEJIDAD
+#Los hospitales chilenos de alta complejidad han mostrado variaciones significativas 
+#en su eficiencia técnica entre 2014 y 2023. Los cambios más relevantes se concentran 
+#en los años anteriores a 2020, mientras que en los años posteriores se aprecia una 
+#relativa estabilización. Las caídas en eficiencia no son consistentes ni generalizadas 
+#en el periodo post-pandemia. Esto podría deberse a una mayor estandarización de procesos, 
+#mejoras tecnológicas o un sistema que se ha adaptado mejor a nuevas condiciones.
 
-ef_tec_mediana <-  ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Mediana")
+
+# - Malmquist
+
+malm_alta_long <- malm_compl %>%
+  filter(complejidad == "Alta") %>%
+  select(-c(11)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor") %>%
+  mutate(
+    Año = as.factor(sub(".*_", "", Año))) %>%
+  group_by(IdEstablecimiento) %>%
+  filter(n_distinct(Año) == max(n_distinct(Año))) %>%  
+  ungroup()
+
+# 3. Verificar que no haya NAs
+sum(is.na(malm_alta_long$Valor))  # Debe ser 0
+
+alta_malm <- analisis_eficiencia_tecnica(malm_alta_long)
 
 
-ef_tec_mediana_long <- ef_tec_mediana[,-c(2,3)]%>%
-  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+
+##########################
+# --- MEDIANA COMPLEJIDAD
+
+ef_tec_mediana_long <- ef_tec_all %>%
+  filter(complejidad == "Mediana") %>%
+  select(-c(2, 3)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor")
 
 
 mediana_ef <- analisis_eficiencia_tecnica(ef_tec_mediana_long)
 
 
-# BAJA COMPLEJIDAD
+#Los hospitales chilenos de mediana complejidad presentaron algunas variaciones 
+#significativas en su eficiencia técnica a lo largo del tiempo, especialmente entre 
+#2014 y 2020. Sin embargo, estas diferencias no son sistemáticas, y en los últimos años 
+#(2021–2023) se observa una estabilización relativa. La evidencia sugiere que, si bien 
+#hubo ciertos descensos en eficiencia en años específicos, la mediana de eficiencia 
+#técnica no cambió de forma significativa entre periodos amplios, como pre y post pandemia.
 
-ef_tec_baja <-  ef_tec_complejidades %>% filter(.data[["complejidad"]] == "Baja")
+#Estos resultados podrían reflejar un sistema más resiliente de lo esperado o un efecto 
+#de intervenciones puntuales de gestión, más que cambios estructurales generalizados.
 
 
-ef_tec_baja_long <- ef_tec_baja[,-c(2,3)]%>%
-  pivot_longer(cols = -c(IdEstablecimiento), names_to = "Año", values_to = "Valor")
+# - Malmquist
+
+malm_mediana_long <- malm_compl %>%
+  filter(complejidad == "Mediana") %>%
+  select(-c(11)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor") %>%
+  mutate(
+    Año = as.factor(sub(".*_", "", Año))) %>%
+  group_by(IdEstablecimiento) %>%
+  filter(n_distinct(Año) == max(n_distinct(Año))) %>%  
+  ungroup()
+
+# 3. Verificar que no haya NAs
+sum(is.na(malm_mediana_long$Valor))  # Debe ser 0
+
+mediana_malm <- analisis_eficiencia_tecnica(malm_mediana_long)
+
+
+
+##########################
+# --- BAJA COMPLEJIDAD
+
+ef_tec_baja_long <- ef_tec_all %>%
+  filter(complejidad == "Baja") %>%
+  select(-c(2, 3)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor")
 
 
 baja_ef <- analisis_eficiencia_tecnica(ef_tec_baja_long)
 
 
 
+# - Malmquist
 
-
-
-
-
-
-#######################################
-#######################################
-# GRAFICA COMPARATIVA DE COMPLEJIDADES
-
-# Convertir a formato largo
-df_long <- ef_tec_complejidades %>%
-  pivot_longer(cols = starts_with("20"),  # Seleccionar columnas de los años
-               names_to = "Año", 
-               values_to = "Valor")
-
-medianas <- df_long %>%
-  group_by(Año, complejidad) %>%
-  summarise(Mediana = median(Valor, na.rm = TRUE), .groups = "drop")
-
-# Definir el ancho de desplazamiento
-dodge_width <- 0.87  # Ajustar el desplazamiento para alinear mejor
-
-# Definir colores personalizados para cada nivel de complejidad
-colores_violin <- c("Alta" = brewer.pal(11, "RdYlGn")[9],   # Verde para Alta
-                    "Mediana" = brewer.pal(11, "RdYlGn")[5], # Amarillo para Mediana
-                    "Baja" = brewer.pal(11, "RdYlGn")[3])   # Rojo para Baja
-
-# Crear el gráfico de violín con medianas alineadas y colores por complejidad
-grafica_alta_med_baj <- ggplot(df_long, aes(x = factor(Año), y = Valor, fill = complejidad)) +
-  geom_violin(trim = FALSE, alpha = 0.6, aes(color = complejidad, fill = complejidad), 
-              position = position_dodge(dodge_width), width = 1.5) +  # Aumentar el ancho de los violines
-  # Puntos de mediana en su violín respectivo
-  geom_line(data = medianas, 
-            aes(x = as.numeric(factor(Año)) + (as.numeric(factor(complejidad)) - 2) * 0.3, 
-                y = Mediana, group = complejidad, color = complejidad), 
-            size = 0.8, linetype = "dashed") +  # Línea de medianas punteada con color por complejidad
-  geom_point(data = medianas, 
-             aes(x = as.numeric(factor(Año)) + (as.numeric(factor(complejidad)) - 2) * 0.3, 
-                 y = Mediana, color = complejidad), 
-             size = 2) +  # Puntos en la línea de medianas
-  labs(title = "Distribución de valores según Complejidad Hospitalaria",
-       x = "Año", y = "Valor", 
-       fill = "Complejidad Hospitalaria",  # Nombre de la leyenda para los violines
-       color = "Complejidad Hospitalaria") +  # Nombre de la leyenda para las líneas
-  theme_minimal() +
-  theme(
-    plot.title = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.margin = unit(c(2, 2, 2, 2), "cm"),
-    panel.spacing.x = unit(1.5, "lines")  # Aumentar el espacio entre los años
-  ) +
-  scale_fill_manual(values = colores_violin) +  # Asignar colores a los violines según complejidad
-  scale_color_manual(values = colores_violin)   # Asignar colores a las líneas de medianas
-
-print(grafica_alta_med_baj)
-ggsave(paste0("distribucion_por_complejidad.jpg"), plot = grafica_alta_med_baj, width = 13, height = 5, dpi = 300)
-
-# ==============================================
-#    MALMQUIST
-# ==============================================
-
-
-
-
-mal_tec <- malmquist_indices[["index"]][,c(1:10)]
-
-normalidad_malm <- verificar_normalidad(mal_tec,c(2:9))
-print(normalidad_malm)
-
-
-
-
-
-
-# REVISAR SI HAY DIFERENCIAS EN LAS MEDIANAS
-df_long_malm <- mal_tec %>%        # Identificador del DMU
-  pivot_longer(
-    cols = starts_with("20"),          # Ajustar si tus columnas se llaman "2014", "2015", etc.
-    names_to = "year",
-    values_to = "index"
-  ) %>%
+malm_baja_long <- malm_compl %>%
+  filter(complejidad == "Baja") %>%
+  select(-c(11)) %>%
+  pivot_longer(cols = -IdEstablecimiento, names_to = "Año", values_to = "Valor") %>%
   mutate(
-    year = as.factor(year)  # o as.numeric si prefieres, pero factor para la prueba
-  )
+    Año = as.factor(sub(".*_", "", Año))) %>%
+  group_by(IdEstablecimiento) %>%
+  filter(n_distinct(Año) == max(n_distinct(Año))) %>%  
+  ungroup()
 
-df_long_malm <- df_long_malm %>% rename(IdEstablecimiento = ID)
+# 3. Verificar que no haya NAs
+sum(is.na(malm_baja_long$Valor))  # Debe ser 0
 
-df_long_malm <- df_long_malm %>% rename(Año = year)
-df_long_malm <- df_long_malm %>% rename(Valor = index)
-
-
-
-# Aplicar la prueba de Kruskal-Wallis
-resultado_kruskal_malm <- kruskal.test(Valor ~ Año, data = df_long_malm)
-
-# Mostrar el resultado
-print(resultado_kruskal_malm)
-
-# RESULTADO:
-# Kruskal-Wallis chi-squared = 454.43, df = 8, p-value < 2.2e-16
-
-
-
-posthoc_wilcoxon_mal <- df_long_malm %>%
-  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm")
-
-# Mostrar resultados
-print(n=50,posthoc_wilcoxon_mal)
-
-
-
-posthoc_wilcoxon_mal_less <- df_long_malm %>%
-  pairwise_wilcox_test(Valor ~ Año, paired = TRUE, p.adjust.method = "holm", alternative="less")
-
-# Mostrar resultados
-print(n=50,posthoc_wilcoxon_mal_less)
-
-
+baja_malm <- analisis_eficiencia_tecnica(malm_baja_long)
 
 
 
