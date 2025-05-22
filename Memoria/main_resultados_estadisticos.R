@@ -120,6 +120,18 @@ all_malm <- analisis_eficiencia_tecnica(df_long_malm)
 #o efectos adaptativos tras la pandemia.
 
 
+# ---- CONCLUSION:
+
+#Los análisis no muestran evidencia estadísticamente significativa de una disminución 
+#de al menos un 5% en la mediana de la eficiencia técnica entre 2020 y 2023 comparado 
+#con 2014–2019.
+
+#Aunque existen caídas puntuales en algunos años (como 2020), estas no son sostenidas 
+#ni generalizadas, y el intervalo bootstrap tampoco respalda esa caída del 5%.
+
+#Además, el índice de Malmquist incluso sugiere una leve mejora del desempeño productivo.
+
+
 
 # -------------------------------------------------------------
 # -------------------------------------------------------------
