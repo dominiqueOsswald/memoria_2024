@@ -20,7 +20,7 @@ titulos2 <- "Outputs"
 
 resultados_usar <- resultados_sin_atipicos[[columna]]
 
-correlaciones_eficiencia_grafica_vertical(correlacion_todos_metodos_atipicos[[columna]][["comparacion"]][["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS_sin_atipicos")
+#correlaciones_eficiencia_grafica_vertical(correlacion_todos_metodos_atipicos[[columna]][["comparacion"]][["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS_sin_atipicos")
 
 # ---- Grafica de comparacion de resultados
 
@@ -50,7 +50,7 @@ resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista
 
 
 
-correlaciones_eficiencia_grafica(resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista"]], "", c("Iteracion 1", "Iteracion 2", "Iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes", "iteraciones",2.5,1.5, 3500,6000, 3,4)
+#correlaciones_eficiencia_grafica(resultados_usar[[orientacion]][["resultados_correlacion"]][["correlaciones_lista"]], "", c("Iteracion 1", "Iteracion 2", "Iteracion 3"),  "Sensibilidad por eliminación de DMU eficientes", "iteraciones",2.5,1.5, 3500,6000, 3,4)
 
 
 # --------------------------- #
@@ -78,9 +78,7 @@ vrs_atp_list
 correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]] <- vrs_atp_list
 
 
-correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]], "ambos", c("Original", "Sin atipicos"), paste0("Comparación Original vs sin atipicos - Orientación ", titulos), "sin_atipicos",3,2, 3500,6000, 3,4)
-
-#correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]], "todos", c("VRS I", "VRS O", "CRS I", "CRS O","ESC I", "ESC O"),  "", "TODOS", 2,1.5, 4000,6500, 3,4)
+#correlaciones_eficiencia_grafica(correlacion_todos_metodos_atipicos[[columna]][["original_vs_sin_atipicos"]][[orientacion]][["correlaciones_lista"]], "ambos", c("Original", "Sin atipicos"), paste0("Comparación Original vs sin atipicos - Orientación ", titulos), "sin_atipicos",3,2, 3500,6000, 3,4)
 
 
 # GRAFICA DE DISTRIBUCIÓN DE EFICIENCIAS
@@ -99,7 +97,7 @@ datos_usar <- datos_sin_atipicos[[columna]]
 # DATOS SIN ATIPICOS PARA VRS OO
 malmquist_indices <- malmquist(datos_usar,retorno, orientacion2)
 
-generar_graficas_malmquist(malmquist_indices$index,columna2)
+#generar_graficas_malmquist(malmquist_indices$index,columna2)
 
 
 # ==============================================

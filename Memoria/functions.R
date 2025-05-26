@@ -1163,6 +1163,10 @@ analisis_eficiencia_tecnica <- function(df) {
   ic <- boot.ci(resultado_boot, type = "perc")
   print(ic)
   
+  
+  hist(resultado_boot$t, main = "Distribución Bootstrap del Cambio (%)")  
+  abline(v = ic$percent[4:5], col = "red", lty = 2) # Líneas del IC  
+  
   # Retornar todo si se desea guardar resultados
   return(list(
     friedman = friedman_result,
