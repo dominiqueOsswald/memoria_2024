@@ -104,7 +104,7 @@ df_long_malm <- mal_tec %>%
   ungroup()
 
 # 3. Verificar que no haya NAs
-sum(is.na(df_complete$Valor))  # Debe ser 0
+#sum(is.na(df_complete$Valor))  # Debe ser 0
 
 all_malm <- analisis_eficiencia_tecnica(df_long_malm)
 

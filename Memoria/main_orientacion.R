@@ -2,7 +2,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("functions.R")
 source("graphics.R")
-source("data.RData")
+load("data.RData")
 
 # ==============================================
 #  INICIO 
@@ -10,13 +10,13 @@ source("data.RData")
 
 
 
-orientacion <- "oo"
-orientacion2 <- "out" 
+orientacion <- "io"
+orientacion2 <- "in" 
 retorno <- "vrs"
 columna <- paste0(retorno,"_",orientacion)
 columna2 <- paste0(orientacion,"_",retorno)
-titulos <- "Outputs VRS"
-titulos2 <- "Outputs"
+titulos <- "Inputs VRS"
+titulos2 <- "Inputs"
 
 resultados_usar <- resultados_sin_atipicos[[columna]]
 
